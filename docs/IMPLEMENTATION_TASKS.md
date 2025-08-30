@@ -66,35 +66,35 @@
 
 #### 1.2.1 Create Supabase Project
 
-( ) Sign up/login to Supabase
-( ) Create new project with appropriate region
-( ) Note project URL and anon key
-( ) Add environment variables to .env.local
-( ) Install @supabase/supabase-js
-**Verification:** Test connection with simple query from Next.js
+(X) Sign up/login to Supabase
+(X) Create new project with appropriate region
+(X) Note project URL and anon key
+(X) Add environment variables to .env.local
+(X) Install @supabase/supabase-js
+**Verification:** Test connection with simple query from Next.js ✓
 
 #### 1.2.2 Database Schema Implementation
 
-( ) Create admin_users table with columns
-( ) Create gift_items table with columns
-( ) Create placement_constraints table
-( ) Create mockup_sessions table
-( ) Create audit_log table
-( ) Set up foreign key relationships
-( ) Create indexes for performance
-( ) Enable Row Level Security (RLS)
-**Verification:** Run test queries for each table, verify relationships work
+(X) Create admin_users table with columns
+(X) Create gift_items table with columns
+(X) Create placement_constraints table
+(X) Create mockup_sessions table
+(X) Create audit_log table
+(X) Set up foreign key relationships
+(X) Create indexes for performance
+(X) Enable Row Level Security (RLS)
+**Verification:** Run test queries for each table, verify relationships work ✓
 
 #### 1.2.3 Storage Buckets Setup
 
-( ) Create 'gift-items' bucket for product images
-( ) Create 'constraint-images' bucket for marked images
-( ) Create 'user-logos' bucket for uploads
-( ) Create 'generated-mockups' bucket
-( ) Set appropriate CORS policies
-( ) Configure public/private access rules
-( ) Set up CDN (if using Supabase CDN)
-**Verification:** Upload test file to each bucket, verify access permissions
+(X) Create 'gift-items' bucket for product images
+(X) Create 'constraint-images' bucket for marked images
+(X) Create 'user-logos' bucket for uploads
+(X) Create 'generated-mockups' bucket
+(X) Set appropriate CORS policies
+(X) Configure public/private access rules
+(X) Set up CDN (if using Supabase CDN)
+**Verification:** Upload test file to each bucket, verify access permissions ✓
 
 #### 1.2.4 Edge Functions Environment
 
