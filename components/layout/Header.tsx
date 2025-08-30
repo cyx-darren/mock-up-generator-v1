@@ -1,6 +1,6 @@
-import React from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
+import React from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
 
 export const Header: React.FC = () => {
   return (
@@ -11,20 +11,29 @@ export const Header: React.FC = () => {
             <Link href="/" className="flex items-center">
               <span className="text-2xl font-bold text-blue-600">MockupGen</span>
             </Link>
-            
+
             <nav className="hidden md:ml-10 md:flex md:space-x-8">
-              <Link href="/catalog" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">
+              <Link
+                href="/catalog"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium"
+              >
                 Catalog
               </Link>
-              <Link href="/how-it-works" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">
+              <Link
+                href="/how-it-works"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium"
+              >
                 How It Works
               </Link>
-              <Link href="/pricing" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">
+              <Link
+                href="/pricing"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium"
+              >
                 Pricing
               </Link>
             </nav>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <Link href="/admin/login">
               <Button variant="ghost" size="sm">
@@ -32,13 +41,11 @@ export const Header: React.FC = () => {
               </Button>
             </Link>
             <Link href="/create">
-              <Button size="sm">
-                Start Creating
-              </Button>
+              <Button size="sm">Start Creating</Button>
             </Link>
           </div>
         </div>
       </div>
     </header>
-  )
-}
+  );
+};

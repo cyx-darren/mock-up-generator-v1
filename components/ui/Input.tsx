@@ -1,10 +1,10 @@
-import React from 'react'
-import { cn } from '@/lib/utils'
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  helperText?: string
+  label?: string;
+  error?: string;
+  helperText?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -15,15 +15,12 @@ export const Input: React.FC<InputProps> = ({
   id,
   ...props
 }) => {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
-  
+  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
@@ -38,20 +35,16 @@ export const Input: React.FC<InputProps> = ({
         )}
         {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
     </div>
-  )
-}
+  );
+};
 
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string
-  error?: string
-  helperText?: string
+  label?: string;
+  error?: string;
+  helperText?: string;
 }
 
 export const Textarea: React.FC<TextareaProps> = ({
@@ -62,15 +55,12 @@ export const Textarea: React.FC<TextareaProps> = ({
   id,
   ...props
 }) => {
-  const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`
-  
+  const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className="w-full">
       {label && (
-        <label
-          htmlFor={textareaId}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor={textareaId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
@@ -85,12 +75,8 @@ export const Textarea: React.FC<TextareaProps> = ({
         )}
         {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="mt-1 text-sm text-gray-500">{helperText}</p>}
     </div>
-  )
-}
+  );
+};

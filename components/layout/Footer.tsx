@@ -1,5 +1,5 @@
-import React from 'react'
-import Link from 'next/link'
+import React from 'react';
+import Link from 'next/link';
 
 export const Footer: React.FC = () => {
   return (
@@ -12,7 +12,7 @@ export const Footer: React.FC = () => {
               Create professional mockups for your corporate gifts in seconds.
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
               Product
@@ -35,7 +35,7 @@ export const Footer: React.FC = () => {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
               Support
@@ -58,7 +58,7 @@ export const Footer: React.FC = () => {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
               Legal
@@ -77,7 +77,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-8 pt-8 border-t border-gray-200">
           <p className="text-sm text-gray-500 text-center">
             © {new Date().getFullYear()} MockupGen. All rights reserved.
@@ -85,5 +85,5 @@ export const Footer: React.FC = () => {
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};

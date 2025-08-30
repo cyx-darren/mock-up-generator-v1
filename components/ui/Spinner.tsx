@@ -1,17 +1,17 @@
-import React from 'react'
-import { cn } from '@/lib/utils'
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface SpinnerProps {
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
 export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', className }) => {
   const sizes = {
     sm: 'h-4 w-4',
     md: 'h-8 w-8',
-    lg: 'h-12 w-12'
-  }
+    lg: 'h-12 w-12',
+  };
 
   return (
     <div className={cn('flex justify-center items-center', className)}>
@@ -36,29 +36,20 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', className }) => {
         />
       </svg>
     </div>
-  )
-}
+  );
+};
 
 interface LoadingSkeletonProps {
-  className?: string
-  lines?: number
+  className?: string;
+  lines?: number;
 }
 
-export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ 
-  className, 
-  lines = 1 
-}) => {
+export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({ className, lines = 1 }) => {
   return (
     <div className={cn('animate-pulse', className)}>
       {Array.from({ length: lines }).map((_, i) => (
-        <div
-          key={i}
-          className={cn(
-            'h-4 bg-gray-200 rounded',
-            i > 0 && 'mt-2'
-          )}
-        />
+        <div key={i} className={cn('h-4 bg-gray-200 rounded', i > 0 && 'mt-2')} />
       ))}
     </div>
-  )
-}
+  );
+};

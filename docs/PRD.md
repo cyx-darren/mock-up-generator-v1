@@ -1,18 +1,21 @@
 # Product Requirements Document
+
 ## Corporate Gift Mockup Generator
 
 **Version:** 1.0  
 **Date:** August 30, 2025  
-**Status:** Draft  
+**Status:** Draft
 
 ---
 
 ## 1. EXECUTIVE SUMMARY
 
 ### 1.1 Product Overview
+
 A web-based application that enables users to generate realistic digital mockups of corporate gift items with custom logo placement using Google AI Studio's Nano Banana model. Users can select gift items, choose logo placement options, upload their logos, and receive AI-generated mockups showing their branded merchandise.
 
 ### 1.2 Business Objectives
+
 - Streamline the corporate gift visualization process
 - Reduce back-and-forth design iterations
 - Enable instant mockup generation for sales presentations
@@ -20,6 +23,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Reduce designer workload for simple mockup requests
 
 ### 1.3 Target Users
+
 - Primary: Corporate gift sales representatives
 - Secondary: Marketing managers and procurement teams
 - Tertiary: Small business owners and event planners
@@ -31,6 +35,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 2.1 Technical Architecture
 
 #### Frontend
+
 - **Framework:** Next.js 14+ with React 18
 - **Hosting:** Vercel
 - **Styling:** Tailwind CSS
@@ -38,6 +43,7 @@ A web-based application that enables users to generate realistic digital mockups
 - **Image Processing:** Canvas API / Sharp
 
 #### Backend
+
 - **Platform:** Supabase
 - **Database:** PostgreSQL
 - **Storage:** Supabase Storage
@@ -45,6 +51,7 @@ A web-based application that enables users to generate realistic digital mockups
 - **Authentication:** Supabase Auth (optional for v1)
 
 #### External Services
+
 - **AI Model:** Google AI Studio - Nano Banana Model
 - **Background Removal:** Remove.bg API or Clipdrop API
 - **CDN:** Vercel Edge Network
@@ -52,9 +59,11 @@ A web-based application that enables users to generate realistic digital mockups
 ### 2.2 Core Features
 
 #### Feature 1: Admin Backend System
+
 **Priority:** P0 (Must Have)
 **Description:** Comprehensive admin interface for product and constraint management
 **Acceptance Criteria:**
+
 - Secure authentication for admin users
 - Role-based access control (Super Admin, Product Manager)
 - Product CRUD operations
@@ -64,9 +73,11 @@ A web-based application that enables users to generate realistic digital mockups
 - Audit log for all changes
 
 #### Feature 2: Gift Item Selection
+
 **Priority:** P0 (Must Have)
 **Description:** Users can browse and select from a catalog of corporate gift items
 **Acceptance Criteria:**
+
 - Display grid/list view of available items
 - Show item name, category, and thumbnail
 - Support category filtering
@@ -74,9 +85,11 @@ A web-based application that enables users to generate realistic digital mockups
 - Load time < 2 seconds
 
 #### Feature 3: Logo Placement Template Selection
+
 **Priority:** P0 (Must Have)
 **Description:** Users select how their logo should be placed on the item
 **Acceptance Criteria:**
+
 - Show 3 placement options: horizontal, vertical, all-over
 - Visual preview of placement area on item outline
 - Color-coded constraint areas (bright green for printable zones)
@@ -84,9 +97,11 @@ A web-based application that enables users to generate realistic digital mockups
 - Tooltip explanations for each option
 
 #### Feature 4: Logo Upload and Processing
+
 **Priority:** P0 (Must Have)
 **Description:** Users upload their logo and system prepares it for mockup generation
 **Acceptance Criteria:**
+
 - Support PNG, JPG, SVG formats
 - Maximum file size: 10MB
 - Automatic background removal
@@ -95,9 +110,11 @@ A web-based application that enables users to generate realistic digital mockups
 - Error handling for unsupported formats
 
 #### Feature 5: AI-Powered Mockup Generation
+
 **Priority:** P0 (Must Have)
 **Description:** Generate realistic mockup using Nano Banana model
 **Acceptance Criteria:**
+
 - Process time < 30 seconds
 - Output resolution matches input item image
 - Accurate logo placement within constraints
@@ -105,9 +122,11 @@ A web-based application that enables users to generate realistic digital mockups
 - Option to regenerate if unsatisfied
 
 #### Feature 6: Download and Share
+
 **Priority:** P1 (Should Have)
 **Description:** Users can download or share generated mockups
 **Acceptance Criteria:**
+
 - Download in PNG format (minimum 1920x1920)
 - Optional JPG and WebP formats
 - Share via direct link
@@ -122,6 +141,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 3.1 Admin Backend Requirements
 
 #### 3.1.1 Admin Authentication
+
 - **Login System**
   - Email/password authentication
   - Two-factor authentication (optional)
@@ -137,6 +157,7 @@ A web-based application that enables users to generate realistic digital mockups
 #### 3.1.2 Product Management Interface
 
 **Product Upload Form:**
+
 - **Basic Information**
   - Product name (required)
   - Product SKU (auto-generated or manual)
@@ -185,6 +206,7 @@ A web-based application that enables users to generate realistic digital mockups
    - Add design guidelines text
 
 **Constraint Validation Features:**
+
 - Automatic green area detection
 - Visual overlay showing detected printable zone
 - Warning if green area is too small (<100x100px)
@@ -194,6 +216,7 @@ A web-based application that enables users to generate realistic digital mockups
 #### 3.1.4 Admin Dashboard
 
 **Overview Section:**
+
 - Total products (Active/Draft/Archived)
 - Recent mockups generated
 - Popular products (by usage)
@@ -201,6 +224,7 @@ A web-based application that enables users to generate realistic digital mockups
 - API usage statistics
 
 **Product List View:**
+
 - Sortable table with columns:
   - Product image thumbnail
   - Product name
@@ -215,6 +239,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Export to CSV
 
 **Quick Actions:**
+
 - Add new product button
 - Bulk import products
 - Download all product images
@@ -224,6 +249,7 @@ A web-based application that enables users to generate realistic digital mockups
 #### 3.1.5 Bulk Operations
 
 **Bulk Product Import:**
+
 - CSV template download
 - CSV upload with validation
 - Preview import results
@@ -231,6 +257,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Rollback capability
 
 **Bulk Image Upload:**
+
 - ZIP file upload support
 - Automatic matching by filename
 - Progress indicator
@@ -240,6 +267,7 @@ A web-based application that enables users to generate realistic digital mockups
 #### 3.1.6 Preview & Testing
 
 **Product Preview Mode:**
+
 - View product as end-user would see
 - Test all placement options
 - Upload test logo
@@ -247,6 +275,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Validate constraint detection
 
 **Quality Control:**
+
 - Flag products for review
 - Add internal notes
 - Approval workflow
@@ -298,6 +327,7 @@ A web-based application that enables users to generate realistic digital mockups
 #### Database Schema
 
 **admin_users table**
+
 - id (UUID, Primary Key)
 - email (VARCHAR, Unique)
 - password_hash (VARCHAR)
@@ -308,6 +338,7 @@ A web-based application that enables users to generate realistic digital mockups
 - updated_at (TIMESTAMP)
 
 **gift_items table**
+
 - id (UUID, Primary Key)
 - sku (VARCHAR, Unique)
 - name (VARCHAR)
@@ -327,6 +358,7 @@ A web-based application that enables users to generate realistic digital mockups
 - updated_at (TIMESTAMP)
 
 **placement_constraints table**
+
 - id (UUID, Primary Key)
 - item_id (UUID, Foreign Key)
 - placement_type (ENUM: horizontal, vertical, all_over)
@@ -346,6 +378,7 @@ A web-based application that enables users to generate realistic digital mockups
 - updated_at (TIMESTAMP)
 
 **audit_log table**
+
 - id (UUID, Primary Key)
 - admin_user_id (UUID, Foreign Key)
 - action (VARCHAR)
@@ -358,6 +391,7 @@ A web-based application that enables users to generate realistic digital mockups
 - created_at (TIMESTAMP)
 
 **templates table**
+
 - id (UUID, Primary Key)
 - item_id (UUID, Foreign Key)
 - placement_type (ENUM: horizontal, vertical, all_over)
@@ -367,6 +401,7 @@ A web-based application that enables users to generate realistic digital mockups
 - default_position (JSONB)
 
 **mockup_sessions table**
+
 - id (UUID, Primary Key)
 - session_id (VARCHAR)
 - item_id (UUID, Foreign Key)
@@ -382,18 +417,21 @@ A web-based application that enables users to generate realistic digital mockups
 ### 3.3 Non-Functional Requirements
 
 #### Performance
+
 - Page load time: < 3 seconds
 - Mockup generation: < 30 seconds
 - API response time: < 500ms
 - Support 100 concurrent users
 
 #### Reliability
+
 - 99.9% uptime SLA
 - Graceful error handling
 - Automatic retry for failed generations
 - Queue system for high load periods
 
 #### Security
+
 - HTTPS encryption
 - Rate limiting: 10 mockups per IP per hour
 - Input validation and sanitization
@@ -401,12 +439,14 @@ A web-based application that enables users to generate realistic digital mockups
 - GDPR compliant data handling
 
 #### Scalability
+
 - Horizontal scaling capability
 - CDN for static assets
 - Database connection pooling
 - Efficient image compression
 
 #### Usability
+
 - Mobile responsive (320px to 4K)
 - WCAG 2.1 AA accessibility compliance
 - Multi-browser support (Chrome, Firefox, Safari, Edge)
@@ -420,6 +460,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 4.1 Color-Coded Constraint Implementation
 
 **Marker Colors:**
+
 - Bright Green (#00FF00): Standard print area
 - Bright Blue (#0000FF): Embroidery area
 - Bright Magenta (#FF00FF): Embossing area
@@ -452,83 +493,101 @@ A web-based application that enables users to generate realistic digital mockups
 #### Admin API Endpoints
 
 **POST /api/admin/auth/login**
+
 - Request: email, password
 - Response: JWT token, user details
 - Sets httpOnly cookie
 
 **POST /api/admin/auth/logout**
+
 - Clears session
 - Response: Success message
 
 **GET /api/admin/dashboard/stats**
+
 - Response: Product counts, usage statistics
 - Requires: Admin authentication
 
 **GET /api/admin/products**
+
 - Response: Paginated list of all products
 - Query params: page, limit, status, category
 - Includes constraint configuration status
 
 **POST /api/admin/products**
+
 - Request: Product details, base image
 - Response: Created product with ID
 - Triggers image optimization
 
 **PUT /api/admin/products/{id}**
+
 - Request: Updated product details
 - Response: Updated product
 - Creates audit log entry
 
 **DELETE /api/admin/products/{id}**
+
 - Soft delete (archives product)
 - Response: Success confirmation
 
 **POST /api/admin/products/{id}/constraints**
+
 - Request: placement_type, constraint_image, settings
 - Response: Constraint configuration with validation
 - Triggers green area detection
 
 **PUT /api/admin/products/{id}/constraints/{type}**
+
 - Update specific constraint configuration
 - Response: Updated constraint details
 
 **GET /api/admin/products/{id}/preview**
+
 - Response: Product preview data
 - Includes all constraint configurations
 
 **POST /api/admin/products/bulk-import**
+
 - Request: CSV file
 - Response: Import results, error report
 
 **GET /api/admin/audit-log**
+
 - Response: Paginated audit entries
 - Query params: user_id, date_range, entity_type
 
 #### Public API Endpoints
 
 **GET /api/items**
+
 - Response: Array of active gift items
 - Pagination: limit, offset
 - Filtering: category, is_active
 
 **GET /api/items/{id}/templates**
+
 - Response: Available templates for item
 - Include: constraint previews
 
 **POST /api/upload/logo**
+
 - Request: Multipart form data
 - Response: Upload ID, processed logo URL
 - Max size: 10MB
 
 **POST /api/process/remove-background**
+
 - Request: Logo URL
 - Response: Processed logo URL, preview URLs
 
 **POST /api/generate/mockup**
+
 - Request: item_id, template_id, logo_url, adjustments
 - Response: Job ID, status URL
 
 **GET /api/mockup/{id}**
+
 - Response: Mockup URL, metadata, status
 
 ### 5.2 WebSocket Events
@@ -545,6 +604,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 6.1 Design System
 
 **Colors:**
+
 - Primary: #2563EB (Blue)
 - Secondary: #10B981 (Green)
 - Accent: #F59E0B (Amber)
@@ -552,11 +612,13 @@ A web-based application that enables users to generate realistic digital mockups
 - Neutral: #6B7280 (Gray)
 
 **Typography:**
+
 - Headings: Inter font family
 - Body: System font stack
 - Minimum font size: 14px
 
 **Components:**
+
 - Buttons: Primary, Secondary, Ghost variants
 - Cards: Elevated with subtle shadows
 - Forms: Floating labels, inline validation
@@ -577,6 +639,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 7.1 Google AI Studio Integration
 
 **Configuration:**
+
 - Model: Nano Banana
 - API Key: Environment variable
 - Rate limit: 100 requests/minute
@@ -584,6 +647,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Retry strategy: Exponential backoff
 
 **Input Format:**
+
 - Base image: PNG/JPG, max 2048x2048
 - Logo: PNG with transparency
 - Constraint mask: Binary image
@@ -592,6 +656,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 7.2 Background Removal Service
 
 **Primary: Remove.bg API**
+
 - API Key: Environment variable
 - Fallback: Clipdrop API
 - Error handling: Manual removal option
@@ -648,15 +713,18 @@ A web-based application that enables users to generate realistic digital mockups
 ## 10. DEVELOPMENT PHASES
 
 ### 10.1 Phase 1: Foundation & Infrastructure (Week 1-2)
+
 **Duration:** 2 weeks  
 **Team Required:** 1 Full-stack developer using Claude Code
 
 **Objectives:**
+
 - Set up development environment
 - Establish basic infrastructure
 - Create foundational components
 
 **Deliverables:**
+
 1. **Project Setup**
    - Initialize Next.js project with TypeScript
    - Configure Tailwind CSS
@@ -677,20 +745,24 @@ A web-based application that enables users to generate realistic digital mockups
    - Set up routing structure
 
 **Success Criteria:**
+
 - Deployable Next.js app on Vercel
 - Functional Supabase backend
 - Basic UI components ready
 
 ### 10.2 Phase 2: Admin Backend & Product Management (Week 3-4)
+
 **Duration:** 2 weeks  
 **Team Required:** 1 Full-stack developer
 
 **Objectives:**
+
 - Build complete admin backend system
 - Implement product management interface
 - Create constraint configuration tools
 
 **Deliverables:**
+
 1. **Admin Authentication System**
    - Login/logout functionality
    - Role-based access control
@@ -708,7 +780,7 @@ A web-based application that enables users to generate realistic digital mockups
 3. **Constraint Configuration System**
    - Individual constraint image upload for each placement type
    - Horizontal placement configuration
-   - Vertical placement configuration  
+   - Vertical placement configuration
    - All-over print configuration
    - Green area detection and validation
    - Preview system for each constraint
@@ -722,6 +794,7 @@ A web-based application that enables users to generate realistic digital mockups
    - System health monitoring
 
 **Success Criteria:**
+
 - Admin can log in securely
 - Products can be created with all details
 - Each placement type can be configured independently
@@ -729,15 +802,18 @@ A web-based application that enables users to generate realistic digital mockups
 - Audit trail for all actions
 
 ### 10.3 Phase 3: Product Catalog & Asset Preparation (Week 5)
+
 **Duration:** 1 week  
 **Team Required:** 1 Full-stack developer + 1 Designer (part-time)
 
 **Objectives:**
+
 - Populate product catalog using admin backend
 - Prepare constraint images for all products
 - Build customer-facing catalog interface
 
 **Deliverables:**
+
 1. **Asset Preparation Using Admin Tools**
    - Upload 20 products via admin interface
    - Create constraint images with green markings
@@ -747,7 +823,7 @@ A web-based application that enables users to generate realistic digital mockups
 
 2. **Customer Catalog UI**
    - Product grid/list view
-   - Category filtering  
+   - Category filtering
    - Search functionality
    - Product detail modals
    - Loading states and skeletons
@@ -759,21 +835,25 @@ A web-based application that enables users to generate realistic digital mockups
    - Performance testing with full catalog
 
 **Success Criteria:**
+
 - 20 products fully configured in system
 - All placement options properly set
 - Customer can browse products smoothly
 - Admin can manage products efficiently
 
 ### 10.4 Phase 4: Image Processing Pipeline (Week 6-7)
+
 **Duration:** 2 weeks  
 **Team Required:** 1 Full-stack developer
 
 **Objectives:**
+
 - Implement logo upload system
 - Integrate background removal
 - Build constraint detection system
 
 **Deliverables:**
+
 1. **Upload System**
    - Drag-and-drop file upload
    - File type validation
@@ -794,20 +874,24 @@ A web-based application that enables users to generate realistic digital mockups
    - Template-specific mask extraction
 
 **Success Criteria:**
+
 - Successful logo upload and processing
 - Accurate background removal
 - Constraint masks generated correctly
 
 ### 10.5 Phase 5: AI Integration & Mockup Generation (Week 8-10)
+
 **Duration:** 3 weeks  
 **Team Required:** 1 Full-stack developer + 1 AI/ML engineer (consultant)
 
 **Objectives:**
+
 - Integrate Google AI Studio
 - Implement mockup generation using admin-configured constraints
 - Optimize prompt engineering
 
 **Deliverables:**
+
 1. **Google AI Studio Integration**
    - API authentication setup
    - Nano Banana model configuration
@@ -833,21 +917,25 @@ A web-based application that enables users to generate realistic digital mockups
    - Metadata embedding
 
 **Success Criteria:**
+
 - Successful mockup generation
 - Constraints properly applied
 - <30 second generation time
 - 80%+ quality acceptance rate
 
 ### 10.6 Phase 6: User Experience & Polish (Week 11-12)
+
 **Duration:** 2 weeks  
 **Team Required:** 1 Full-stack developer + 1 UI/UX designer
 
 **Objectives:**
+
 - Refine both admin and user interfaces
 - Implement advanced features
 - Optimize performance
 
 **Deliverables:**
+
 1. **Admin UI Enhancements**
    - Improved constraint visualization
    - Batch operations interface
@@ -873,21 +961,25 @@ A web-based application that enables users to generate realistic digital mockups
    - Bundle optimization
 
 **Success Criteria:**
+
 - Smooth, intuitive user experience
 - Efficient admin workflows
 - <3 second page load times
 - Mobile-responsive design
 
 ### 10.7 Phase 7: Testing & Quality Assurance (Week 13)
+
 **Duration:** 1 week  
 **Team Required:** 1 Full-stack developer + QA testing
 
 **Objectives:**
+
 - Comprehensive testing
 - Bug fixes and stability
 - Performance validation
 
 **Deliverables:**
+
 1. **Testing Implementation**
    - Unit tests for critical functions
    - Integration tests for API endpoints
@@ -907,20 +999,24 @@ A web-based application that enables users to generate realistic digital mockups
    - Video tutorials
 
 **Success Criteria:**
+
 - <5% error rate
 - All critical paths tested
 - Documentation complete
 
 ### 10.8 Phase 8: Beta Launch & Iteration (Week 14-15)
+
 **Duration:** 2 weeks  
 **Team Required:** Full team
 
 **Objectives:**
+
 - Soft launch to beta users including admin users
 - Gather feedback on both admin and customer interfaces
 - Iterate based on usage
 
 **Deliverables:**
+
 1. **Beta Launch**
    - Deploy to production
    - Invite 5-10 admin users
@@ -943,22 +1039,26 @@ A web-based application that enables users to generate realistic digital mockups
    - Admin workflow refinements
 
 **Success Criteria:**
+
 - 50+ beta users onboarded
 - Admin users can manage products efficiently
-- >80% satisfaction rate
+- > 80% satisfaction rate
 - Major issues resolved
 
 ### 10.9 Phase 9: Production Launch (Week 16)
+
 **Duration:** 1 week  
 **Team Required:** Full team
 
 **Objectives:**
+
 - Public launch
 - Admin training
 - Marketing activation
 - Scale monitoring
 
 **Deliverables:**
+
 1. **Production Deployment**
    - Final performance optimization
    - Security audit (especially admin backend)
@@ -985,6 +1085,7 @@ A web-based application that enables users to generate realistic digital mockups
    - Analytics dashboards
 
 **Success Criteria:**
+
 - Successful public launch
 - All admins trained
 - System stability maintained
@@ -995,6 +1096,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 11.1 MVP Scope (Phases 1-8)
 
 **Must Have:**
+
 - 20 gift items across 5 categories
 - 3 placement templates per item
 - Logo upload and background removal
@@ -1004,6 +1106,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Quality validation
 
 **Nice to Have (if time permits):**
+
 - User accounts
 - Mockup history
 - Batch processing
@@ -1012,6 +1115,7 @@ A web-based application that enables users to generate realistic digital mockups
 ### 11.2 Future Enhancements (Post-Launch)
 
 **Phase 2 (Months 2-3):**
+
 - User authentication and profiles
 - Saved mockup galleries
 - Batch mockup generation
@@ -1019,6 +1123,7 @@ A web-based application that enables users to generate realistic digital mockups
 - Multiple logo placement
 
 **Phase 3 (Months 4-6):**
+
 - API for enterprise integration
 - White-label solution
 - Text addition capability
@@ -1028,13 +1133,15 @@ A web-based application that enables users to generate realistic digital mockups
 ### 11.3 Success Metrics
 
 **Launch Goals (First 30 days):**
+
 - 1,000 mockups generated
 - 500 unique users
 - <5% error rate
-- >80% user satisfaction score
+- > 80% user satisfaction score
 - <30 second average generation time
 
 **Key Performance Indicators:**
+
 - Daily active users
 - Mockups per user
 - Generation success rate
@@ -1063,6 +1170,7 @@ Week 16:    Production Launch
 ### 12.2 Resource Allocation
 
 **Core Team:**
+
 - 1 Full-stack Developer (Lead) - 100% allocation
 - 1 UI/UX Designer - 30% allocation
 - 1 AI/ML Consultant - As needed (Weeks 8-10)
@@ -1070,6 +1178,7 @@ Week 16:    Production Launch
 - 1 Product Manager - 20% allocation (for admin training)
 
 **Claude Code Implementation Strategy:**
+
 1. Use Claude Code for rapid prototyping in each phase
 2. Admin backend development first (Phase 2)
 3. Iterative development with daily commits
@@ -1080,37 +1189,45 @@ Week 16:    Production Launch
 ### 12.3 Milestone Checkpoints
 
 **Milestone 1 (End of Week 2):** Infrastructure Ready
+
 - Vercel + Supabase connected
 - Basic UI framework deployed
 
 **Milestone 2 (End of Week 4):** Admin Backend Complete
+
 - Full admin interface functional
 - Product management working
 - Constraint configuration system ready
 
 **Milestone 3 (End of Week 5):** Products Configured
+
 - 20 products uploaded via admin
 - All constraints properly set
 - Catalog browsable
 
 **Milestone 4 (End of Week 7):** Processing Pipeline Complete
+
 - Logo upload working
 - Constraints detected from admin configs
 - Background removal functional
 
 **Milestone 5 (End of Week 10):** AI Integration Complete
+
 - Mockups generating with admin constraints
 - Quality meets standards
 
 **Milestone 6 (End of Week 12):** UX Polished
+
 - Both admin and customer UX refined
 - Performance optimized
 
 **Milestone 7 (End of Week 15):** Beta Complete
+
 - Admin and end user feedback incorporated
 - System stable
 
 **Milestone 8 (End of Week 16):** Public Launch
+
 - Production deployment
 - Admin users trained
 - Marketing activated
@@ -1118,20 +1235,24 @@ Week 16:    Production Launch
 ### 12.4 Risk Management by Phase
 
 **Phase 1-2 Risks:**
+
 - Learning curve with Supabase Edge Functions
-- *Mitigation:* Allocate extra time for documentation review
+- _Mitigation:_ Allocate extra time for documentation review
 
 **Phase 3-4 Risks:**
+
 - Background removal API quality
-- *Mitigation:* Test multiple services early
+- _Mitigation:_ Test multiple services early
 
 **Phase 5-6 Risks:**
+
 - Nano Banana model limitations
-- *Mitigation:* Early POC and backup generation methods
+- _Mitigation:_ Early POC and backup generation methods
 
 **Phase 7-8 Risks:**
+
 - User adoption and feedback
-- *Mitigation:* Close beta user engagement
+- _Mitigation:_ Close beta user engagement
 
 ## 13. RISKS AND MITIGATIONS
 
@@ -1228,17 +1349,17 @@ Week 16:    Production Launch
 
 ### C. Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-08-30 | Initial | Initial PRD creation |
-| 1.1 | 2025-08-30 | Update | Added comprehensive admin backend requirements |
-| | | | Added constraint configuration per placement type |
-| | | | Updated development phases to include admin system |
-| | | | Added admin API endpoints |
-| | | | Enhanced database schema for admin functionality |
+| Version | Date       | Author  | Changes                                            |
+| ------- | ---------- | ------- | -------------------------------------------------- |
+| 1.0     | 2025-08-30 | Initial | Initial PRD creation                               |
+| 1.1     | 2025-08-30 | Update  | Added comprehensive admin backend requirements     |
+|         |            |         | Added constraint configuration per placement type  |
+|         |            |         | Updated development phases to include admin system |
+|         |            |         | Added admin API endpoints                          |
+|         |            |         | Enhanced database schema for admin functionality   |
 
 ---
 
 **Document End**
 
-*This PRD is a living document and will be updated as requirements evolve.*
+_This PRD is a living document and will be updated as requirements evolve._
