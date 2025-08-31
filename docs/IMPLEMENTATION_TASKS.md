@@ -98,25 +98,25 @@
 
 #### 1.2.4 Edge Functions Environment
 
-( ) Enable Edge Functions in Supabase
-( ) Install Supabase CLI locally
-( ) Create functions folder structure
-( ) Create hello-world test function
-( ) Deploy and test function
-( ) Set up function secrets/environment variables
-**Verification:** Call test function from frontend, verify response
+(X) Enable Edge Functions in Supabase
+(X) Install Supabase CLI locally
+(X) Create functions folder structure
+(X) Create hello-world test function
+(X) Deploy and test function
+(X) Set up function secrets/environment variables
+**Verification:** Call test function from frontend, verify response ✓
 
 ### 1.3 Basic UI Framework Tasks
 
 #### 1.3.1 Layout Components
 
-( ) Create Layout.tsx wrapper component
-( ) Build Header component with navigation
-( ) Build Footer component with links
-( ) Create Container component for consistent spacing
-( ) Implement responsive navigation menu
-( ) Add dark mode toggle (optional)
-**Verification:** All pages wrapped in layout, responsive at all breakpoints
+(X) Create Layout.tsx wrapper component
+(X) Build Header component with navigation
+(X) Build Footer component with links
+(X) Create Container component for consistent spacing
+(X) Implement responsive navigation menu
+(X) Add dark mode toggle (optional)
+**Verification:** All pages wrapped in layout, responsive at all breakpoints ✓
 
 #### 1.3.2 Component Library
 
