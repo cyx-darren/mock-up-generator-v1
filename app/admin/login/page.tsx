@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Input, Checkbox } from '@/components/ui/Input';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
@@ -9,6 +10,7 @@ import { Alert } from '@/components/ui/Alert';
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -21,20 +23,8 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, rememberMe }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
+      await login(email, password, rememberMe);
+      // The useAuth login function will handle user state and redirect
       router.push('/admin/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -48,7 +38,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <h1 className="text-2xl font-bold text-center">Admin Login</h1>
+            <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">Admin Login</h1>
           </CardHeader>
           <CardBody>
             <form onSubmit={handleSubmit} className="space-y-4">

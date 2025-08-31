@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { validateResetToken, markResetTokenAsUsed } from '@/lib/auth/reset-token';
 import { hashPassword } from '@/lib/auth/password';
-import { invalidateAllUserSessions } from '@/lib/auth/session';
+import { terminateAllUserSessions } from '@/lib/auth/session-manager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
     await markResetTokenAsUsed(token);
 
     // Invalidate all existing sessions for security
-    await invalidateAllUserSessions(userId);
+    // Since this is password reset, we terminate ALL sessions
+    await terminateAllUserSessions(userId);
 
     return NextResponse.json({
       success: true,

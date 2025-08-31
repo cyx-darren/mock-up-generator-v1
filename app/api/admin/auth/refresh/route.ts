@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { verifyRefreshToken, generateAccessToken } from '@/lib/auth/jwt';
 import { getAuthTokens, AUTH_COOKIES } from '@/lib/auth/cookies';
-import { getSession, updateSessionActivity } from '@/lib/auth/session';
+import { validateAndRefreshSession } from '@/lib/auth/session-manager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,11 +25,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check session in database
-    const session = await getSession(sessionId);
-    if (!session || !session.isActive || session.expiresAt < new Date()) {
+    // Validate and refresh session with timeout detection
+    const sessionValidation = await validateAndRefreshSession(sessionId);
+    if (!sessionValidation.isValid) {
+      let errorMessage = 'Session expired or invalid';
+      if (sessionValidation.reason === 'idle_timeout') {
+        errorMessage = 'Session expired due to inactivity';
+      } else if (sessionValidation.reason === 'expired') {
+        errorMessage = 'Session has expired';
+      }
+      
       return NextResponse.json(
-        { error: 'Session expired or invalid' },
+        { 
+          error: errorMessage,
+          reason: sessionValidation.reason,
+          showWarning: false
+        },
         { status: 401 }
       );
     }
@@ -39,7 +50,7 @@ export async function POST(request: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from('admin_users')
       .select('id, email, role')
-      .eq('id', session.userId)
+      .eq('id', refreshPayload.userId)
       .single();
 
     if (userError || !user) {
@@ -57,8 +68,7 @@ export async function POST(request: NextRequest) {
       sessionId: sessionId,
     });
 
-    // Update session activity
-    await updateSessionActivity(sessionId);
+    // Session activity is automatically updated by validateAndRefreshSession
 
     // Create response with new access token
     const response = NextResponse.json({

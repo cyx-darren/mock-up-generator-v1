@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { cn } from '@/lib/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -19,12 +19,13 @@ export const Input: React.FC<InputProps> = ({
   id,
   ...props
 }) => {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const inputId = id || generatedId;
 
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
           {label}
         </label>
       )}
@@ -37,7 +38,9 @@ export const Input: React.FC<InputProps> = ({
         <input
           id={inputId}
           className={cn(
-            'w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0 dark:bg-gray-800 dark:text-gray-100',
+            'w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-0',
+            'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
+            'placeholder:text-gray-500 dark:placeholder:text-gray-400',
             leftIcon && 'pl-10',
             rightIcon && 'pr-10',
             error
@@ -73,12 +76,13 @@ export const Textarea: React.FC<TextareaProps> = ({
   id,
   ...props
 }) => {
-  const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const textareaId = id || generatedId;
 
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={textareaId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor={textareaId} className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
           {label}
         </label>
       )}
@@ -115,12 +119,13 @@ export const Select: React.FC<SelectProps> = ({
   id,
   ...props
 }) => {
-  const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const selectId = id || generatedId;
 
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor={selectId} className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
           {label}
         </label>
       )}
@@ -159,7 +164,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   id,
   ...props
 }) => {
-  const checkboxId = id || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const checkboxId = id || generatedId;
 
   return (
     <div className="flex items-start">
@@ -177,7 +183,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       </div>
       {label && (
         <div className="ml-3 text-sm">
-          <label htmlFor={checkboxId} className="font-medium text-gray-700 dark:text-gray-300">
+          <label htmlFor={checkboxId} className="font-medium text-gray-900 dark:text-gray-300">
             {label}
           </label>
         </div>

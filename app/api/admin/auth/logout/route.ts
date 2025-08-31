@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthTokens, clearAuthCookies } from '@/lib/auth/cookies';
-import { invalidateSession } from '@/lib/auth/session';
+import { terminateSession } from '@/lib/auth/session-manager';
+import { verifyAccessToken } from '@/lib/auth/jwt';
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId } = getAuthTokens(request);
+    const { accessToken, sessionId } = getAuthTokens(request);
+    let userId: string | undefined;
+
+    // Get user ID from token for additional security
+    if (accessToken) {
+      try {
+        const tokenPayload = verifyAccessToken(accessToken);
+        userId = tokenPayload.userId;
+      } catch (error) {
+        // Token might be expired, but we can still terminate session by ID
+      }
+    }
 
     if (sessionId) {
-      // Invalidate session in database
-      await invalidateSession(sessionId);
+      // Terminate session in database with optional user ID for security
+      await terminateSession(sessionId, userId);
     }
 
     // Create response and clear cookies

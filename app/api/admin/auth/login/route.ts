@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { verifyPassword } from '@/lib/auth/password';
 import { generateTokens } from '@/lib/auth/jwt';
 import { setAuthCookies } from '@/lib/auth/cookies';
-import { createSession } from '@/lib/auth/session';
+import { createManagedSession, parseDeviceInfo } from '@/lib/auth/session-manager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,13 +58,15 @@ export async function POST(request: NextRequest) {
       '127.0.0.1';
     const userAgent = request.headers.get('user-agent') || 'Unknown';
 
-    // Create session in database
-    await createSession(
+    // Create managed session with advanced features
+    const deviceInfo = parseDeviceInfo(userAgent);
+    await createManagedSession(
       user.id,
       tokens.sessionId,
-      tokens.expiresAt,
       ipAddress,
-      userAgent
+      userAgent,
+      rememberMe,
+      deviceInfo
     );
 
     // Update last login
