@@ -102,6 +102,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDuplicate = async (productId: string) => {
+    if (!can('canCreateProducts')) {
+      setError('You don\'t have permission to create products');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/admin/products/${productId}/duplicate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to duplicate product');
+      }
+
+      await fetchProducts();
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to duplicate product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleProductSelection = (productId: string) => {
     setSelectedProducts(prev =>
       prev.includes(productId)
@@ -405,6 +435,16 @@ export default function AdminDashboard() {
                               <Link href={`/admin/products/${product.id}/edit`}>
                                 <Button variant="outline" size="sm">Edit</Button>
                               </Link>
+                            )}
+                            {can('canCreateProducts') && (
+                              <Button 
+                                variant="secondary" 
+                                size="sm" 
+                                onClick={() => handleDuplicate(product.id)}
+                                disabled={loading}
+                              >
+                                Duplicate
+                              </Button>
                             )}
                             {can('canDeleteProducts') && (
                               <Button 
