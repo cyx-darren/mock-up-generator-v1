@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Input, Checkbox } from '@/components/ui/Input';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
 
@@ -11,6 +11,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export default function AdminLoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       const data = await response.json();
@@ -71,9 +72,25 @@ export default function AdminLoginPage() {
                 placeholder="Enter your password"
               />
 
+              <Checkbox
+                label="Remember me for 30 days"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+
               <Button type="submit" isLoading={isLoading} className="w-full">
                 Sign In
               </Button>
+
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => router.push('/admin/forgot-password')}
+                  className="text-sm text-blue-600 hover:text-blue-500 underline"
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </form>
           </CardBody>
         </Card>
