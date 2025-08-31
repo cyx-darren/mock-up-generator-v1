@@ -6,6 +6,8 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
+import { DashboardStats } from '@/components/admin/DashboardStats';
+import { UsageCharts } from '@/components/admin/UsageCharts';
 import Link from 'next/link';
 
 interface Product {
@@ -28,6 +30,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchProducts = async () => {
     try {
@@ -206,78 +209,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <Card>
-              <CardBody>
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Products</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{products.length}</p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardBody>
-                <div className="flex items-center">
-                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Products</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {products.filter(p => p.status === 'active').length}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardBody>
-                <div className="flex items-center">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Inactive Products</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {products.filter(p => p.status === 'inactive').length}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardBody>
-                <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Categories</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {new Set(products.map(p => p.category)).size}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
+          {/* Enhanced Dashboard Statistics */}
+          <DashboardStats refreshTrigger={refreshTrigger} />
         </div>
 
         {/* Products Management */}
@@ -434,6 +367,11 @@ export default function AdminDashboard() {
                             {can('canEditProducts') && (
                               <Link href={`/admin/products/${product.id}/edit`}>
                                 <Button variant="outline" size="sm">Edit</Button>
+                              </Link>
+                            )}
+                            {can('canEditProducts') && (
+                              <Link href={`/admin/products/${product.id}/constraints`}>
+                                <Button variant="outline" size="sm">Constraints</Button>
                               </Link>
                             )}
                             {can('canCreateProducts') && (
