@@ -13,6 +13,7 @@ interface Product {
   sku: string;
   thumbnail_url?: string;
   primary_image_url?: string;
+  additional_images?: string[];
   tags: string[];
   horizontal_enabled: boolean;
   vertical_enabled: boolean;

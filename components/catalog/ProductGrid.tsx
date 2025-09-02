@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ProductCard } from './ProductCard';
 import { ProductGridSkeleton } from './ProductCardSkeleton';
+import { ProductDetailModal } from './ProductDetailModal';
 
 interface Product {
   id: string;
@@ -14,6 +15,7 @@ interface Product {
   sku: string;
   thumbnail_url?: string;
   primary_image_url?: string;
+  additional_images?: string[];
   tags: string[];
   horizontal_enabled: boolean;
   vertical_enabled: boolean;
@@ -38,6 +40,8 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>('name');
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Initialize state from URL params
   useEffect(() => {
@@ -124,7 +128,18 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
   }, [fetchProducts]);
 
   const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleModalProductSelect = (product: Product) => {
     onProductSelect?.(product);
+    handleModalClose();
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
   };
 
   const handleRetry = () => {
@@ -330,6 +345,14 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
           </div>
         </div>
       )}
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        product={selectedProduct}
+        onSelectProduct={handleModalProductSelect}
+      />
     </div>
   );
 }
