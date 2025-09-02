@@ -7,11 +7,7 @@ interface SpinnerProps {
   className?: string;
 }
 
-export const Spinner: React.FC<SpinnerProps> = ({ 
-  size = 'md', 
-  color = 'primary',
-  className 
-}) => {
+export const Spinner: React.FC<SpinnerProps> = ({ size = 'md', color = 'primary', className }) => {
   const sizes = {
     xs: 'h-3 w-3',
     sm: 'h-4 w-4',
@@ -34,14 +30,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
       fill="none"
       viewBox="0 0 24 24"
     >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"
@@ -59,19 +48,17 @@ interface LoadingProps {
   className?: string;
 }
 
-export const Loading: React.FC<LoadingProps> = ({ 
+export const Loading: React.FC<LoadingProps> = ({
   size = 'md',
   text,
   fullScreen = false,
   overlay = false,
-  className 
+  className,
 }) => {
   const content = (
     <div className={cn('flex flex-col items-center justify-center', className)}>
       <Spinner size={size} />
-      {text && (
-        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">{text}</p>
-      )}
+      {text && <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">{text}</p>}
     </div>
   );
 
@@ -166,9 +153,7 @@ export const Progress: React.FC<ProgressProps> = ({
     <div className={cn('w-full', className)}>
       {showLabel && (
         <div className="flex justify-between mb-1">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Progress
-          </span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {Math.round(percentage)}%
           </span>

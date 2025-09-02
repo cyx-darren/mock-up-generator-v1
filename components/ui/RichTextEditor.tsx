@@ -15,7 +15,7 @@ interface RichTextEditorProps {
 export function RichTextEditor({
   value,
   onChange,
-  placeholder = "Start typing...",
+  placeholder = 'Start typing...',
   className,
   minHeight = '200px',
   disabled = false,
@@ -66,16 +66,16 @@ export function RichTextEditor({
 
   const execCommand = (command: string, value?: string) => {
     if (disabled) return;
-    
+
     document.execCommand(command, false, value);
-    
+
     // Update active formats
     setActiveFormats({
       bold: document.queryCommandState('bold'),
       italic: document.queryCommandState('italic'),
       underline: document.queryCommandState('underline'),
     });
-    
+
     if (editorRef.current) {
       editorRef.current.focus();
       onChange(editorRef.current.innerHTML);
@@ -84,7 +84,7 @@ export function RichTextEditor({
 
   const handleSelectionChange = () => {
     if (disabled) return;
-    
+
     setActiveFormats({
       bold: document.queryCommandState('bold'),
       italic: document.queryCommandState('italic'),
@@ -94,7 +94,7 @@ export function RichTextEditor({
 
   const insertList = (type: 'ul' | 'ol') => {
     if (disabled) return;
-    
+
     if (type === 'ul') {
       execCommand('insertUnorderedList');
     } else {
@@ -107,16 +107,16 @@ export function RichTextEditor({
     execCommand('formatBlock', `<${tag}>`);
   };
 
-  const ToolbarButton = ({ 
-    onClick, 
-    active, 
-    children, 
-    title 
-  }: { 
-    onClick: () => void; 
-    active?: boolean; 
-    children: React.ReactNode; 
-    title: string 
+  const ToolbarButton = ({
+    onClick,
+    active,
+    children,
+    title,
+  }: {
+    onClick: () => void;
+    active?: boolean;
+    children: React.ReactNode;
+    title: string;
   }) => (
     <button
       type="button"
@@ -147,7 +147,7 @@ export function RichTextEditor({
         >
           <strong>B</strong>
         </ToolbarButton>
-        
+
         <ToolbarButton
           onClick={() => execCommand('italic')}
           active={activeFormats.italic}
@@ -155,7 +155,7 @@ export function RichTextEditor({
         >
           <em>I</em>
         </ToolbarButton>
-        
+
         <ToolbarButton
           onClick={() => execCommand('underline')}
           active={activeFormats.underline}
@@ -167,34 +167,22 @@ export function RichTextEditor({
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
         {/* List Buttons */}
-        <ToolbarButton
-          onClick={() => insertList('ul')}
-          title="Bullet List"
-        >
+        <ToolbarButton onClick={() => insertList('ul')} title="Bullet List">
           <span className="text-sm">•</span>
         </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => insertList('ol')}
-          title="Numbered List"
-        >
+
+        <ToolbarButton onClick={() => insertList('ol')} title="Numbered List">
           <span className="text-sm">1.</span>
         </ToolbarButton>
 
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
 
         {/* Heading Buttons */}
-        <ToolbarButton
-          onClick={() => formatBlock('h3')}
-          title="Heading 3"
-        >
+        <ToolbarButton onClick={() => formatBlock('h3')} title="Heading 3">
           <span className="text-sm font-semibold">H3</span>
         </ToolbarButton>
-        
-        <ToolbarButton
-          onClick={() => formatBlock('p')}
-          title="Paragraph"
-        >
+
+        <ToolbarButton onClick={() => formatBlock('p')} title="Paragraph">
           <span className="text-sm">P</span>
         </ToolbarButton>
       </div>
@@ -239,7 +227,8 @@ export function RichTextEditor({
         [contenteditable] p {
           margin: 0.5rem 0;
         }
-        [contenteditable] ul, [contenteditable] ol {
+        [contenteditable] ul,
+        [contenteditable] ol {
           margin: 0.5rem 0;
           padding-left: 1.5rem;
         }

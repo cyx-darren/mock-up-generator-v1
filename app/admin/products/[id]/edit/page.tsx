@@ -51,8 +51,8 @@ export default function EditProductPage() {
       <div className="min-h-screen flex items-center justify-center">
         <Card>
           <CardBody>
-            <Alert 
-              type="error" 
+            <Alert
+              type="error"
               message={`You don't have permission to edit products. Current role: ${user?.role || 'No role'}`}
             />
             <div className="mt-4">
@@ -77,7 +77,7 @@ export default function EditProductPage() {
     try {
       setFetching(true);
       const response = await fetch(`/api/admin/products/${params.id}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           setError('Product not found');
@@ -89,7 +89,7 @@ export default function EditProductPage() {
       const data = await response.json();
       const productData = data.product;
       setProduct(productData);
-      
+
       // Populate form with existing data
       setFormData({
         name: productData.name || '',
@@ -102,7 +102,6 @@ export default function EditProductPage() {
         thumbnail_url: productData.thumbnail_url || '',
         primary_image_url: productData.primary_image_url || '',
       });
-
     } catch (error) {
       console.error('Fetch product error:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch product');
@@ -111,11 +110,13 @@ export default function EditProductPage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -136,7 +137,12 @@ export default function EditProductPage() {
       const submitData = {
         ...formData,
         price: formData.price ? parseFloat(formData.price) : 0,
-        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+        tags: formData.tags
+          ? formData.tags
+              .split(',')
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+          : [],
       };
 
       const response = await fetch(`/api/admin/products/${params.id}`, {
@@ -154,7 +160,7 @@ export default function EditProductPage() {
 
       const data = await response.json();
       setSuccess('Product updated successfully!');
-      
+
       // Update product state with new data
       setProduct(data.product);
 
@@ -162,7 +168,6 @@ export default function EditProductPage() {
       setTimeout(() => {
         router.push('/admin/dashboard');
       }, 2000);
-
     } catch (error) {
       console.error('Update product error:', error);
       setError(error instanceof Error ? error.message : 'Failed to update product');
@@ -210,12 +215,8 @@ export default function EditProductPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Edit Product
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Update product information
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Product</h1>
+              <p className="text-gray-600 dark:text-gray-400">Update product information</p>
             </div>
             <Link href="/admin/dashboard">
               <Button variant="outline">Back to Dashboard</Button>
@@ -228,13 +229,9 @@ export default function EditProductPage() {
             <h2 className="text-xl font-semibold">Product Details</h2>
           </CardHeader>
           <CardBody>
-            {error && (
-              <Alert type="error" message={error} className="mb-6" />
-            )}
-            
-            {success && (
-              <Alert type="success" message={success} className="mb-6" />
-            )}
+            {error && <Alert type="error" message={error} className="mb-6" />}
+
+            {success && <Alert type="success" message={success} className="mb-6" />}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
@@ -353,7 +350,7 @@ export default function EditProductPage() {
               {/* Image URLs */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Images</h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Thumbnail URL
@@ -388,10 +385,7 @@ export default function EditProductPage() {
                     Cancel
                   </Button>
                 </Link>
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                >
+                <Button type="submit" disabled={loading}>
                   {loading ? 'Updating...' : 'Update Product'}
                 </Button>
               </div>

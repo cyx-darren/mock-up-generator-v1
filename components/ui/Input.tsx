@@ -25,7 +25,10 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
+        <label
+          htmlFor={inputId}
+          className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1"
+        >
           {label}
         </label>
       )}
@@ -57,7 +60,9 @@ export const Input: React.FC<InputProps> = ({
         )}
       </div>
       {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {helperText && !error && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>}
+      {helperText && !error && (
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+      )}
     </div>
   );
 };
@@ -82,7 +87,10 @@ export const Textarea: React.FC<TextareaProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={textareaId} className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
+        <label
+          htmlFor={textareaId}
+          className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1"
+        >
           {label}
         </label>
       )}
@@ -98,7 +106,9 @@ export const Textarea: React.FC<TextareaProps> = ({
         {...props}
       />
       {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {helperText && !error && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>}
+      {helperText && !error && (
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+      )}
     </div>
   );
 };
@@ -125,7 +135,10 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
+        <label
+          htmlFor={selectId}
+          className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1"
+        >
           {label}
         </label>
       )}
@@ -147,7 +160,9 @@ export const Select: React.FC<SelectProps> = ({
         ))}
       </select>
       {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {helperText && !error && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>}
+      {helperText && !error && (
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+      )}
     </div>
   );
 };
@@ -157,13 +172,7 @@ interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-export const Checkbox: React.FC<CheckboxProps> = ({
-  label,
-  error,
-  className,
-  id,
-  ...props
-}) => {
+export const Checkbox: React.FC<CheckboxProps> = ({ label, error, className, id, ...props }) => {
   const generatedId = useId();
   const checkboxId = id || generatedId;
 

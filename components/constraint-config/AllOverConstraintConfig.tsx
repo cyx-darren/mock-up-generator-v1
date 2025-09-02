@@ -35,15 +35,33 @@ export function AllOverConstraintConfig({
   onCancel,
 }: AllOverConstraintConfigProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [constraintImage, setConstraintImage] = useState<string>(existingConstraint?.constraintImageUrl || '');
-  const [patternRepeatX, setPatternRepeatX] = useState<number>(existingConstraint?.patternRepeatX || 3);
-  const [patternRepeatY, setPatternRepeatY] = useState<number>(existingConstraint?.patternRepeatY || 4);
-  const [minPatternWidth, setMinPatternWidth] = useState<number>(existingConstraint?.minPatternWidth || 20);
-  const [minPatternHeight, setMinPatternHeight] = useState<number>(existingConstraint?.minPatternHeight || 20);
-  const [maxPatternWidth, setMaxPatternWidth] = useState<number>(existingConstraint?.maxPatternWidth || 200);
-  const [maxPatternHeight, setMaxPatternHeight] = useState<number>(existingConstraint?.maxPatternHeight || 200);
-  const [patternSpacing, setPatternSpacing] = useState<number>(existingConstraint?.patternSpacing || 10);
-  const [guidelinesText, setGuidelinesText] = useState<string>(existingConstraint?.guidelinesText || '');
+  const [constraintImage, setConstraintImage] = useState<string>(
+    existingConstraint?.constraintImageUrl || ''
+  );
+  const [patternRepeatX, setPatternRepeatX] = useState<number>(
+    existingConstraint?.patternRepeatX || 3
+  );
+  const [patternRepeatY, setPatternRepeatY] = useState<number>(
+    existingConstraint?.patternRepeatY || 4
+  );
+  const [minPatternWidth, setMinPatternWidth] = useState<number>(
+    existingConstraint?.minPatternWidth || 20
+  );
+  const [minPatternHeight, setMinPatternHeight] = useState<number>(
+    existingConstraint?.minPatternHeight || 20
+  );
+  const [maxPatternWidth, setMaxPatternWidth] = useState<number>(
+    existingConstraint?.maxPatternWidth || 200
+  );
+  const [maxPatternHeight, setMaxPatternHeight] = useState<number>(
+    existingConstraint?.maxPatternHeight || 200
+  );
+  const [patternSpacing, setPatternSpacing] = useState<number>(
+    existingConstraint?.patternSpacing || 10
+  );
+  const [guidelinesText, setGuidelinesText] = useState<string>(
+    existingConstraint?.guidelinesText || ''
+  );
   const [isEnabled, setIsEnabled] = useState<boolean>(existingConstraint?.isEnabled || false);
   const [patternAnalysis, setPatternAnalysis] = useState<{
     totalPixels: number;
@@ -69,7 +87,7 @@ export function AllOverConstraintConfig({
 
     const img = document.createElement('img');
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
@@ -168,7 +186,6 @@ export function AllOverConstraintConfig({
       };
 
       await onSave(constraintData);
-      
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to save constraint');
     } finally {
@@ -199,7 +216,7 @@ export function AllOverConstraintConfig({
               maxFileSize={10 * 1024 * 1024}
               onUploadProgress={setUploadProgress}
             />
-            
+
             {constraintImage && (
               <div className="space-y-4">
                 <div className="relative w-full max-w-md mx-auto">
@@ -211,18 +228,24 @@ export function AllOverConstraintConfig({
                     className="w-full h-auto border border-gray-300 dark:border-gray-600 rounded-lg"
                   />
                 </div>
-                
+
                 {patternAnalysis && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Pattern Analysis</h4>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                      Pattern Analysis
+                    </h4>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <span className="text-blue-700 dark:text-blue-300">Pattern Coverage:</span>
-                        <div className="font-medium">{patternAnalysis.coveragePercentage.toFixed(1)}%</div>
+                        <div className="font-medium">
+                          {patternAnalysis.coveragePercentage.toFixed(1)}%
+                        </div>
                       </div>
                       <div>
                         <span className="text-blue-700 dark:text-blue-300">Pattern Pixels:</span>
-                        <div className="font-medium">{patternAnalysis.totalPixels.toLocaleString()}</div>
+                        <div className="font-medium">
+                          {patternAnalysis.totalPixels.toLocaleString()}
+                        </div>
                       </div>
                       <div>
                         <span className="text-blue-700 dark:text-blue-300">Est. Repeats:</span>
@@ -430,11 +453,7 @@ export function AllOverConstraintConfig({
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button 
-          variant="primary" 
-          onClick={handleSave} 
-          disabled={loading}
-        >
+        <Button variant="primary" onClick={handleSave} disabled={loading}>
           {loading ? 'Saving...' : 'Save Configuration'}
         </Button>
       </div>

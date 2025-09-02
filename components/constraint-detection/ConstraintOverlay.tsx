@@ -34,12 +34,21 @@ export function ConstraintOverlay({
     if (imageUrl && canvasRef.current && imageRef.current) {
       drawOverlay();
     }
-  }, [imageUrl, detectedArea, validation, showBounds, showCentroid, showContours, showGrid, overlayOpacity]);
+  }, [
+    imageUrl,
+    detectedArea,
+    validation,
+    showBounds,
+    showCentroid,
+    showContours,
+    showGrid,
+    overlayOpacity,
+  ]);
 
   const drawOverlay = () => {
     const canvas = canvasRef.current;
     const img = imageRef.current;
-    
+
     if (!canvas || !img) return;
 
     const ctx = canvas.getContext('2d');
@@ -100,7 +109,7 @@ export function ConstraintOverlay({
     ctx.font = `${Math.max(16, width / 30)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
+
     const message = 'No green areas detected';
     ctx.fillText(message, width / 2, height / 2);
 
@@ -111,7 +120,7 @@ export function ConstraintOverlay({
 
   const drawGrid = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const gridSize = Math.max(20, Math.min(width, height) / 20);
-    
+
     ctx.strokeStyle = 'rgba(128, 128, 128, 0.3)';
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 2]);
@@ -136,12 +145,12 @@ export function ConstraintOverlay({
   };
 
   const drawBounds = (
-    ctx: CanvasRenderingContext2D, 
+    ctx: CanvasRenderingContext2D,
     bounds: { x: number; y: number; width: number; height: number },
     isValid?: boolean
   ) => {
     const color = isValid === false ? '#FF4444' : '#00FF00';
-    
+
     // Draw bounding rectangle
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
@@ -151,7 +160,7 @@ export function ConstraintOverlay({
     // Draw corner markers
     const cornerSize = 15;
     ctx.fillStyle = color;
-    
+
     // Top-left corner
     ctx.fillRect(bounds.x - 2, bounds.y - 2, cornerSize, 4);
     ctx.fillRect(bounds.x - 2, bounds.y - 2, 4, cornerSize);
@@ -165,8 +174,18 @@ export function ConstraintOverlay({
     ctx.fillRect(bounds.x - 2, bounds.y + bounds.height - cornerSize + 2, 4, cornerSize);
 
     // Bottom-right corner
-    ctx.fillRect(bounds.x + bounds.width - cornerSize + 2, bounds.y + bounds.height - 2, cornerSize, 4);
-    ctx.fillRect(bounds.x + bounds.width - 2, bounds.y + bounds.height - cornerSize + 2, 4, cornerSize);
+    ctx.fillRect(
+      bounds.x + bounds.width - cornerSize + 2,
+      bounds.y + bounds.height - 2,
+      cornerSize,
+      4
+    );
+    ctx.fillRect(
+      bounds.x + bounds.width - 2,
+      bounds.y + bounds.height - cornerSize + 2,
+      4,
+      cornerSize
+    );
   };
 
   const drawUsableArea = (
@@ -186,7 +205,10 @@ export function ConstraintOverlay({
     ctx.setLineDash([]);
   };
 
-  const drawContours = (ctx: CanvasRenderingContext2D, contours: Array<{ x: number; y: number }[]>) => {
+  const drawContours = (
+    ctx: CanvasRenderingContext2D,
+    contours: Array<{ x: number; y: number }[]>
+  ) => {
     ctx.strokeStyle = '#FF8800';
     ctx.lineWidth = 2;
     ctx.setLineDash([]);
@@ -196,11 +218,11 @@ export function ConstraintOverlay({
 
       ctx.beginPath();
       ctx.moveTo(contour[0].x, contour[0].y);
-      
+
       for (let i = 1; i < contour.length; i++) {
         ctx.lineTo(contour[i].x, contour[i].y);
       }
-      
+
       ctx.closePath();
       ctx.stroke();
     });
@@ -208,7 +230,7 @@ export function ConstraintOverlay({
 
   const drawCentroid = (ctx: CanvasRenderingContext2D, centroid: { x: number; y: number }) => {
     const size = 8;
-    
+
     // Draw crosshair
     ctx.strokeStyle = '#FF0088';
     ctx.lineWidth = 2;
@@ -307,11 +329,12 @@ export function ConstraintOverlay({
     const centerY = y + indicatorSize / 2;
     const radius = indicatorSize / 2 - 15;
     const startAngle = -Math.PI / 2;
-    const endAngle = startAngle + (quality * 2 * Math.PI);
+    const endAngle = startAngle + quality * 2 * Math.PI;
 
     // Determine color based on quality
     let color = '#FF4444'; // Poor
-    if (quality > 0.7) color = '#44FF44'; // Good
+    if (quality > 0.7)
+      color = '#44FF44'; // Good
     else if (quality > 0.4) color = '#FFAA44'; // Fair
 
     ctx.strokeStyle = color;

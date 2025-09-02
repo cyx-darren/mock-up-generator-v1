@@ -44,8 +44,18 @@ export default function ForgotPasswordPage() {
         <Card className="w-full max-w-md p-8">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              <svg
+                className="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h1>
@@ -66,10 +76,7 @@ export default function ForgotPasswordPage() {
               >
                 Try Again
               </Button>
-              <Button
-                onClick={() => window.location.href = '/admin/login'}
-                className="w-full"
-              >
+              <Button onClick={() => (window.location.href = '/admin/login')} className="w-full">
                 Back to Login
               </Button>
             </div>
@@ -108,18 +115,14 @@ export default function ForgotPasswordPage() {
             </div>
           )}
 
-          <Button
-            type="submit"
-            disabled={isLoading || !email}
-            className="w-full"
-          >
+          <Button type="submit" disabled={isLoading || !email} className="w-full">
             {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
 
           <div className="text-center">
             <button
               type="button"
-              onClick={() => window.location.href = '/admin/login'}
+              onClick={() => (window.location.href = '/admin/login')}
               className="text-sm text-blue-600 hover:text-blue-500"
             >
               Back to Login

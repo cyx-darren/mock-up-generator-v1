@@ -14,18 +14,22 @@ interface UsageChartsProps {
   averageSessionDuration: string;
 }
 
-export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDuration }: UsageChartsProps) {
+export function UsageCharts({
+  dailyActivity,
+  peakUsageTime,
+  averageSessionDuration,
+}: UsageChartsProps) {
   // Calculate max values for scaling
-  const maxProducts = Math.max(...dailyActivity.map(d => d.products));
-  const maxConstraints = Math.max(...dailyActivity.map(d => d.constraints));
-  const maxUsers = Math.max(...dailyActivity.map(d => d.users));
+  const maxProducts = Math.max(...dailyActivity.map((d) => d.products));
+  const maxConstraints = Math.max(...dailyActivity.map((d) => d.constraints));
+  const maxUsers = Math.max(...dailyActivity.map((d) => d.users));
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -60,44 +64,50 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
             {dailyActivity.map((day, index) => (
               <div key={day.date} className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {formatDate(day.date)}
-                  </span>
+                  <span className="text-gray-600 dark:text-gray-400">{formatDate(day.date)}</span>
                   <span className="text-gray-500 dark:text-gray-500">
                     {day.products + day.constraints + day.users} total
                   </span>
                 </div>
-                
+
                 {/* Products Bar */}
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
                     <div className="w-16 text-xs text-gray-500 dark:text-gray-400">Products</div>
                     <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${maxProducts > 0 ? (day.products / maxProducts) * 100 : 0}%` }}
+                        style={{
+                          width: `${maxProducts > 0 ? (day.products / maxProducts) * 100 : 0}%`,
+                        }}
                       ></div>
                     </div>
-                    <div className="w-8 text-xs text-gray-600 dark:text-gray-400">{day.products}</div>
+                    <div className="w-8 text-xs text-gray-600 dark:text-gray-400">
+                      {day.products}
+                    </div>
                   </div>
-                  
+
                   {/* Constraints Bar */}
                   <div className="flex items-center space-x-2">
                     <div className="w-16 text-xs text-gray-500 dark:text-gray-400">Constraints</div>
                     <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${maxConstraints > 0 ? (day.constraints / maxConstraints) * 100 : 0}%` }}
+                        style={{
+                          width: `${maxConstraints > 0 ? (day.constraints / maxConstraints) * 100 : 0}%`,
+                        }}
                       ></div>
                     </div>
-                    <div className="w-8 text-xs text-gray-600 dark:text-gray-400">{day.constraints}</div>
+                    <div className="w-8 text-xs text-gray-600 dark:text-gray-400">
+                      {day.constraints}
+                    </div>
                   </div>
-                  
+
                   {/* Users Bar */}
                   <div className="flex items-center space-x-2">
                     <div className="w-16 text-xs text-gray-500 dark:text-gray-400">Users</div>
                     <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-purple-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${maxUsers > 0 ? (day.users / maxUsers) * 100 : 0}%` }}
                       ></div>
@@ -115,9 +125,7 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Usage Insights
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Usage Insights</h3>
           </CardHeader>
           <CardBody>
             <div className="space-y-4">
@@ -126,9 +134,7 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
                   <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {peakUsageTime}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Peak Usage Time
-                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Peak Usage Time</div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -139,11 +145,9 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
                   </div>
                 </div>
               </div>
-              
+
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Weekly Totals
-                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Weekly Totals</div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -172,9 +176,7 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
         {/* Activity Heatmap */}
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Activity Trends
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Activity Trends</h3>
           </CardHeader>
           <CardBody>
             <div className="space-y-4">
@@ -182,34 +184,38 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
               <div className="grid grid-cols-7 gap-1">
                 {dailyActivity.map((day, index) => {
                   const totalActivity = day.products + day.constraints + day.users;
-                  const maxTotalActivity = Math.max(...dailyActivity.map(d => d.products + d.constraints + d.users));
-                  const intensity = maxTotalActivity > 0 ? (totalActivity / maxTotalActivity) : 0;
-                  
+                  const maxTotalActivity = Math.max(
+                    ...dailyActivity.map((d) => d.products + d.constraints + d.users)
+                  );
+                  const intensity = maxTotalActivity > 0 ? totalActivity / maxTotalActivity : 0;
+
                   return (
                     <div key={day.date} className="text-center">
-                      <div 
+                      <div
                         className="w-8 h-8 rounded mx-auto mb-1 flex items-center justify-center text-xs font-medium transition-all duration-200 hover:scale-110"
                         style={{
                           backgroundColor: `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`,
-                          color: intensity > 0.5 ? '#ffffff' : '#374151'
+                          color: intensity > 0.5 ? '#ffffff' : '#374151',
                         }}
                         title={`${formatDate(day.date)}: ${totalActivity} activities`}
                       >
                         {totalActivity}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 1)}
+                        {new Date(day.date)
+                          .toLocaleDateString('en-US', { weekday: 'short' })
+                          .slice(0, 1)}
                       </div>
                     </div>
                   );
                 })}
               </div>
-              
+
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>Less</span>
                 <div className="flex space-x-1">
                   {[0.2, 0.4, 0.6, 0.8, 1.0].map((opacity) => (
-                    <div 
+                    <div
                       key={opacity}
                       className="w-3 h-3 rounded"
                       style={{ backgroundColor: `rgba(59, 130, 246, ${opacity})` }}
@@ -234,8 +240,15 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
-                {((dailyActivity.reduce((sum, day) => sum + day.constraints, 0) / 
-                   Math.max(dailyActivity.reduce((sum, day) => sum + day.products, 0), 1)) * 100).toFixed(1)}%
+                {(
+                  (dailyActivity.reduce((sum, day) => sum + day.constraints, 0) /
+                    Math.max(
+                      dailyActivity.reduce((sum, day) => sum + day.products, 0),
+                      1
+                    )) *
+                  100
+                ).toFixed(1)}
+                %
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Constraint Coverage
@@ -244,10 +257,10 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
                 Constraints per product ratio
               </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400 mb-2">
-                {Math.max(...dailyActivity.map(d => d.products + d.constraints + d.users))}
+                {Math.max(...dailyActivity.map((d) => d.products + d.constraints + d.users))}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Peak Daily Activity
@@ -256,14 +269,17 @@ export function UsageCharts({ dailyActivity, peakUsageTime, averageSessionDurati
                 Highest single day total
               </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                {(dailyActivity.reduce((sum, day) => sum + day.products + day.constraints + day.users, 0) / 7).toFixed(1)}
+                {(
+                  dailyActivity.reduce(
+                    (sum, day) => sum + day.products + day.constraints + day.users,
+                    0
+                  ) / 7
+                ).toFixed(1)}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Daily Average
-              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Daily Average</div>
               <div className="text-xs text-gray-500 dark:text-gray-500">
                 Average activities per day
               </div>

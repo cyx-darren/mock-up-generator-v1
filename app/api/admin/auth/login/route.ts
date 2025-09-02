@@ -10,10 +10,7 @@ export async function POST(request: NextRequest) {
     const { email, password, rememberMe = false } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     const supabase = createClient();
@@ -26,19 +23,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     // Verify password
     const isValidPassword = await verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     // Generate tokens
@@ -52,9 +43,10 @@ export async function POST(request: NextRequest) {
     );
 
     // Get client info
-    const ipAddress = request.ip || 
-      request.headers.get('x-forwarded-for') || 
-      request.headers.get('x-real-ip') || 
+    const ipAddress =
+      request.ip ||
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
       '127.0.0.1';
     const userAgent = request.headers.get('user-agent') || 'Unknown';
 
@@ -89,12 +81,8 @@ export async function POST(request: NextRequest) {
     setAuthCookies(response, tokens);
 
     return response;
-
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

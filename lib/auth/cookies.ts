@@ -43,14 +43,14 @@ export function setAuthCookies(
 }
 
 export function clearAuthCookies(response: NextResponse) {
-  Object.values(AUTH_COOKIES).forEach(cookieName => {
+  Object.values(AUTH_COOKIES).forEach((cookieName) => {
     response.cookies.delete(cookieName);
   });
 }
 
 export function getAuthTokens(request?: NextRequest) {
   const cookieStore = request ? request.cookies : cookies();
-  
+
   return {
     accessToken: cookieStore.get(AUTH_COOKIES.ACCESS_TOKEN)?.value,
     refreshToken: cookieStore.get(AUTH_COOKIES.REFRESH_TOKEN)?.value,

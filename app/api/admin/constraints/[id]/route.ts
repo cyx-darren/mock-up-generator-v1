@@ -3,10 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { verifyAdminSession } from '@/lib/auth/admin-session';
 
 // PUT /api/admin/constraints/[id]
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await verifyAdminSession(request);
     if (!session.success) {
@@ -20,7 +17,7 @@ export async function PUT(
     }
 
     const supabase = createClient();
-    const constraintId = params.id;
+    const { id: constraintId } = await params;
     const body = await request.json();
 
     const {
@@ -35,16 +32,18 @@ export async function PUT(
       defaultYPosition,
       guidelinesText,
       patternSettings,
-      isEnabled
+      isEnabled,
     } = body;
 
     // First, get the existing constraint to get the old values and verify it exists
     const { data: existingConstraint, error: fetchError } = await supabase
       .from('placement_constraints')
-      .select(`
+      .select(
+        `
         *,
         gift_items(id, name)
-      `)
+      `
+      )
       .eq('id', constraintId)
       .single();
 
@@ -54,12 +53,13 @@ export async function PUT(
 
     // Prepare update data
     const updateData: any = {
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     if (constraintImageUrl !== undefined) updateData.constraint_image_url = constraintImageUrl;
     if (detectedAreaPixels !== undefined) updateData.detected_area_pixels = detectedAreaPixels;
-    if (detectedAreaPercentage !== undefined) updateData.detected_area_percentage = detectedAreaPercentage;
+    if (detectedAreaPercentage !== undefined)
+      updateData.detected_area_percentage = detectedAreaPercentage;
     if (minLogoWidth !== undefined) updateData.min_logo_width = minLogoWidth;
     if (minLogoHeight !== undefined) updateData.min_logo_height = minLogoHeight;
     if (maxLogoWidth !== undefined) updateData.max_logo_width = maxLogoWidth;
@@ -84,10 +84,7 @@ export async function PUT(
 
     if (updateError) {
       console.error('Database error:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update constraint' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to update constraint' }, { status: 500 });
     }
 
     // Update the product's enabled status if specified
@@ -101,7 +98,7 @@ export async function PUT(
         .update({
           [enableField]: isEnabled,
           updated_by: session.user.id,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', productId);
 
@@ -118,30 +115,25 @@ export async function PUT(
       entity_id: constraintId,
       old_values: existingConstraint,
       new_values: updatedConstraint,
-      ip_address: request.headers.get('x-forwarded-for') || 
-                 request.headers.get('x-real-ip') || 
-                 'unknown'
+      ip_address:
+        request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
     });
 
     return NextResponse.json({
       success: true,
       constraint: updatedConstraint,
-      message: 'Constraint updated successfully'
+      message: 'Constraint updated successfully',
     });
-
   } catch (error) {
     console.error('Update constraint error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // DELETE /api/admin/constraints/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await verifyAdminSession(request);
@@ -156,15 +148,17 @@ export async function DELETE(
     }
 
     const supabase = createClient();
-    const constraintId = params.id;
+    const { id: constraintId } = await params;
 
     // First, get the existing constraint to get the product info
     const { data: existingConstraint, error: fetchError } = await supabase
       .from('placement_constraints')
-      .select(`
+      .select(
+        `
         *,
         gift_items(id, name)
-      `)
+      `
+      )
       .eq('id', constraintId)
       .single();
 
@@ -180,10 +174,7 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Database error:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete constraint' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to delete constraint' }, { status: 500 });
     }
 
     // Disable the placement type on the product
@@ -197,7 +188,7 @@ export async function DELETE(
         .update({
           [enableField]: false,
           updated_by: session.user.id,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', productId);
 
@@ -213,21 +204,16 @@ export async function DELETE(
       entity_type: 'placement_constraint',
       entity_id: constraintId,
       old_values: existingConstraint,
-      ip_address: request.headers.get('x-forwarded-for') || 
-                 request.headers.get('x-real-ip') || 
-                 'unknown'
+      ip_address:
+        request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Constraint deleted successfully'
+      message: 'Constraint deleted successfully',
     });
-
   } catch (error) {
     console.error('Delete constraint error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -24,11 +24,12 @@ export default function Error({
           Something went wrong!
         </h2>
         <p className="text-gray-700 dark:text-gray-300 mb-8 max-w-md mx-auto">
-          We encountered an unexpected error. Please try again or contact support if the problem persists.
+          We encountered an unexpected error. Please try again or contact support if the problem
+          persists.
         </p>
         <div className="flex gap-4 justify-center">
           <Button onClick={reset}>Try again</Button>
-          <Button variant="outline" onClick={() => window.location.href = '/'}>
+          <Button variant="outline" onClick={() => (window.location.href = '/')}>
             Go home
           </Button>
         </div>

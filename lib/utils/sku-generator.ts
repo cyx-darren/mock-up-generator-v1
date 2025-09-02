@@ -34,7 +34,7 @@ export function generateSku({
     .replace(/[^a-zA-Z0-9]/g, '')
     .toUpperCase()
     .slice(0, 3);
-  
+
   if (nameComponent.length > 0) {
     parts.push(nameComponent);
   }
@@ -47,7 +47,9 @@ export function generateSku({
 
   // Add random component for uniqueness
   if (includeRandom) {
-    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const randomNum = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
     parts.push(randomNum);
   }
 
@@ -132,8 +134,10 @@ export function generateSkuSuggestions(options: SkuGenerationOptions): string[] 
   suggestions.push(generateSku(options));
   suggestions.push(generateSku({ ...options, includeYear: false }));
   suggestions.push(generateSku({ ...options, includeRandom: false }));
-  suggestions.push(generateSku({ ...options, customPrefix: options.category.toUpperCase().slice(0, 2) }));
-  
+  suggestions.push(
+    generateSku({ ...options, customPrefix: options.category.toUpperCase().slice(0, 2) })
+  );
+
   // Add timestamp-based version
   const timestamp = Date.now().toString().slice(-6);
   suggestions.push(generateSku({ ...options, includeRandom: false }) + timestamp);

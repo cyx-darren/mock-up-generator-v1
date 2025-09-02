@@ -65,15 +65,16 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
 
   // Get unique categories for filter
   const categories = useMemo(() => {
-    const uniqueCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
+    const uniqueCategories = [...new Set(products.map((p) => p.category))].filter(Boolean);
     return uniqueCategories.sort();
   }, [products]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter(product => {
+    let filtered = products.filter((product) => {
       // Search filter
-      const matchesSearch = searchTerm === '' || 
+      const matchesSearch =
+        searchTerm === '' ||
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchTerm.toLowerCase());
@@ -133,7 +134,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
   // Handle bulk delete
   const handleBulkDelete = async () => {
     if (!can('products.delete')) {
-      setError('You don\'t have permission to delete products');
+      setError("You don't have permission to delete products");
       return;
     }
 
@@ -164,7 +165,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
   // Handle product deletion
   const handleDelete = async (productId: string) => {
     if (!can('products.delete')) {
-      setError('You don\'t have permission to delete products');
+      setError("You don't have permission to delete products");
       return;
     }
 
@@ -190,7 +191,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
   // Handle product duplication
   const handleDuplicate = async (productId: string) => {
     if (!can('canCreateProducts')) {
-      setError('You don\'t have permission to create products');
+      setError("You don't have permission to create products");
       return;
     }
 
@@ -204,7 +205,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to duplicate product');
       }
@@ -221,7 +222,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
   // Handle quick edit
   const handleQuickEdit = async (productId: string) => {
     if (!can('canEditProducts')) {
-      setError('You don\'t have permission to edit products');
+      setError("You don't have permission to edit products");
       return;
     }
 
@@ -249,17 +250,17 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
   // Handle export to CSV
   const handleExportCSV = () => {
     const csvHeaders = ['Name', 'SKU', 'Category', 'Price', 'Status', 'Created At'];
-    const csvData = filteredAndSortedProducts.map(product => [
+    const csvData = filteredAndSortedProducts.map((product) => [
       product.name,
       product.sku,
       product.category,
       product.price?.toString() || '0',
       product.status,
-      new Date(product.created_at).toLocaleDateString()
+      new Date(product.created_at).toLocaleDateString(),
     ]);
 
     const csvContent = [csvHeaders, ...csvData]
-      .map(row => row.map(field => `"${field}"`).join(','))
+      .map((row) => row.map((field) => `"${field}"`).join(','))
       .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -275,19 +276,15 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
 
   // Toggle product selection
   const toggleProductSelection = (productId: string) => {
-    setSelectedProducts(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
+    setSelectedProducts((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
     );
   };
 
   // Toggle select all
   const toggleSelectAll = () => {
     setSelectedProducts(
-      selectedProducts.length === paginatedProducts.length
-        ? []
-        : paginatedProducts.map(p => p.id)
+      selectedProducts.length === paginatedProducts.length ? [] : paginatedProducts.map((p) => p.id)
     );
   };
 
@@ -314,10 +311,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
     return (
       <Card>
         <CardBody>
-          <Alert 
-            type="error" 
-            message="You don't have permission to view products"
-          />
+          <Alert type="error" message="You don't have permission to view products" />
         </CardBody>
       </Card>
     );
@@ -344,12 +338,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
       </CardHeader>
       <CardBody>
         {error && (
-          <Alert 
-            type="error" 
-            message={error} 
-            onClose={() => setError('')} 
-            className="mb-4"
-          />
+          <Alert type="error" message={error} onClose={() => setError('')} className="mb-4" />
         )}
 
         {/* Filters and Search */}
@@ -389,9 +378,9 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
               >
                 <option value="all">All Categories ({products.length})</option>
-                {categories.map(category => (
+                {categories.map((category) => (
                   <option key={category} value={category}>
-                    {category} ({products.filter(p => p.category === category).length})
+                    {category} ({products.filter((p) => p.category === category).length})
                   </option>
                 ))}
               </select>
@@ -404,9 +393,15 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active ({products.filter(p => p.status === 'active').length})</option>
-                <option value="inactive">Inactive ({products.filter(p => p.status === 'inactive').length})</option>
-                <option value="draft">Draft ({products.filter(p => p.status === 'draft').length})</option>
+                <option value="active">
+                  Active ({products.filter((p) => p.status === 'active').length})
+                </option>
+                <option value="inactive">
+                  Inactive ({products.filter((p) => p.status === 'inactive').length})
+                </option>
+                <option value="draft">
+                  Draft ({products.filter((p) => p.status === 'draft').length})
+                </option>
               </select>
             </div>
             <div>
@@ -430,7 +425,8 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
           {/* Results Summary */}
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Showing {paginatedProducts.length} of {filteredAndSortedProducts.length} products
-            {filteredAndSortedProducts.length !== products.length && ` (filtered from ${products.length} total)`}
+            {filteredAndSortedProducts.length !== products.length &&
+              ` (filtered from ${products.length} total)`}
           </div>
         </div>
 
@@ -442,42 +438,45 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                 <th className="px-6 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedProducts.length === paginatedProducts.length && paginatedProducts.length > 0}
+                    checked={
+                      selectedProducts.length === paginatedProducts.length &&
+                      paginatedProducts.length > 0
+                    }
                     onChange={toggleSelectAll}
                     className="rounded border-gray-300 dark:border-gray-600"
                   />
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort('name')}
                 >
                   Product {getSortIcon('name')}
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort('category')}
                 >
                   Category {getSortIcon('category')}
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort('sku')}
                 >
                   SKU {getSortIcon('sku')}
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort('price')}
                 >
                   Price {getSortIcon('price')}
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort('status')}
                 >
                   Status {getSortIcon('status')}
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => handleSort('created_at')}
                 >
@@ -500,9 +499,12 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                 </tr>
               ) : paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                    {filteredAndSortedProducts.length === 0 && products.length === 0 
-                      ? 'No products found. Create your first product!' 
+                  <td
+                    colSpan={8}
+                    className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
+                  >
+                    {filteredAndSortedProducts.length === 0 && products.length === 0
+                      ? 'No products found. Create your first product!'
                       : 'No products match your search criteria.'}
                   </td>
                 </tr>
@@ -521,15 +523,25 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {product.thumbnail_url ? (
-                            <img 
-                              className="h-10 w-10 rounded-lg object-cover" 
-                              src={product.thumbnail_url} 
+                            <img
+                              className="h-10 w-10 rounded-lg object-cover"
+                              src={product.thumbnail_url}
                               alt={product.name}
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                              <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              <svg
+                                className="h-6 w-6 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
                               </svg>
                             </div>
                           )}
@@ -539,7 +551,9 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                             {showQuickEdit === product.id ? (
                               <Input
                                 value={quickEditData.name ?? product.name}
-                                onChange={(e) => setQuickEditData({...quickEditData, name: e.target.value})}
+                                onChange={(e) =>
+                                  setQuickEditData({ ...quickEditData, name: e.target.value })
+                                }
                                 className="w-32"
                               />
                             ) : (
@@ -565,7 +579,9 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                         <Input
                           type="number"
                           value={quickEditData.price ?? product.price}
-                          onChange={(e) => setQuickEditData({...quickEditData, price: Number(e.target.value)})}
+                          onChange={(e) =>
+                            setQuickEditData({ ...quickEditData, price: Number(e.target.value) })
+                          }
                           className="w-20"
                         />
                       ) : (
@@ -576,7 +592,9 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                       {showQuickEdit === product.id ? (
                         <select
                           value={quickEditData.status ?? product.status}
-                          onChange={(e) => setQuickEditData({...quickEditData, status: e.target.value as any})}
+                          onChange={(e) =>
+                            setQuickEditData({ ...quickEditData, status: e.target.value as any })
+                          }
                           className="px-2 py-1 text-xs border rounded"
                         >
                           <option value="active">Active</option>
@@ -584,13 +602,15 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                           <option value="draft">Draft</option>
                         </select>
                       ) : (
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.status === 'active'
-                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                            : product.status === 'draft'
-                            ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                            : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            product.status === 'active'
+                              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                              : product.status === 'draft'
+                                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                          }`}
+                        >
                           {product.status}
                         </span>
                       )}
@@ -602,16 +622,16 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                       <div className="flex items-center space-x-2">
                         {showQuickEdit === product.id ? (
                           <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleQuickEdit(product.id)}
                             >
                               Save
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setShowQuickEdit(null);
                                 setQuickEditData({});
@@ -622,15 +642,15 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                           </>
                         ) : (
                           <>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => {
                                 setShowQuickEdit(product.id);
                                 setQuickEditData({
                                   name: product.name,
                                   price: product.price,
-                                  status: product.status
+                                  status: product.status,
                                 });
                               }}
                             >
@@ -638,18 +658,22 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                             </Button>
                             {can('canEditProducts') && (
                               <Link href={`/admin/products/${product.id}/edit`}>
-                                <Button variant="outline" size="sm">Edit</Button>
+                                <Button variant="outline" size="sm">
+                                  Edit
+                                </Button>
                               </Link>
                             )}
                             {can('canEditProducts') && (
                               <Link href={`/admin/products/${product.id}/constraints`}>
-                                <Button variant="outline" size="sm">Constraints</Button>
+                                <Button variant="outline" size="sm">
+                                  Constraints
+                                </Button>
                               </Link>
                             )}
                             {can('canCreateProducts') && (
-                              <Button 
-                                variant="secondary" 
-                                size="sm" 
+                              <Button
+                                variant="secondary"
+                                size="sm"
                                 onClick={() => handleDuplicate(product.id)}
                                 disabled={loading}
                               >
@@ -657,9 +681,9 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                               </Button>
                             )}
                             {can('canDeleteProducts') && (
-                              <Button 
-                                variant="danger" 
-                                size="sm" 
+                              <Button
+                                variant="danger"
+                                size="sm"
                                 onClick={() => handleDelete(product.id)}
                               >
                                 Delete
@@ -694,12 +718,12 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
                 Previous
               </Button>
-              
+
               {/* Page numbers */}
               <div className="flex space-x-1">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -708,7 +732,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
                     return (
                       <Button
                         key={pageNumber}
-                        variant={pageNumber === currentPage ? "primary" : "outline"}
+                        variant={pageNumber === currentPage ? 'primary' : 'outline'}
                         size="sm"
                         onClick={() => setCurrentPage(pageNumber)}
                       >
@@ -723,7 +747,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
               >
                 Next

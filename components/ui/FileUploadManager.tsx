@@ -58,25 +58,28 @@ export function FileUploadManager({
   }, []);
 
   // Handle files accepted by dropzone
-  const handleFilesAccepted = useCallback((files: File[]) => {
-    const newImages: ImagePreviewData[] = files.map(file => ({
-      file,
-      id: generateId(),
-      preview: createPreview(file),
-      progress: 0,
-      status: 'uploading' as const,
-      metadata: {
-        size: file.size,
-        type: file.type,
-      },
-    }));
+  const handleFilesAccepted = useCallback(
+    (files: File[]) => {
+      const newImages: ImagePreviewData[] = files.map((file) => ({
+        file,
+        id: generateId(),
+        preview: createPreview(file),
+        progress: 0,
+        status: 'uploading' as const,
+        metadata: {
+          size: file.size,
+          type: file.type,
+        },
+      }));
 
-    setImages(prev => [...prev, ...newImages]);
-    setUploadErrors([]);
-    
-    // Start upload
-    uploadFiles(newImages);
-  }, [generateId, createPreview]);
+      setImages((prev) => [...prev, ...newImages]);
+      setUploadErrors([]);
+
+      // Start upload
+      uploadFiles(newImages);
+    },
+    [generateId, createPreview]
+  );
 
   // Handle files rejected by dropzone
   const handleFilesRejected = useCallback((rejections: { file: File; errors: string[] }[]) => {
@@ -84,118 +87,122 @@ export function FileUploadManager({
   }, []);
 
   // Upload files to server
-  const uploadFiles = useCallback(async (imagesToUpload: ImagePreviewData[]) => {
-    setIsUploading(true);
-    abortControllerRef.current = new AbortController();
-    
-    const uploadedFiles: { file: File; url: string }[] = [];
-    const totalFiles = imagesToUpload.length;
-    let completedFiles = 0;
+  const uploadFiles = useCallback(
+    async (imagesToUpload: ImagePreviewData[]) => {
+      setIsUploading(true);
+      abortControllerRef.current = new AbortController();
 
-    try {
-      // Upload files concurrently with progress tracking
-      const uploadPromises = imagesToUpload.map(async (image, index) => {
-        try {
-          const formData = new FormData();
-          formData.append('file', image.file);
-          formData.append('fileName', image.file.name);
+      const uploadedFiles: { file: File; url: string }[] = [];
+      const totalFiles = imagesToUpload.length;
+      let completedFiles = 0;
 
-          // Simulate upload with XMLHttpRequest for progress tracking
-          const xhr = new XMLHttpRequest();
-          
-          return new Promise<void>((resolve, reject) => {
-            xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
-                const progress = (e.loaded / e.total) * 100;
-                
-                // Update individual file progress
-                setImages(prev => prev.map(img => 
-                  img.id === image.id 
-                    ? { ...img, progress }
-                    : img
-                ));
-                
-                // Update overall progress
-                const totalProgress = ((completedFiles * 100 + progress) / totalFiles);
-                setUploadProgress(totalProgress);
-                onUploadProgress?.(totalProgress);
-              }
-            });
+      try {
+        // Upload files concurrently with progress tracking
+        const uploadPromises = imagesToUpload.map(async (image, index) => {
+          try {
+            const formData = new FormData();
+            formData.append('file', image.file);
+            formData.append('fileName', image.file.name);
 
-            xhr.addEventListener('load', () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                try {
-                  const response = JSON.parse(xhr.responseText);
-                  uploadedFiles.push({ file: image.file, url: response.url });
-                  
-                  // Mark as completed
-                  setImages(prev => prev.map(img => 
-                    img.id === image.id 
-                      ? { ...img, status: 'completed' as const, progress: 100 }
-                      : img
-                  ));
-                  
-                  completedFiles++;
-                  const totalProgress = (completedFiles / totalFiles) * 100;
+            // Simulate upload with XMLHttpRequest for progress tracking
+            const xhr = new XMLHttpRequest();
+
+            return new Promise<void>((resolve, reject) => {
+              xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                  const progress = (e.loaded / e.total) * 100;
+
+                  // Update individual file progress
+                  setImages((prev) =>
+                    prev.map((img) => (img.id === image.id ? { ...img, progress } : img))
+                  );
+
+                  // Update overall progress
+                  const totalProgress = (completedFiles * 100 + progress) / totalFiles;
                   setUploadProgress(totalProgress);
                   onUploadProgress?.(totalProgress);
-                  
-                  resolve();
-                } catch (error) {
-                  reject(new Error('Invalid response from server'));
                 }
-              } else {
-                reject(new Error(`Upload failed with status ${xhr.status}`));
+              });
+
+              xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  try {
+                    const response = JSON.parse(xhr.responseText);
+                    uploadedFiles.push({ file: image.file, url: response.url });
+
+                    // Mark as completed
+                    setImages((prev) =>
+                      prev.map((img) =>
+                        img.id === image.id
+                          ? { ...img, status: 'completed' as const, progress: 100 }
+                          : img
+                      )
+                    );
+
+                    completedFiles++;
+                    const totalProgress = (completedFiles / totalFiles) * 100;
+                    setUploadProgress(totalProgress);
+                    onUploadProgress?.(totalProgress);
+
+                    resolve();
+                  } catch (error) {
+                    reject(new Error('Invalid response from server'));
+                  }
+                } else {
+                  reject(new Error(`Upload failed with status ${xhr.status}`));
+                }
+              });
+
+              xhr.addEventListener('error', () => {
+                reject(new Error('Network error occurred'));
+              });
+
+              xhr.addEventListener('abort', () => {
+                reject(new Error('Upload cancelled'));
+              });
+
+              xhr.open('POST', uploadEndpoint);
+              xhr.send(formData);
+
+              // Store xhr reference for potential cancellation
+              if (abortControllerRef.current) {
+                abortControllerRef.current.signal.addEventListener('abort', () => {
+                  xhr.abort();
+                });
               }
             });
+          } catch (error) {
+            // Mark as error
+            setImages((prev) =>
+              prev.map((img) =>
+                img.id === image.id
+                  ? {
+                      ...img,
+                      status: 'error' as const,
+                      error: error instanceof Error ? error.message : 'Upload failed',
+                    }
+                  : img
+              )
+            );
+            throw error;
+          }
+        });
 
-            xhr.addEventListener('error', () => {
-              reject(new Error('Network error occurred'));
-            });
+        await Promise.allSettled(uploadPromises);
 
-            xhr.addEventListener('abort', () => {
-              reject(new Error('Upload cancelled'));
-            });
-
-            xhr.open('POST', uploadEndpoint);
-            xhr.send(formData);
-
-            // Store xhr reference for potential cancellation
-            if (abortControllerRef.current) {
-              abortControllerRef.current.signal.addEventListener('abort', () => {
-                xhr.abort();
-              });
-            }
-          });
-        } catch (error) {
-          // Mark as error
-          setImages(prev => prev.map(img => 
-            img.id === image.id 
-              ? { 
-                  ...img, 
-                  status: 'error' as const, 
-                  error: error instanceof Error ? error.message : 'Upload failed' 
-                }
-              : img
-          ));
-          throw error;
+        // Call completion handler with successful uploads
+        if (uploadedFiles.length > 0) {
+          onUploadComplete(uploadedFiles);
         }
-      });
-
-      await Promise.allSettled(uploadPromises);
-      
-      // Call completion handler with successful uploads
-      if (uploadedFiles.length > 0) {
-        onUploadComplete(uploadedFiles);
+      } catch (error) {
+        console.error('Upload error:', error);
+      } finally {
+        setIsUploading(false);
+        abortControllerRef.current = null;
       }
-      
-    } catch (error) {
-      console.error('Upload error:', error);
-    } finally {
-      setIsUploading(false);
-      abortControllerRef.current = null;
-    }
-  }, [uploadEndpoint, onUploadComplete, onUploadProgress]);
+    },
+    [uploadEndpoint, onUploadComplete, onUploadProgress]
+  );
 
   // Cancel upload
   const handleCancelUpload = useCallback(() => {
@@ -204,64 +211,72 @@ export function FileUploadManager({
     }
     setIsUploading(false);
     setUploadProgress(0);
-    
+
     // Reset uploading images
-    setImages(prev => prev.filter(img => img.status !== 'uploading'));
+    setImages((prev) => prev.filter((img) => img.status !== 'uploading'));
   }, []);
 
   // Remove image
   const handleRemoveImage = useCallback((id: string) => {
-    setImages(prev => {
-      const imageToRemove = prev.find(img => img.id === id);
+    setImages((prev) => {
+      const imageToRemove = prev.find((img) => img.id === id);
       if (imageToRemove) {
         URL.revokeObjectURL(imageToRemove.preview);
       }
-      return prev.filter(img => img.id !== id);
+      return prev.filter((img) => img.id !== id);
     });
   }, []);
 
   // Start crop
-  const handleCropImage = useCallback((id: string) => {
-    const image = images.find(img => img.id === id);
-    if (image) {
-      setCropImage(image);
-    }
-  }, [images]);
+  const handleCropImage = useCallback(
+    (id: string) => {
+      const image = images.find((img) => img.id === id);
+      if (image) {
+        setCropImage(image);
+      }
+    },
+    [images]
+  );
 
   // Save cropped image
-  const handleSaveCroppedImage = useCallback((croppedBlob: Blob, fileName: string) => {
-    if (!cropImage) return;
+  const handleSaveCroppedImage = useCallback(
+    (croppedBlob: Blob, fileName: string) => {
+      if (!cropImage) return;
 
-    const newFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
-    const newPreview = createPreview(newFile);
-    
-    // Update the image with cropped version
-    setImages(prev => prev.map(img => 
-      img.id === cropImage.id
-        ? {
-            ...img,
-            file: newFile,
-            preview: newPreview,
-            status: 'uploading' as const,
-            progress: 0,
-          }
-        : img
-    ));
+      const newFile = new File([croppedBlob], fileName, { type: 'image/jpeg' });
+      const newPreview = createPreview(newFile);
 
-    // Clean up old preview
-    URL.revokeObjectURL(cropImage.preview);
-    setCropImage(null);
+      // Update the image with cropped version
+      setImages((prev) =>
+        prev.map((img) =>
+          img.id === cropImage.id
+            ? {
+                ...img,
+                file: newFile,
+                preview: newPreview,
+                status: 'uploading' as const,
+                progress: 0,
+              }
+            : img
+        )
+      );
 
-    // Re-upload the cropped image
-    const updatedImage = {
-      ...cropImage,
-      file: newFile,
-      preview: newPreview,
-      status: 'uploading' as const,
-      progress: 0,
-    };
-    uploadFiles([updatedImage]);
-  }, [cropImage, createPreview, uploadFiles]);
+      // Clean up old preview
+      URL.revokeObjectURL(cropImage.preview);
+      setCropImage(null);
+
+      // Re-upload the cropped image
+      const updatedImage = {
+        ...cropImage,
+        file: newFile,
+        preview: newPreview,
+        status: 'uploading' as const,
+        progress: 0,
+      };
+      uploadFiles([updatedImage]);
+    },
+    [cropImage, createPreview, uploadFiles]
+  );
 
   // Cancel crop
   const handleCancelCrop = useCallback(() => {
@@ -269,14 +284,22 @@ export function FileUploadManager({
   }, []);
 
   // Retry failed upload
-  const handleRetryUpload = useCallback((id: string) => {
-    const image = images.find(img => img.id === id);
-    if (!image) return;
+  const handleRetryUpload = useCallback(
+    (id: string) => {
+      const image = images.find((img) => img.id === id);
+      if (!image) return;
 
-    const updatedImage = { ...image, status: 'uploading' as const, progress: 0, error: undefined };
-    setImages(prev => prev.map(img => img.id === id ? updatedImage : img));
-    uploadFiles([updatedImage]);
-  }, [images, uploadFiles]);
+      const updatedImage = {
+        ...image,
+        status: 'uploading' as const,
+        progress: 0,
+        error: undefined,
+      };
+      setImages((prev) => prev.map((img) => (img.id === id ? updatedImage : img)));
+      uploadFiles([updatedImage]);
+    },
+    [images, uploadFiles]
+  );
 
   // Clear errors
   const handleClearErrors = useCallback(() => {
@@ -286,7 +309,7 @@ export function FileUploadManager({
   // Cleanup on unmount
   React.useEffect(() => {
     return () => {
-      images.forEach(image => {
+      images.forEach((image) => {
         URL.revokeObjectURL(image.preview);
       });
     };
@@ -356,7 +379,7 @@ export function FileUploadManager({
               variant="outline"
               size="sm"
               onClick={() => {
-                images.forEach(img => URL.revokeObjectURL(img.preview));
+                images.forEach((img) => URL.revokeObjectURL(img.preview));
                 setImages([]);
               }}
               disabled={isUploading}
@@ -374,10 +397,11 @@ export function FileUploadManager({
           />
 
           {/* Failed uploads with retry option */}
-          {images.some(img => img.status === 'error') && (
+          {images.some((img) => img.status === 'error') && (
             <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
               <span className="text-sm text-red-800 dark:text-red-200">
-                Some uploads failed. You can retry individual uploads by clicking the retry button on each failed image.
+                Some uploads failed. You can retry individual uploads by clicking the retry button
+                on each failed image.
               </span>
             </div>
           )}

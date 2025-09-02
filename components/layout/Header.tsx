@@ -125,23 +125,17 @@ export const Header: React.FC = () => {
               </Link>
               <div className="pt-4 pb-2 space-y-2">
                 <div className="flex items-center justify-between px-3">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Theme</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Theme
+                  </span>
                   <ThemeToggle />
                 </div>
-                <Link
-                  href="/admin/login"
-                  className="block"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link href="/admin/login" className="block" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="ghost" size="sm" className="w-full justify-start">
                     Admin
                   </Button>
                 </Link>
-                <Link
-                  href="/create"
-                  className="block"
-                  onClick={() => setIsMenuOpen(false)}
-                >
+                <Link href="/create" className="block" onClick={() => setIsMenuOpen(false)}>
                   <Button size="sm" className="w-full">
                     Start Creating
                   </Button>

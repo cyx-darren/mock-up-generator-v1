@@ -6,19 +6,22 @@ export default function HowItWorksPage() {
     {
       number: '1',
       title: 'Choose Your Product',
-      description: 'Browse our extensive catalog of corporate gift items including mugs, t-shirts, pens, bags, and more.',
+      description:
+        'Browse our extensive catalog of corporate gift items including mugs, t-shirts, pens, bags, and more.',
       icon: '🎁',
     },
     {
       number: '2',
       title: 'Upload Your Logo',
-      description: 'Upload your company logo or design in any format. Our AI will automatically remove the background if needed.',
+      description:
+        'Upload your company logo or design in any format. Our AI will automatically remove the background if needed.',
       icon: '📤',
     },
     {
       number: '3',
       title: 'Select Placement',
-      description: 'Choose where you want your logo placed - horizontal, vertical, or all-over print options available.',
+      description:
+        'Choose where you want your logo placed - horizontal, vertical, or all-over print options available.',
       icon: '🎯',
     },
     {
@@ -30,7 +33,8 @@ export default function HowItWorksPage() {
     {
       number: '5',
       title: 'Download & Share',
-      description: 'Download your mockup in high resolution. Available in PNG, JPG, or WebP formats.',
+      description:
+        'Download your mockup in high resolution. Available in PNG, JPG, or WebP formats.',
       icon: '💾',
     },
   ];
@@ -38,9 +42,7 @@ export default function HowItWorksPage() {
   return (
     <Container className="py-12">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          How It Works
-        </h1>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">How It Works</h1>
         <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
           Create professional mockups for your corporate gifts in just a few simple steps
         </p>
@@ -69,9 +71,7 @@ export default function HowItWorksPage() {
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       {step.title}
                     </h3>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {step.description}
-                    </p>
+                    <p className="text-gray-700 dark:text-gray-300">{step.description}</p>
                   </div>
                 </div>
               </CardBody>
@@ -92,29 +92,32 @@ export default function HowItWorksPage() {
                 What file formats are supported for logo upload?
               </h3>
               <p className="text-gray-700 dark:text-gray-300">
-                We support PNG, JPG, SVG, and WebP formats. For best results, use PNG with transparent background.
+                We support PNG, JPG, SVG, and WebP formats. For best results, use PNG with
+                transparent background.
               </p>
             </CardBody>
           </Card>
-          
+
           <Card>
             <CardBody>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 How long does it take to generate a mockup?
               </h3>
               <p className="text-gray-700 dark:text-gray-300">
-                Most mockups are generated in under 30 seconds. Complex designs may take slightly longer.
+                Most mockups are generated in under 30 seconds. Complex designs may take slightly
+                longer.
               </p>
             </CardBody>
           </Card>
-          
+
           <Card>
             <CardBody>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 Can I edit the mockup after generation?
               </h3>
               <p className="text-gray-700 dark:text-gray-300">
-                Yes! You can adjust the logo position, size, and rotation before downloading the final mockup.
+                Yes! You can adjust the logo position, size, and rotation before downloading the
+                final mockup.
               </p>
             </CardBody>
           </Card>

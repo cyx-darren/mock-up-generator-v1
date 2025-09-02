@@ -12,7 +12,7 @@ export function EdgeFunctionTest() {
     try {
       setLoading(true);
       setResponse('');
-      
+
       const { data, error } = await supabase.functions.invoke('hello-world', {
         method: 'GET',
       });
@@ -38,9 +38,7 @@ export function EdgeFunctionTest() {
       {response && (
         <div className="mt-4">
           <h4 className="font-medium mb-2">Response:</h4>
-          <pre className="bg-white p-3 rounded border text-sm overflow-x-auto">
-            {response}
-          </pre>
+          <pre className="bg-white p-3 rounded border text-sm overflow-x-auto">{response}</pre>
         </div>
       )}
     </div>

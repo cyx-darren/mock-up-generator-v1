@@ -26,9 +26,9 @@ interface ImageCropResizeProps {
 const DEFAULT_ASPECT_RATIOS = [
   { label: 'Free', value: null },
   { label: 'Square (1:1)', value: 1 },
-  { label: 'Landscape (4:3)', value: 4/3 },
-  { label: 'Portrait (3:4)', value: 3/4 },
-  { label: 'Wide (16:9)', value: 16/9 },
+  { label: 'Landscape (4:3)', value: 4 / 3 },
+  { label: 'Portrait (3:4)', value: 3 / 4 },
+  { label: 'Wide (16:9)', value: 16 / 9 },
 ];
 
 export function ImageCropResize({
@@ -60,7 +60,7 @@ export function ImageCropResize({
     img.onload = () => {
       setImage(img);
       setResizeDimensions({ width: img.naturalWidth, height: img.naturalHeight });
-      
+
       // Initialize crop area to center 80% of image
       const margin = 0.1;
       setCropArea({
@@ -116,8 +116,14 @@ export function ImageCropResize({
       ctx.clearRect(scaledCrop.x, scaledCrop.y, scaledCrop.width, scaledCrop.height);
       ctx.drawImage(
         image,
-        cropArea.x, cropArea.y, cropArea.width, cropArea.height,
-        scaledCrop.x, scaledCrop.y, scaledCrop.width, scaledCrop.height
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
+        scaledCrop.x,
+        scaledCrop.y,
+        scaledCrop.width,
+        scaledCrop.height
       );
 
       // Draw crop border
@@ -135,123 +141,130 @@ export function ImageCropResize({
       ];
 
       ctx.fillStyle = '#3B82F6';
-      corners.forEach(corner => {
-        ctx.fillRect(
-          corner.x - handleSize / 2,
-          corner.y - handleSize / 2,
-          handleSize,
-          handleSize
-        );
+      corners.forEach((corner) => {
+        ctx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
       });
     }
   }, [image, cropArea, resizeMode]);
 
   // Handle mouse events for cropping
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (resizeMode !== 'crop' || !canvasRef.current) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (resizeMode !== 'crop' || !canvasRef.current) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    setIsDragging(true);
-    setDragStart({ x, y });
-  }, [resizeMode]);
+      setIsDragging(true);
+      setDragStart({ x, y });
+    },
+    [resizeMode]
+  );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || resizeMode !== 'crop' || !canvasRef.current || !image) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isDragging || resizeMode !== 'crop' || !canvasRef.current || !image) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    const scale = Math.min(
-      canvasRef.current.width / image.naturalWidth,
-      canvasRef.current.height / image.naturalHeight
-    );
+      const scale = Math.min(
+        canvasRef.current.width / image.naturalWidth,
+        canvasRef.current.height / image.naturalHeight
+      );
 
-    const deltaX = (x - dragStart.x) / scale;
-    const deltaY = (y - dragStart.y) / scale;
+      const deltaX = (x - dragStart.x) / scale;
+      const deltaY = (y - dragStart.y) / scale;
 
-    setCropArea(prev => {
-      let newWidth = Math.max(50, prev.width + deltaX);
-      let newHeight = Math.max(50, prev.height + deltaY);
+      setCropArea((prev) => {
+        let newWidth = Math.max(50, prev.width + deltaX);
+        let newHeight = Math.max(50, prev.height + deltaY);
 
-      // Apply aspect ratio constraint
-      if (selectedAspectRatio) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          newHeight = newWidth / selectedAspectRatio;
-        } else {
-          newWidth = newHeight * selectedAspectRatio;
+        // Apply aspect ratio constraint
+        if (selectedAspectRatio) {
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            newHeight = newWidth / selectedAspectRatio;
+          } else {
+            newWidth = newHeight * selectedAspectRatio;
+          }
         }
-      }
 
-      // Keep within image bounds
-      const newX = Math.max(0, Math.min(prev.x, image.naturalWidth - newWidth));
-      const newY = Math.max(0, Math.min(prev.y, image.naturalHeight - newHeight));
+        // Keep within image bounds
+        const newX = Math.max(0, Math.min(prev.x, image.naturalWidth - newWidth));
+        const newY = Math.max(0, Math.min(prev.y, image.naturalHeight - newHeight));
 
-      return {
-        x: newX,
-        y: newY,
-        width: Math.min(newWidth, image.naturalWidth - newX),
-        height: Math.min(newHeight, image.naturalHeight - newY),
-      };
-    });
+        return {
+          x: newX,
+          y: newY,
+          width: Math.min(newWidth, image.naturalWidth - newX),
+          height: Math.min(newHeight, image.naturalHeight - newY),
+        };
+      });
 
-    setDragStart({ x, y });
-  }, [isDragging, resizeMode, dragStart, selectedAspectRatio, image]);
+      setDragStart({ x, y });
+    },
+    [isDragging, resizeMode, dragStart, selectedAspectRatio, image]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
   // Handle aspect ratio change
-  const handleAspectRatioChange = useCallback((ratio: number | null) => {
-    setSelectedAspectRatio(ratio);
-    
-    if (ratio && image) {
-      setCropArea(prev => {
-        const centerX = prev.x + prev.width / 2;
-        const centerY = prev.y + prev.height / 2;
-        
-        let newWidth = prev.width;
-        let newHeight = newWidth / ratio;
-        
-        // If height exceeds image bounds, adjust width
-        if (newHeight > image.naturalHeight) {
-          newHeight = image.naturalHeight;
-          newWidth = newHeight * ratio;
-        }
-        
-        return {
-          x: Math.max(0, Math.min(centerX - newWidth / 2, image.naturalWidth - newWidth)),
-          y: Math.max(0, Math.min(centerY - newHeight / 2, image.naturalHeight - newHeight)),
-          width: newWidth,
-          height: newHeight,
-        };
-      });
-    }
-  }, [image]);
+  const handleAspectRatioChange = useCallback(
+    (ratio: number | null) => {
+      setSelectedAspectRatio(ratio);
+
+      if (ratio && image) {
+        setCropArea((prev) => {
+          const centerX = prev.x + prev.width / 2;
+          const centerY = prev.y + prev.height / 2;
+
+          let newWidth = prev.width;
+          let newHeight = newWidth / ratio;
+
+          // If height exceeds image bounds, adjust width
+          if (newHeight > image.naturalHeight) {
+            newHeight = image.naturalHeight;
+            newWidth = newHeight * ratio;
+          }
+
+          return {
+            x: Math.max(0, Math.min(centerX - newWidth / 2, image.naturalWidth - newWidth)),
+            y: Math.max(0, Math.min(centerY - newHeight / 2, image.naturalHeight - newHeight)),
+            width: newWidth,
+            height: newHeight,
+          };
+        });
+      }
+    },
+    [image]
+  );
 
   // Handle resize dimension change
-  const handleResizeDimensionChange = useCallback((dimension: 'width' | 'height', value: number) => {
-    if (!image) return;
+  const handleResizeDimensionChange = useCallback(
+    (dimension: 'width' | 'height', value: number) => {
+      if (!image) return;
 
-    setResizeDimensions(prev => {
-      const newDimensions = { ...prev, [dimension]: value };
-      
-      if (maintainAspectRatio) {
-        const aspectRatio = image.naturalWidth / image.naturalHeight;
-        if (dimension === 'width') {
-          newDimensions.height = Math.round(value / aspectRatio);
-        } else {
-          newDimensions.width = Math.round(value * aspectRatio);
+      setResizeDimensions((prev) => {
+        const newDimensions = { ...prev, [dimension]: value };
+
+        if (maintainAspectRatio) {
+          const aspectRatio = image.naturalWidth / image.naturalHeight;
+          if (dimension === 'width') {
+            newDimensions.height = Math.round(value / aspectRatio);
+          } else {
+            newDimensions.width = Math.round(value * aspectRatio);
+          }
         }
-      }
-      
-      return newDimensions;
-    });
-  }, [image, maintainAspectRatio]);
+
+        return newDimensions;
+      });
+    },
+    [image, maintainAspectRatio]
+  );
 
   // Generate final image
   const handleSave = useCallback(async () => {
@@ -267,26 +280,28 @@ export function ImageCropResize({
         // Crop mode
         canvas.width = Math.min(cropArea.width, maxWidth);
         canvas.height = Math.min(cropArea.height, maxHeight);
-        
-        const scale = Math.min(
-          maxWidth / cropArea.width,
-          maxHeight / cropArea.height,
-          1
-        );
-        
+
+        const scale = Math.min(maxWidth / cropArea.width, maxHeight / cropArea.height, 1);
+
         canvas.width = cropArea.width * scale;
         canvas.height = cropArea.height * scale;
-        
+
         ctx.drawImage(
           image,
-          cropArea.x, cropArea.y, cropArea.width, cropArea.height,
-          0, 0, canvas.width, canvas.height
+          cropArea.x,
+          cropArea.y,
+          cropArea.width,
+          cropArea.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height
         );
       } else {
         // Resize mode
         canvas.width = Math.min(resizeDimensions.width, maxWidth);
         canvas.height = Math.min(resizeDimensions.height, maxHeight);
-        
+
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
       }
 
@@ -305,7 +320,17 @@ export function ImageCropResize({
       console.error('Error processing image:', error);
       setLoading(false);
     }
-  }, [image, resizeMode, cropArea, resizeDimensions, maxWidth, maxHeight, quality, fileName, onSave]);
+  }, [
+    image,
+    resizeMode,
+    cropArea,
+    resizeDimensions,
+    maxWidth,
+    maxHeight,
+    quality,
+    fileName,
+    onSave,
+  ]);
 
   if (!image) {
     return (
@@ -354,7 +379,9 @@ export function ImageCropResize({
             </label>
             <select
               value={selectedAspectRatio || ''}
-              onChange={(e) => handleAspectRatioChange(e.target.value ? parseFloat(e.target.value) : null)}
+              onChange={(e) =>
+                handleAspectRatioChange(e.target.value ? parseFloat(e.target.value) : null)
+              }
               className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             >
               {aspectRatios.map((ratio) => (
@@ -406,7 +433,10 @@ export function ImageCropResize({
       )}
 
       {/* Canvas */}
-      <div ref={containerRef} className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+      <div
+        ref={containerRef}
+        className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800"
+      >
         <canvas
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -425,12 +455,13 @@ export function ImageCropResize({
         {resizeMode === 'crop' ? (
           <p>
             Crop area: {Math.round(cropArea.width)} × {Math.round(cropArea.height)}px
-            {selectedAspectRatio && ` (${aspectRatios.find(r => r.value === selectedAspectRatio)?.label})`}
+            {selectedAspectRatio &&
+              ` (${aspectRatios.find((r) => r.value === selectedAspectRatio)?.label})`}
           </p>
         ) : (
           <p>
-            Original: {image.naturalWidth} × {image.naturalHeight}px →{' '}
-            New: {resizeDimensions.width} × {resizeDimensions.height}px
+            Original: {image.naturalWidth} × {image.naturalHeight}px → New: {resizeDimensions.width}{' '}
+            × {resizeDimensions.height}px
           </p>
         )}
       </div>

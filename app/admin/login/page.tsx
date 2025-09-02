@@ -38,7 +38,9 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <Card>
           <CardHeader>
-            <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">Admin Login</h1>
+            <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
+              Admin Login
+            </h1>
           </CardHeader>
           <CardBody>
             <form onSubmit={handleSubmit} className="space-y-4">

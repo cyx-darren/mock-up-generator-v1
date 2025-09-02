@@ -57,30 +57,26 @@ function UnauthorizedContent() {
         <div className="text-center">
           {/* Error Icon */}
           <div className="w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-            <svg 
-              className="w-8 h-8 text-red-600" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth="2" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
           </div>
 
           {/* Error Title */}
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            {getErrorTitle()}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{getErrorTitle()}</h1>
 
           {/* Error Message */}
-          <p className="text-gray-600 mb-6">
-            {getErrorMessage()}
-          </p>
+          <p className="text-gray-600 mb-6">{getErrorMessage()}</p>
 
           {/* Additional Info */}
           {(resource || requiredRole) && (
@@ -113,17 +109,10 @@ function UnauthorizedContent() {
 
           {/* Actions */}
           <div className="space-y-3">
-            <Button
-              onClick={() => window.history.back()}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={() => window.history.back()} variant="outline" className="w-full">
               Go Back
             </Button>
-            <Button
-              onClick={() => window.location.href = '/admin/dashboard'}
-              className="w-full"
-            >
+            <Button onClick={() => (window.location.href = '/admin/dashboard')} className="w-full">
               Go to Dashboard
             </Button>
           </div>
@@ -135,16 +124,18 @@ function UnauthorizedContent() {
 
 export default function UnauthorizedPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md p-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Card className="w-full max-w-md p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </Card>
+        </div>
+      }
+    >
       <UnauthorizedContent />
     </Suspense>
   );

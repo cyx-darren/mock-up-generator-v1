@@ -27,13 +27,11 @@ export async function createResetToken(userId: string): Promise<string> {
     .eq('is_used', false);
 
   // Create new reset token
-  const { error } = await supabase
-    .from('password_reset_tokens')
-    .insert({
-      user_id: userId,
-      token,
-      expires_at: expiresAt.toISOString(),
-    });
+  const { error } = await supabase.from('password_reset_tokens').insert({
+    user_id: userId,
+    token,
+    expires_at: expiresAt.toISOString(),
+  });
 
   if (error) {
     throw new Error('Failed to create reset token');
@@ -42,7 +40,9 @@ export async function createResetToken(userId: string): Promise<string> {
   return token;
 }
 
-export async function validateResetToken(token: string): Promise<{ isValid: boolean; userId?: string }> {
+export async function validateResetToken(
+  token: string
+): Promise<{ isValid: boolean; userId?: string }> {
   const supabase = createClient();
 
   const { data: resetToken, error } = await supabase
@@ -67,17 +67,11 @@ export async function validateResetToken(token: string): Promise<{ isValid: bool
 export async function markResetTokenAsUsed(token: string): Promise<void> {
   const supabase = createClient();
 
-  await supabase
-    .from('password_reset_tokens')
-    .update({ is_used: true })
-    .eq('token', token);
+  await supabase.from('password_reset_tokens').update({ is_used: true }).eq('token', token);
 }
 
 export async function cleanupExpiredTokens(): Promise<void> {
   const supabase = createClient();
 
-  await supabase
-    .from('password_reset_tokens')
-    .delete()
-    .lt('expires_at', new Date().toISOString());
+  await supabase.from('password_reset_tokens').delete().lt('expires_at', new Date().toISOString());
 }

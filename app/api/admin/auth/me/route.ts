@@ -6,10 +6,7 @@ export async function GET(request: NextRequest) {
     const user = await authenticateRequest(request);
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     return NextResponse.json({
@@ -18,14 +15,10 @@ export async function GET(request: NextRequest) {
         id: user.userId,
         email: user.email,
         role: user.role,
-      }
+      },
     });
-
   } catch (error) {
     console.error('Auth check error:', error);
-    return NextResponse.json(
-      { error: 'Authentication check failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Authentication check failed' }, { status: 500 });
   }
 }

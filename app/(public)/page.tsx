@@ -33,28 +33,42 @@ export default function HomePage() {
       {/* How It Works */}
       <section className="py-20 bg-white dark:bg-gray-900">
         <Container>
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">
+            How It Works
+          </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">1</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Choose a Product</h3>
-              <p className="text-gray-700 dark:text-gray-300">Select from our catalog of corporate gift items</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Choose a Product
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Select from our catalog of corporate gift items
+              </p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">2</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Upload Your Logo</h3>
-              <p className="text-gray-700 dark:text-gray-300">Upload your company logo and choose placement options</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Upload Your Logo
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Upload your company logo and choose placement options
+              </p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">3</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Generate Mockup</h3>
-              <p className="text-gray-700 dark:text-gray-300">AI generates a realistic mockup in seconds</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Generate Mockup
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                AI generates a realistic mockup in seconds
+              </p>
             </div>
           </div>
         </Container>
@@ -63,33 +77,57 @@ export default function HomePage() {
       {/* Features */}
       <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <Container>
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">Features</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">
+            Features
+          </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">AI-Powered</h3>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                AI-Powered
+              </h3>
               <p className="text-gray-700 dark:text-gray-300">
                 Advanced AI technology for realistic mockup generation
               </p>
             </div>
             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Fast Generation</h3>
-              <p className="text-gray-700 dark:text-gray-300">Get your mockups in under 30 seconds</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Fast Generation
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Get your mockups in under 30 seconds
+              </p>
             </div>
             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Multiple Formats</h3>
-              <p className="text-gray-700 dark:text-gray-300">Download in PNG, JPG, or WebP formats</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Multiple Formats
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Download in PNG, JPG, or WebP formats
+              </p>
             </div>
             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Background Removal</h3>
-              <p className="text-gray-700 dark:text-gray-300">Automatic logo background removal included</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Background Removal
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Automatic logo background removal included
+              </p>
             </div>
             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Placement Options</h3>
-              <p className="text-gray-700 dark:text-gray-300">Choose horizontal, vertical, or all-over print</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                Placement Options
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Choose horizontal, vertical, or all-over print
+              </p>
             </div>
             <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">High Resolution</h3>
-              <p className="text-gray-700 dark:text-gray-300">Export high-quality mockups for presentations</p>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                High Resolution
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                Export high-quality mockups for presentations
+              </p>
             </div>
           </div>
         </Container>

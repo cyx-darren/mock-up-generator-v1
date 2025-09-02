@@ -9,20 +9,14 @@ export async function POST(request: NextRequest) {
     const { refreshToken, sessionId } = getAuthTokens(request);
 
     if (!refreshToken || !sessionId) {
-      return NextResponse.json(
-        { error: 'Missing refresh token or session ID' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Missing refresh token or session ID' }, { status: 401 });
     }
 
     // Verify refresh token
     const refreshPayload = verifyRefreshToken(refreshToken);
-    
+
     if (refreshPayload.sessionId !== sessionId) {
-      return NextResponse.json(
-        { error: 'Session mismatch' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Session mismatch' }, { status: 401 });
     }
 
     // Validate and refresh session with timeout detection
@@ -34,12 +28,12 @@ export async function POST(request: NextRequest) {
       } else if (sessionValidation.reason === 'expired') {
         errorMessage = 'Session has expired';
       }
-      
+
       return NextResponse.json(
-        { 
+        {
           error: errorMessage,
           reason: sessionValidation.reason,
-          showWarning: false
+          showWarning: false,
         },
         { status: 401 }
       );
@@ -54,10 +48,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 401 });
     }
 
     // Generate new access token
@@ -90,12 +81,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-
   } catch (error) {
     console.error('Token refresh error:', error);
-    return NextResponse.json(
-      { error: 'Invalid or expired refresh token' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Invalid or expired refresh token' }, { status: 401 });
   }
 }

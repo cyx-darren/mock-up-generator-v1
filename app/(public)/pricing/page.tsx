@@ -7,12 +7,7 @@ export default function PricingPage() {
     {
       name: 'Free',
       price: '$0',
-      features: [
-        '5 mockups per month',
-        'Basic quality',
-        'Watermarked images',
-        'Standard support',
-      ],
+      features: ['5 mockups per month', 'Basic quality', 'Watermarked images', 'Standard support'],
       cta: 'Get Started',
       variant: 'outline' as const,
     },

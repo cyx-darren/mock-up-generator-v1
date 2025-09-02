@@ -36,7 +36,16 @@ export const PRODUCT_VALIDATION_RULES: Record<keyof ProductFormData, ValidationR
   category: {
     required: true,
     custom: (value) => {
-      const validCategories = ['apparel', 'bags', 'drinkware', 'electronics', 'office', 'outdoor', 'wellness', 'other'];
+      const validCategories = [
+        'apparel',
+        'bags',
+        'drinkware',
+        'electronics',
+        'office',
+        'outdoor',
+        'wellness',
+        'other',
+      ];
       return validCategories.includes(value) ? null : 'Please select a valid category';
     },
   },
@@ -79,8 +88,10 @@ export const PRODUCT_VALIDATION_RULES: Record<keyof ProductFormData, ValidationR
       if (!value) return null;
       // Strip HTML tags and check length
       const textOnly = value.replace(/<[^>]*>/g, '').trim();
-      if (textOnly.length < 10) return 'Description must be at least 10 characters (excluding HTML)';
-      if (textOnly.length > 5000) return 'Description cannot exceed 5000 characters (excluding HTML)';
+      if (textOnly.length < 10)
+        return 'Description must be at least 10 characters (excluding HTML)';
+      if (textOnly.length > 5000)
+        return 'Description cannot exceed 5000 characters (excluding HTML)';
       return null;
     },
   },
@@ -88,17 +99,17 @@ export const PRODUCT_VALIDATION_RULES: Record<keyof ProductFormData, ValidationR
     custom: (value: string[]) => {
       if (!Array.isArray(value)) return 'Tags must be an array';
       if (value.length > 10) return 'Maximum 10 tags allowed';
-      
+
       for (const tag of value) {
         if (typeof tag !== 'string') return 'All tags must be strings';
         if (tag.length > 50) return 'Each tag must be 50 characters or less';
         if (tag.trim().length === 0) return 'Tags cannot be empty';
       }
-      
+
       // Check for duplicates
       const uniqueTags = new Set(value);
       if (uniqueTags.size !== value.length) return 'Duplicate tags are not allowed';
-      
+
       return null;
     },
   },
@@ -118,13 +129,13 @@ export const PRODUCT_VALIDATION_RULES: Record<keyof ProductFormData, ValidationR
     custom: (value: string[]) => {
       if (!Array.isArray(value)) return 'Additional images must be an array';
       if (value.length > 5) return 'Maximum 5 additional images allowed';
-      
+
       for (const url of value) {
         if (typeof url !== 'string') return 'All image URLs must be strings';
         const urlError = validateImageUrl(url);
         if (urlError) return urlError;
       }
-      
+
       return null;
     },
   },
@@ -153,12 +164,16 @@ export function validateField(
 
   // Check minimum length
   if (rules.minLength && typeof value === 'string' && value.length < rules.minLength) {
-    errors.push(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${rules.minLength} characters`);
+    errors.push(
+      `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must be at least ${rules.minLength} characters`
+    );
   }
 
   // Check maximum length
   if (rules.maxLength && typeof value === 'string' && value.length > rules.maxLength) {
-    errors.push(`${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must not exceed ${rules.maxLength} characters`);
+    errors.push(
+      `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} must not exceed ${rules.maxLength} characters`
+    );
   }
 
   // Check pattern
@@ -188,7 +203,7 @@ export function validateProductForm(data: ProductFormData): ValidationResult {
   Object.keys(PRODUCT_VALIDATION_RULES).forEach((fieldName) => {
     const key = fieldName as keyof ProductFormData;
     const fieldErrors = validateField(key, data[key]);
-    
+
     if (fieldErrors.length > 0) {
       errors[key] = fieldErrors;
       isValid = false;
@@ -205,23 +220,23 @@ export function getStepValidation(stepIndex: number, data: ProductFormData): boo
   switch (stepIndex) {
     case 0: // Basic Info Step
       const basicFields = ['name', 'category'] as const;
-      return basicFields.every(field => {
+      return basicFields.every((field) => {
         const fieldErrors = validateField(field, data[field]);
         return fieldErrors.length === 0;
       });
-      
+
     case 1: // Description Step
       const descriptionErrors = validateField('description', data.description);
       return descriptionErrors.length === 0;
-      
+
     case 2: // Tags Step
       const tagErrors = validateField('tags', data.tags);
       return tagErrors.length === 0;
-      
+
     case 3: // Images Step
       // Images are optional, so always valid
       return true;
-      
+
     default:
       return true;
   }
@@ -232,25 +247,25 @@ export function getStepValidation(stepIndex: number, data: ProductFormData): boo
  */
 function validateImageUrl(url: string): string | null {
   if (!url.trim()) return null;
-  
+
   try {
     const urlObj = new URL(url);
-    
+
     // Check protocol
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
       return 'Image URL must use HTTP or HTTPS protocol';
     }
-    
+
     // Check file extension
     const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const hasValidExtension = validExtensions.some(ext => 
+    const hasValidExtension = validExtensions.some((ext) =>
       urlObj.pathname.toLowerCase().endsWith(ext)
     );
-    
+
     if (!hasValidExtension) {
       return 'Image URL must end with a valid image extension (.jpg, .png, .gif, .webp)';
     }
-    
+
     return null;
   } catch (error) {
     return 'Please enter a valid URL';

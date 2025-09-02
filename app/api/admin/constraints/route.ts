@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       defaultYPosition,
       guidelinesText,
       patternSettings = {},
-      isEnabled = true
+      isEnabled = true,
     } = body;
 
     // Validate required fields
@@ -46,10 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Validate placement type
     if (!['horizontal', 'vertical', 'all_over'].includes(placementType)) {
-      return NextResponse.json(
-        { error: 'Invalid placement type' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid placement type' }, { status: 400 });
     }
 
     // Verify the product exists
@@ -95,17 +92,14 @@ export async function POST(request: NextRequest) {
         default_y_position: defaultYPosition,
         guidelines_text: guidelinesText,
         pattern_settings: patternSettings,
-        is_validated: detectedAreaPixels > 0
+        is_validated: detectedAreaPixels > 0,
       })
       .select()
       .single();
 
     if (constraintError) {
       console.error('Database error:', constraintError);
-      return NextResponse.json(
-        { error: 'Failed to create constraint' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create constraint' }, { status: 500 });
     }
 
     // Update the product to enable the placement type
@@ -116,7 +110,7 @@ export async function POST(request: NextRequest) {
         .update({
           [enableField]: true,
           updated_by: session.user.id,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', productId);
 
@@ -132,22 +126,17 @@ export async function POST(request: NextRequest) {
       entity_type: 'placement_constraint',
       entity_id: constraint.id,
       new_values: constraint,
-      ip_address: request.headers.get('x-forwarded-for') || 
-                 request.headers.get('x-real-ip') || 
-                 'unknown'
+      ip_address:
+        request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
     });
 
     return NextResponse.json({
       success: true,
       constraint,
-      message: 'Constraint created successfully'
+      message: 'Constraint created successfully',
     });
-
   } catch (error) {
     console.error('Create constraint error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

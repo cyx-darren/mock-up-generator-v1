@@ -17,11 +17,11 @@ export async function verifyAdminSession(request: NextRequest): Promise<VerifySe
   try {
     // Get auth tokens from cookies
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
       return {
         success: false,
-        error: 'Authentication required'
+        error: 'Authentication required',
       };
     }
 
@@ -39,7 +39,7 @@ export async function verifyAdminSession(request: NextRequest): Promise<VerifySe
     if (userError || !user) {
       return {
         success: false,
-        error: 'Invalid user'
+        error: 'Invalid user',
       };
     }
 
@@ -48,13 +48,13 @@ export async function verifyAdminSession(request: NextRequest): Promise<VerifySe
       user: {
         id: user.id,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Authentication failed'
+      error: error instanceof Error ? error.message : 'Authentication failed',
     };
   }
 }

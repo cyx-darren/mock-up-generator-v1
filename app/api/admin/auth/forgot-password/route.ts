@@ -7,10 +7,7 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     const supabase = createClient();
@@ -37,7 +34,7 @@ export async function POST(request: NextRequest) {
     // In production, you would send an actual email here
     // For now, we'll log the reset URL to the console for testing
     const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/reset-password?token=${resetToken}`;
-    
+
     console.log('Password Reset URL:', resetUrl);
     console.log('Reset token for user', user.email, ':', resetToken);
 
@@ -48,12 +45,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'If an account with that email exists, we sent a password reset link.',
     });
-
   } catch (error) {
     console.error('Forgot password error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

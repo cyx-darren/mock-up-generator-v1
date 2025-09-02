@@ -59,8 +59,8 @@ export default function ProductConstraintsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <Card>
           <CardBody>
-            <Alert 
-              type="error" 
+            <Alert
+              type="error"
               message={`You don't have permission to configure constraints. Current role: ${user?.role || 'No role'}`}
             />
             <div className="mt-4">
@@ -105,7 +105,6 @@ export default function ProductConstraintsPage() {
         const constraintsData = await constraintsResponse.json();
         setConstraints(constraintsData.constraints || []);
       }
-
     } catch (error) {
       console.error('Fetch error:', error);
       setError(error instanceof Error ? error.message : 'Failed to load data');
@@ -116,9 +115,11 @@ export default function ProductConstraintsPage() {
 
   const handleConstraintSave = async (constraintData: any) => {
     try {
-      const existingConstraint = constraints.find(c => c.placementType === constraintData.placementType);
+      const existingConstraint = constraints.find(
+        (c) => c.placementType === constraintData.placementType
+      );
       const method = existingConstraint ? 'PUT' : 'POST';
-      const url = existingConstraint 
+      const url = existingConstraint
         ? `/api/admin/constraints/${existingConstraint.id}`
         : '/api/admin/constraints';
 
@@ -137,14 +138,13 @@ export default function ProductConstraintsPage() {
 
       // Refresh constraints data
       await fetchProductAndConstraints();
-      
     } catch (error) {
       throw error; // Re-throw to be handled by the component
     }
   };
 
   const getConstraintByType = (type: 'horizontal' | 'vertical' | 'all_over') => {
-    return constraints.find(c => c.placementType === type);
+    return constraints.find((c) => c.placementType === type);
   };
 
   if (loading) {
@@ -269,7 +269,8 @@ export default function ProductConstraintsPage() {
                       id: getConstraintByType('horizontal')!.id,
                       constraintImageUrl: getConstraintByType('horizontal')!.constraintImageUrl,
                       detectedAreaPixels: getConstraintByType('horizontal')!.detectedAreaPixels,
-                      detectedAreaPercentage: getConstraintByType('horizontal')!.detectedAreaPercentage,
+                      detectedAreaPercentage:
+                        getConstraintByType('horizontal')!.detectedAreaPercentage,
                       minLogoWidth: getConstraintByType('horizontal')!.minLogoWidth,
                       minLogoHeight: getConstraintByType('horizontal')!.minLogoHeight,
                       maxLogoWidth: getConstraintByType('horizontal')!.maxLogoWidth,
@@ -295,7 +296,8 @@ export default function ProductConstraintsPage() {
                       id: getConstraintByType('vertical')!.id,
                       constraintImageUrl: getConstraintByType('vertical')!.constraintImageUrl,
                       detectedAreaPixels: getConstraintByType('vertical')!.detectedAreaPixels,
-                      detectedAreaPercentage: getConstraintByType('vertical')!.detectedAreaPercentage,
+                      detectedAreaPercentage:
+                        getConstraintByType('vertical')!.detectedAreaPercentage,
                       minLogoWidth: getConstraintByType('vertical')!.minLogoWidth,
                       minLogoHeight: getConstraintByType('vertical')!.minLogoHeight,
                       maxLogoWidth: getConstraintByType('vertical')!.maxLogoWidth,

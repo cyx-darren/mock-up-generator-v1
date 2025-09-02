@@ -5,7 +5,11 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { GreenColorDetector, DetectedArea } from '@/lib/constraint-detection/greenColorDetector';
-import { ConstraintCalculator, ValidationResult, ConstraintMetrics } from '@/lib/constraint-detection/constraintCalculator';
+import {
+  ConstraintCalculator,
+  ValidationResult,
+  ConstraintMetrics,
+} from '@/lib/constraint-detection/constraintCalculator';
 import { ConstraintOverlay } from './ConstraintOverlay';
 import { ConstraintStats } from './ConstraintStats';
 
@@ -57,11 +61,13 @@ export function ConstraintPreview({
     opacity: 0.8,
   });
 
-  const detector = useRef(new GreenColorDetector({
-    tolerance: detectionConfig.sensitivity,
-    noiseReduction: detectionConfig.noiseReduction,
-    morphologyOps: detectionConfig.morphology,
-  }));
+  const detector = useRef(
+    new GreenColorDetector({
+      tolerance: detectionConfig.sensitivity,
+      noiseReduction: detectionConfig.noiseReduction,
+      morphologyOps: detectionConfig.morphology,
+    })
+  );
 
   // Update detector when config changes
   useEffect(() => {
@@ -70,7 +76,7 @@ export function ConstraintPreview({
       noiseReduction: detectionConfig.noiseReduction,
       morphologyOps: detectionConfig.morphology,
     });
-    
+
     if (imageUrl && imageLoaded) {
       analyzeImage();
     }
@@ -98,11 +104,11 @@ export function ConstraintPreview({
           canvas.width = img.naturalWidth;
           canvas.height = img.naturalHeight;
           setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
-          
+
           ctx.drawImage(img, 0, 0);
           resolve();
         };
-        
+
         img.onerror = () => reject(new Error('Failed to load image'));
         img.src = imageUrl;
       });
@@ -110,7 +116,7 @@ export function ConstraintPreview({
       // Analyze image data
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const detected = detector.current.detectGreenAreas(imageData, canvas.width, canvas.height);
-      
+
       // Validate constraint
       const validationResult = ConstraintCalculator.validateConstraint(
         detected,
@@ -139,7 +145,6 @@ export function ConstraintPreview({
           metrics: metricsResult,
         });
       }
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze image';
       setError(errorMessage);
@@ -165,11 +170,11 @@ export function ConstraintPreview({
   };
 
   const handleConfigChange = (key: string, value: any) => {
-    setDetectionConfig(prev => ({ ...prev, [key]: value }));
+    setDetectionConfig((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleOverlayChange = (key: string, value: any) => {
-    setOverlayOptions(prev => ({ ...prev, [key]: value }));
+    setOverlayOptions((prev) => ({ ...prev, [key]: value }));
   };
 
   if (!imageUrl) {
@@ -178,8 +183,18 @@ export function ConstraintPreview({
         <CardBody>
           <div className="text-center py-8">
             <div className="text-gray-400 dark:text-gray-600 mb-4">
-              <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              <svg
+                className="mx-auto h-16 w-16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -205,11 +220,7 @@ export function ConstraintPreview({
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Detection Controls
             </h3>
-            <Button 
-              variant="outline" 
-              onClick={handleReanalyze}
-              disabled={isAnalyzing}
-            >
+            <Button variant="outline" onClick={handleReanalyze} disabled={isAnalyzing}>
               {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
             </Button>
           </div>
@@ -241,7 +252,10 @@ export function ConstraintPreview({
                 onChange={(e) => handleConfigChange('noiseReduction', e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="noiseReduction" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="noiseReduction"
+                className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+              >
                 Noise Reduction
               </label>
             </div>
@@ -269,7 +283,10 @@ export function ConstraintPreview({
                 onChange={(e) => handleConfigChange('showAdvancedStats', e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="advancedStats" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="advancedStats"
+                className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+              >
                 Advanced Stats
               </label>
             </div>
@@ -280,9 +297,7 @@ export function ConstraintPreview({
       {/* Overlay Controls */}
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Display Options
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Display Options</h3>
         </CardHeader>
         <CardBody>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -309,7 +324,10 @@ export function ConstraintPreview({
                 onChange={(e) => handleOverlayChange('showCentroid', e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="showCentroid" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="showCentroid"
+                className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+              >
                 Centroid
               </label>
             </div>
@@ -323,7 +341,10 @@ export function ConstraintPreview({
                 onChange={(e) => handleOverlayChange('showContours', e.target.checked)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="showContours" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="showContours"
+                className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+              >
                 Contours
               </label>
             </div>
@@ -379,7 +400,7 @@ export function ConstraintPreview({
                   </div>
                 </div>
               )}
-              
+
               <ConstraintOverlay
                 imageUrl={imageUrl}
                 detectedArea={detectedArea}
@@ -399,9 +420,11 @@ export function ConstraintPreview({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Detection:</span>
-                    <span className={`ml-2 font-medium ${
-                      validation?.isValid ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <span
+                      className={`ml-2 font-medium ${
+                        validation?.isValid ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
                       {validation?.isValid ? 'Valid' : 'Issues Found'}
                     </span>
                   </div>
@@ -432,12 +455,7 @@ export function ConstraintPreview({
 
       {/* Hidden canvas for image processing */}
       <canvas ref={canvasRef} className="hidden" />
-      <img 
-        src={imageUrl} 
-        onLoad={handleImageLoad} 
-        className="hidden" 
-        alt="Analysis target"
-      />
+      <img src={imageUrl} onLoad={handleImageLoad} className="hidden" alt="Analysis target" />
     </div>
   );
 }

@@ -7,12 +7,12 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   hoverable?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({ 
-  className, 
-  children, 
+export const Card: React.FC<CardProps> = ({
+  className,
+  children,
   variant = 'default',
   hoverable = false,
-  ...props 
+  ...props
 }) => {
   const variants = {
     default: 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm',
@@ -42,7 +42,10 @@ interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardHeader: React.FC<CardHeaderProps> = ({ className, children, ...props }) => {
   return (
-    <div className={cn('px-6 py-4 border-b border-gray-200 dark:border-gray-700', className)} {...props}>
+    <div
+      className={cn('px-6 py-4 border-b border-gray-200 dark:border-gray-700', className)}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -54,7 +57,10 @@ interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
 
 export const CardTitle: React.FC<CardTitleProps> = ({ className, children, ...props }) => {
   return (
-    <h3 className={cn('text-lg font-semibold text-gray-900 dark:text-gray-100', className)} {...props}>
+    <h3
+      className={cn('text-lg font-semibold text-gray-900 dark:text-gray-100', className)}
+      {...props}
+    >
       {children}
     </h3>
   );
@@ -64,7 +70,11 @@ interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement
   children: React.ReactNode;
 }
 
-export const CardDescription: React.FC<CardDescriptionProps> = ({ className, children, ...props }) => {
+export const CardDescription: React.FC<CardDescriptionProps> = ({
+  className,
+  children,
+  ...props
+}) => {
   return (
     <p className={cn('text-sm text-gray-600 dark:text-gray-400 mt-1', className)} {...props}>
       {children}
@@ -90,7 +100,13 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardFooter: React.FC<CardFooterProps> = ({ className, children, ...props }) => {
   return (
-    <div className={cn('px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900', className)} {...props}>
+    <div
+      className={cn(
+        'px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );

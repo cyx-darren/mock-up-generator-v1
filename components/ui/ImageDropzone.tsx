@@ -47,94 +47,103 @@ export function ImageDropzone({
   multiple = true,
   disabled = false,
   className,
-  acceptedFormats = "JPEG, PNG, GIF, WebP",
-  maxFileDisplay = "10MB",
+  acceptedFormats = 'JPEG, PNG, GIF, WebP',
+  maxFileDisplay = '10MB',
   children,
 }: ImageDropzoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isDragReject, setIsDragReject] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateFile = useCallback((file: File): string[] => {
-    const errors: string[] = [];
-    const rules = { ...DEFAULT_VALIDATION, ...validation };
-
-    // Check file size
-    if (rules.maxSize && file.size > rules.maxSize) {
-      errors.push(`File size must be less than ${formatFileSize(rules.maxSize)}`);
-    }
-    if (rules.minSize && file.size < rules.minSize) {
-      errors.push(`File size must be at least ${formatFileSize(rules.minSize)}`);
-    }
-
-    // Check file type
-    if (rules.allowedTypes && !rules.allowedTypes.includes(file.type)) {
-      errors.push(`File type ${file.type} is not allowed`);
-    }
-
-    // Check file extension
-    if (rules.allowedExtensions) {
-      const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-      if (!rules.allowedExtensions.includes(extension)) {
-        errors.push(`File extension ${extension} is not allowed`);
-      }
-    }
-
-    return errors;
-  }, [validation]);
-
-  const processFiles = useCallback((fileList: FileList | File[]) => {
-    const files = Array.from(fileList);
-    const rules = { ...DEFAULT_VALIDATION, ...validation };
-
-    // Check max files limit
-    if (rules.maxFiles && files.length > rules.maxFiles) {
-      const error = `Maximum ${rules.maxFiles} files allowed`;
-      if (onFilesRejected) {
-        onFilesRejected(files.map(file => ({ file, errors: [error] })));
-      }
-      return;
-    }
-
-    const acceptedFiles: File[] = [];
-    const rejectedFiles: { file: File; errors: string[] }[] = [];
-
-    files.forEach(file => {
-      const errors = validateFile(file);
-      if (errors.length === 0) {
-        acceptedFiles.push(file);
-      } else {
-        rejectedFiles.push({ file, errors });
-      }
-    });
-
-    if (acceptedFiles.length > 0) {
-      onFilesAccepted(acceptedFiles);
-    }
-
-    if (rejectedFiles.length > 0 && onFilesRejected) {
-      onFilesRejected(rejectedFiles);
-    }
-  }, [validation, validateFile, onFilesAccepted, onFilesRejected]);
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (disabled) return;
-
-    setIsDragActive(true);
-    
-    // Check if dragged items are valid
-    const items = Array.from(e.dataTransfer.items);
-    const hasInvalidItems = items.some(item => {
-      if (item.kind !== 'file') return true;
+  const validateFile = useCallback(
+    (file: File): string[] => {
+      const errors: string[] = [];
       const rules = { ...DEFAULT_VALIDATION, ...validation };
-      return rules.allowedTypes && !rules.allowedTypes.includes(item.type);
-    });
-    
-    setIsDragReject(hasInvalidItems);
-  }, [disabled, validation]);
+
+      // Check file size
+      if (rules.maxSize && file.size > rules.maxSize) {
+        errors.push(`File size must be less than ${formatFileSize(rules.maxSize)}`);
+      }
+      if (rules.minSize && file.size < rules.minSize) {
+        errors.push(`File size must be at least ${formatFileSize(rules.minSize)}`);
+      }
+
+      // Check file type
+      if (rules.allowedTypes && !rules.allowedTypes.includes(file.type)) {
+        errors.push(`File type ${file.type} is not allowed`);
+      }
+
+      // Check file extension
+      if (rules.allowedExtensions) {
+        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+        if (!rules.allowedExtensions.includes(extension)) {
+          errors.push(`File extension ${extension} is not allowed`);
+        }
+      }
+
+      return errors;
+    },
+    [validation]
+  );
+
+  const processFiles = useCallback(
+    (fileList: FileList | File[]) => {
+      const files = Array.from(fileList);
+      const rules = { ...DEFAULT_VALIDATION, ...validation };
+
+      // Check max files limit
+      if (rules.maxFiles && files.length > rules.maxFiles) {
+        const error = `Maximum ${rules.maxFiles} files allowed`;
+        if (onFilesRejected) {
+          onFilesRejected(files.map((file) => ({ file, errors: [error] })));
+        }
+        return;
+      }
+
+      const acceptedFiles: File[] = [];
+      const rejectedFiles: { file: File; errors: string[] }[] = [];
+
+      files.forEach((file) => {
+        const errors = validateFile(file);
+        if (errors.length === 0) {
+          acceptedFiles.push(file);
+        } else {
+          rejectedFiles.push({ file, errors });
+        }
+      });
+
+      if (acceptedFiles.length > 0) {
+        onFilesAccepted(acceptedFiles);
+      }
+
+      if (rejectedFiles.length > 0 && onFilesRejected) {
+        onFilesRejected(rejectedFiles);
+      }
+    },
+    [validation, validateFile, onFilesAccepted, onFilesRejected]
+  );
+
+  const handleDragEnter = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (disabled) return;
+
+      setIsDragActive(true);
+
+      // Check if dragged items are valid
+      const items = Array.from(e.dataTransfer.items);
+      const hasInvalidItems = items.some((item) => {
+        if (item.kind !== 'file') return true;
+        const rules = { ...DEFAULT_VALIDATION, ...validation };
+        return rules.allowedTypes && !rules.allowedTypes.includes(item.type);
+      });
+
+      setIsDragReject(hasInvalidItems);
+    },
+    [disabled, validation]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -144,7 +153,7 @@ export function ImageDropzone({
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Only set to false if we're leaving the dropzone entirely
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragActive(false);
@@ -152,53 +161,65 @@ export function ImageDropzone({
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsDragActive(false);
-    setIsDragReject(false);
-    
-    if (disabled) return;
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const files = e.dataTransfer.files;
-    processFiles(files);
-  }, [disabled, processFiles]);
+      setIsDragActive(false);
+      setIsDragReject(false);
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return;
-    
-    const files = e.target.files;
-    if (files) {
+      if (disabled) return;
+
+      const files = e.dataTransfer.files;
       processFiles(files);
-    }
-    
-    // Reset input value to allow selecting the same file again
-    e.target.value = '';
-  }, [disabled, processFiles]);
+    },
+    [disabled, processFiles]
+  );
+
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return;
+
+      const files = e.target.files;
+      if (files) {
+        processFiles(files);
+      }
+
+      // Reset input value to allow selecting the same file again
+      e.target.value = '';
+    },
+    [disabled, processFiles]
+  );
 
   const handleClick = useCallback(() => {
     if (disabled) return;
     fileInputRef.current?.click();
   }, [disabled]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (disabled) return;
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleClick();
-    }
-  }, [disabled, handleClick]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (disabled) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleClick();
+      }
+    },
+    [disabled, handleClick]
+  );
 
   return (
     <div
       className={cn(
         'relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer',
         {
-          'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500': !isDragActive && !isDragReject && !disabled,
-          'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950': isDragActive && !isDragReject && !disabled,
+          'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500':
+            !isDragActive && !isDragReject && !disabled,
+          'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950':
+            isDragActive && !isDragReject && !disabled,
           'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-950': isDragReject && !disabled,
-          'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed': disabled,
+          'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed':
+            disabled,
         },
         className
       )}
@@ -228,12 +249,32 @@ export function ImageDropzone({
           {/* Upload Icon */}
           <div className="mx-auto w-12 h-12">
             {isDragReject ? (
-              <svg className="w-full h-full text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-full h-full text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             ) : (
-              <svg className="w-full h-full text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              <svg
+                className="w-full h-full text-gray-400 dark:text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
               </svg>
             )}
           </div>
@@ -241,10 +282,14 @@ export function ImageDropzone({
           {/* Upload Text */}
           <div className="space-y-2">
             {isDragActive ? (
-              <p className={cn(
-                "text-lg font-medium",
-                isDragReject ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400"
-              )}>
+              <p
+                className={cn(
+                  'text-lg font-medium',
+                  isDragReject
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-blue-600 dark:text-blue-400'
+                )}
+              >
                 {isDragReject ? 'Invalid file type!' : 'Drop files here...'}
               </p>
             ) : (

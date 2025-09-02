@@ -1,0 +1,2 @@
+name,description,sku,category,price,status,tags,thumbnail_url,primary_image_url,additional_images
+Test Product with No Images,A test product with empty image URLs,TEST-001,office,25.99,active,test;bulk-import,,,

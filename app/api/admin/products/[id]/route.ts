@@ -13,12 +13,9 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -32,18 +29,12 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to read products
     if (user.role !== 'super_admin' && user.role !== 'product_manager' && user.role !== 'viewer') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Fetch product
@@ -54,22 +45,15 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       .single();
 
     if (productError || !product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     return NextResponse.json({
       product,
     });
-
   } catch (error) {
     console.error('Product fetch error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -77,12 +61,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -96,18 +77,12 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to update products
     if (user.role !== 'super_admin' && user.role !== 'product_manager') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Get existing product for audit trail
@@ -118,10 +93,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       .single();
 
     if (existingError || !existingProduct) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -136,6 +108,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       thumbnail_url,
       primary_image_url,
       additional_images,
+      horizontal_enabled,
+      vertical_enabled,
+      all_over_enabled,
     } = body;
 
     // Validate required fields
@@ -156,10 +131,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         .single();
 
       if (duplicateProduct) {
-        return NextResponse.json(
-          { error: 'SKU already exists' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'SKU already exists' }, { status: 400 });
       }
     }
 
@@ -175,6 +147,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       thumbnail_url,
       primary_image_url,
       additional_images: additional_images || existingProduct.additional_images,
+      horizontal_enabled: horizontal_enabled !== undefined ? horizontal_enabled : existingProduct.horizontal_enabled,
+      vertical_enabled: vertical_enabled !== undefined ? vertical_enabled : existingProduct.vertical_enabled,
+      all_over_enabled: all_over_enabled !== undefined ? all_over_enabled : existingProduct.all_over_enabled,
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     };
@@ -192,7 +167,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Log audit trail
     const changes: any = {};
-    Object.keys(updates).forEach(key => {
+    Object.keys(updates).forEach((key) => {
       if (key === 'updated_by' || key === 'updated_at') return;
       if (JSON.stringify(existingProduct[key]) !== JSON.stringify(updates[key])) {
         changes[key] = {
@@ -203,28 +178,22 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     });
 
     if (Object.keys(changes).length > 0) {
-      await supabase
-        .from('audit_log')
-        .insert({
-          user_id: user.id,
-          action: 'product.update',
-          table_name: 'gift_items',
-          record_id: params.id,
-          changes,
-        });
+      await supabase.from('audit_log').insert({
+        user_id: user.id,
+        action: 'product.update',
+        table_name: 'gift_items',
+        record_id: params.id,
+        changes,
+      });
     }
 
     return NextResponse.json({
       success: true,
       product,
     });
-
   } catch (error) {
     console.error('Product update error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -232,12 +201,9 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -251,18 +217,12 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to delete products
     if (user.role !== 'super_admin' && user.role !== 'product_manager') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Get product for audit trail
@@ -273,10 +233,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       .single();
 
     if (existingError || !existingProduct) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     // Soft delete (mark as deleted rather than actual deletion)
@@ -294,31 +251,25 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     }
 
     // Log audit trail
-    await supabase
-      .from('audit_log')
-      .insert({
-        user_id: user.id,
-        action: 'product.delete',
-        table_name: 'gift_items',
-        record_id: params.id,
-        changes: {
-          deleted: {
-            name: existingProduct.name,
-            sku: existingProduct.sku,
-          }
+    await supabase.from('audit_log').insert({
+      user_id: user.id,
+      action: 'product.delete',
+      table_name: 'gift_items',
+      record_id: params.id,
+      changes: {
+        deleted: {
+          name: existingProduct.name,
+          sku: existingProduct.sku,
         },
-      });
+      },
+    });
 
     return NextResponse.json({
       success: true,
       message: 'Product deleted successfully',
     });
-
   } catch (error) {
     console.error('Product deletion error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

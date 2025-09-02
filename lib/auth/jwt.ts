@@ -22,7 +22,7 @@ export interface RefreshTokenPayload {
 
 export function generateTokens(payload: Omit<TokenPayload, 'sessionId'>, rememberMe = false) {
   const sessionId = crypto.randomUUID();
-  
+
   const accessTokenPayload: TokenPayload = {
     ...payload,
     sessionId,
@@ -46,7 +46,9 @@ export function generateTokens(payload: Omit<TokenPayload, 'sessionId'>, remembe
     accessToken,
     refreshToken,
     sessionId,
-    expiresAt: new Date(Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000)),
+    expiresAt: new Date(
+      Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000)
+    ),
   };
 }
 

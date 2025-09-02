@@ -17,7 +17,7 @@ interface TagManagerProps {
 export function TagManager({
   tags,
   onChange,
-  placeholder = "Add tags...",
+  placeholder = 'Add tags...',
   maxTags = 20,
   suggestions = [],
   className,
@@ -27,17 +27,12 @@ export function TagManager({
 
   const filteredSuggestions = suggestions.filter(
     (suggestion) =>
-      suggestion.toLowerCase().includes(inputValue.toLowerCase()) &&
-      !tags.includes(suggestion)
+      suggestion.toLowerCase().includes(inputValue.toLowerCase()) && !tags.includes(suggestion)
   );
 
   const addTag = (tag: string) => {
     const trimmedTag = tag.trim().toLowerCase();
-    if (
-      trimmedTag &&
-      !tags.includes(trimmedTag) &&
-      tags.length < maxTags
-    ) {
+    if (trimmedTag && !tags.includes(trimmedTag) && tags.length < maxTags) {
       onChange([...tags, trimmedTag]);
     }
     setInputValue('');
@@ -103,11 +98,7 @@ export function TagManager({
           onKeyDown={handleInputKeyDown}
           onFocus={() => setShowSuggestions(inputValue.length > 0)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          placeholder={
-            tags.length >= maxTags
-              ? `Maximum ${maxTags} tags reached`
-              : placeholder
-          }
+          placeholder={tags.length >= maxTags ? `Maximum ${maxTags} tags reached` : placeholder}
           disabled={tags.length >= maxTags}
         />
 
@@ -153,9 +144,7 @@ export function TagManager({
       {/* Common Tags */}
       {suggestions.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Common Tags:
-          </p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Common Tags:</p>
           <div className="flex flex-wrap gap-2">
             {suggestions
               .filter((suggestion) => !tags.includes(suggestion))

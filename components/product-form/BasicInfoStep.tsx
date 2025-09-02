@@ -27,11 +27,11 @@ const categories = [
   { value: 'other', label: 'Other' },
 ];
 
-export function BasicInfoStep({ 
-  data, 
-  onChange, 
-  onGenerateSku, 
-  isGeneratingSku = false 
+export function BasicInfoStep({
+  data,
+  onChange,
+  onGenerateSku,
+  isGeneratingSku = false,
 }: BasicInfoStepProps) {
   return (
     <div className="space-y-6">
@@ -129,9 +129,7 @@ export function BasicInfoStep({
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Set to inactive to save as draft
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Set to inactive to save as draft</p>
         </div>
       </div>
     </div>

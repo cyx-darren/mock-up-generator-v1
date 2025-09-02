@@ -9,10 +9,7 @@ export async function POST(request: NextRequest) {
     const { token, password } = await request.json();
 
     if (!token || !password) {
-      return NextResponse.json(
-        { error: 'Reset token and password are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Reset token and password are required' }, { status: 400 });
     }
 
     // Validate password strength
@@ -27,10 +24,7 @@ export async function POST(request: NextRequest) {
     const { isValid, userId } = await validateResetToken(token);
 
     if (!isValid || !userId) {
-      return NextResponse.json(
-        { error: 'Invalid or expired reset token' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid or expired reset token' }, { status: 400 });
     }
 
     const supabase = createClient();
@@ -46,7 +40,7 @@ export async function POST(request: NextRequest) {
       // Check if new password is same as current password
       const bcrypt = require('bcryptjs');
       const isSamePassword = await bcrypt.compare(password, user.password_hash);
-      
+
       if (isSamePassword) {
         return NextResponse.json(
           { error: 'New password must be different from your current password' },
@@ -63,7 +57,7 @@ export async function POST(request: NextRequest) {
       .from('admin_users')
       .update({
         password_hash: passwordHash,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
 
@@ -80,36 +74,32 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Password reset successfully'
+      message: 'Password reset successfully',
     });
-
   } catch (error) {
     console.error('Password reset error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 function isPasswordStrong(password: string): boolean {
   if (password.length < 8) return false;
-  
+
   let score = 0;
-  
+
   // Length check
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
-  
+
   // Character variety checks
   if (/[a-z]/.test(password)) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  
+
   // Pattern checks
   if (!/(.)\1{2,}/.test(password)) score++; // No repeating characters
   if (!/123|abc|qwe/i.test(password)) score++; // No common sequences
-  
+
   return score >= 5;
 }

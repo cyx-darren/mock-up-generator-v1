@@ -88,9 +88,7 @@ export function TagsMetadataStep({ data, onChange }: TagsMetadataStepProps) {
         </div>
 
         <div className="space-y-4">
-          <h4 className="font-medium text-gray-900 dark:text-white">
-            SEO Impact
-          </h4>
+          <h4 className="font-medium text-gray-900 dark:text-white">SEO Impact</h4>
           <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm">
             <div className="space-y-2">
               <div className="flex justify-between">

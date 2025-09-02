@@ -44,16 +44,15 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
           📋 Review Your Product
         </h4>
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          Please review all information before creating the product. You can click "Edit" to go back and modify any section.
+          Please review all information before creating the product. You can click "Edit" to go back
+          and modify any section.
         </p>
       </div>
 
       {/* Basic Information */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Basic Information
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h3>
           <button
             type="button"
             onClick={() => onEdit(0)}
@@ -62,7 +61,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
             Edit
           </button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-700 dark:text-gray-300">Name:</span>
@@ -84,11 +83,13 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
           </div>
           <div>
             <span className="font-medium text-gray-700 dark:text-gray-300">Status:</span>
-            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-              data.status === 'active' 
-                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-            }`}>
+            <span
+              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                data.status === 'active'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+              }`}
+            >
               {data.status}
             </span>
           </div>
@@ -98,9 +99,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
       {/* Description */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Description
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Description</h3>
           <button
             type="button"
             onClick={() => onEdit(1)}
@@ -109,7 +108,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
             Edit
           </button>
         </div>
-        
+
         <div className="prose prose-sm max-w-none dark:prose-invert">
           {data.description ? (
             <div dangerouslySetInnerHTML={{ __html: data.description }} />
@@ -117,7 +116,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
             <p className="text-gray-500 italic">No description provided</p>
           )}
         </div>
-        
+
         {data.description && (
           <p className="text-xs text-gray-500 mt-2">
             {stripHtml(data.description).length} characters
@@ -128,9 +127,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
       {/* Tags */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Tags & Metadata
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tags & Metadata</h3>
           <button
             type="button"
             onClick={() => onEdit(2)}
@@ -139,7 +136,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
             Edit
           </button>
         </div>
-        
+
         {data.tags.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {data.tags.map((tag, index) => (
@@ -159,9 +156,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
       {/* Images */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Images
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Images</h3>
           <button
             type="button"
             onClick={() => onEdit(3)}
@@ -170,7 +165,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
             Edit
           </button>
         </div>
-        
+
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.thumbnail_url && (
@@ -190,7 +185,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
                 </div>
               </div>
             )}
-            
+
             {data.primary_image_url && (
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -209,7 +204,7 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
               </div>
             )}
           </div>
-          
+
           {data.additional_images.length > 0 && (
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -234,38 +229,55 @@ export function ReviewStep({ data, onEdit }: ReviewStepProps) {
               </div>
             </div>
           )}
-          
-          {!data.thumbnail_url && !data.primary_image_url && data.additional_images.length === 0 && (
-            <p className="text-gray-500 italic text-sm">No images added</p>
-          )}
+
+          {!data.thumbnail_url &&
+            !data.primary_image_url &&
+            data.additional_images.length === 0 && (
+              <p className="text-gray-500 italic text-sm">No images added</p>
+            )}
         </div>
       </div>
 
       {/* Validation Summary */}
       <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-        <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-          Validation Summary
-        </h4>
+        <h4 className="font-medium text-gray-900 dark:text-white mb-3">Validation Summary</h4>
         <div className="space-y-2 text-sm">
           <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-3 ${data.name ? 'bg-green-500' : 'bg-red-500'}`} />
+            <div
+              className={`w-3 h-3 rounded-full mr-3 ${data.name ? 'bg-green-500' : 'bg-red-500'}`}
+            />
             <span>Product name {data.name ? 'provided' : 'required'}</span>
           </div>
           <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-3 ${data.category ? 'bg-green-500' : 'bg-red-500'}`} />
+            <div
+              className={`w-3 h-3 rounded-full mr-3 ${data.category ? 'bg-green-500' : 'bg-red-500'}`}
+            />
             <span>Category {data.category ? 'selected' : 'required'}</span>
           </div>
           <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-3 ${data.description ? 'bg-green-500' : 'bg-red-500'}`} />
+            <div
+              className={`w-3 h-3 rounded-full mr-3 ${data.description ? 'bg-green-500' : 'bg-red-500'}`}
+            />
             <span>Description {data.description ? 'provided' : 'required'}</span>
           </div>
           <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-3 ${data.tags.length > 0 ? 'bg-green-500' : 'bg-yellow-500'}`} />
-            <span>Tags {data.tags.length > 0 ? `(${data.tags.length})` : '(optional but recommended)'}</span>
+            <div
+              className={`w-3 h-3 rounded-full mr-3 ${data.tags.length > 0 ? 'bg-green-500' : 'bg-yellow-500'}`}
+            />
+            <span>
+              Tags {data.tags.length > 0 ? `(${data.tags.length})` : '(optional but recommended)'}
+            </span>
           </div>
           <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-3 ${data.thumbnail_url || data.primary_image_url ? 'bg-green-500' : 'bg-yellow-500'}`} />
-            <span>Images {data.thumbnail_url || data.primary_image_url ? 'provided' : '(optional but recommended)'}</span>
+            <div
+              className={`w-3 h-3 rounded-full mr-3 ${data.thumbnail_url || data.primary_image_url ? 'bg-green-500' : 'bg-yellow-500'}`}
+            />
+            <span>
+              Images{' '}
+              {data.thumbnail_url || data.primary_image_url
+                ? 'provided'
+                : '(optional but recommended)'}
+            </span>
           </div>
         </div>
       </div>

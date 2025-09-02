@@ -21,23 +21,18 @@ export async function createSession(
   const supabase = createClient();
 
   // First, invalidate any existing sessions for this user
-  await supabase
-    .from('admin_sessions')
-    .update({ is_active: false })
-    .eq('user_id', userId);
+  await supabase.from('admin_sessions').update({ is_active: false }).eq('user_id', userId);
 
   // Create new session
-  const { error } = await supabase
-    .from('admin_sessions')
-    .insert({
-      user_id: userId,
-      session_id: sessionId,
-      expires_at: expiresAt.toISOString(),
-      ip_address: ipAddress,
-      user_agent: userAgent,
-      last_activity: new Date().toISOString(),
-      is_active: true,
-    });
+  const { error } = await supabase.from('admin_sessions').insert({
+    user_id: userId,
+    session_id: sessionId,
+    expires_at: expiresAt.toISOString(),
+    ip_address: ipAddress,
+    user_agent: userAgent,
+    last_activity: new Date().toISOString(),
+    is_active: true,
+  });
 
   if (error) {
     throw new Error(`Failed to create session: ${error.message}`);

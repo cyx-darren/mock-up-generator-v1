@@ -71,8 +71,8 @@ export class ConstraintCalculator {
         usableArea: {
           pixels: 0,
           percentage: 0,
-          bounds: { x: 0, y: 0, width: 0, height: 0 }
-        }
+          bounds: { x: 0, y: 0, width: 0, height: 0 },
+        },
       };
     }
 
@@ -81,12 +81,16 @@ export class ConstraintCalculator {
 
     // Size validation
     if (detectedArea.bounds.width < dimensions.minWidth) {
-      warnings.push(`Detected area width (${detectedArea.bounds.width}px) is smaller than minimum required (${dimensions.minWidth}px)`);
+      warnings.push(
+        `Detected area width (${detectedArea.bounds.width}px) is smaller than minimum required (${dimensions.minWidth}px)`
+      );
       score -= 0.2;
     }
 
     if (detectedArea.bounds.height < dimensions.minHeight) {
-      warnings.push(`Detected area height (${detectedArea.bounds.height}px) is smaller than minimum required (${dimensions.minHeight}px)`);
+      warnings.push(
+        `Detected area height (${detectedArea.bounds.height}px) is smaller than minimum required (${dimensions.minHeight}px)`
+      );
       score -= 0.2;
     }
 
@@ -125,25 +129,32 @@ export class ConstraintCalculator {
 
     // Fragmentation check
     if (detectedArea.contours.length > 3) {
-      warnings.push(`Multiple separate green areas detected (${detectedArea.contours.length} areas)`);
+      warnings.push(
+        `Multiple separate green areas detected (${detectedArea.contours.length} areas)`
+      );
       recommendations.push('Use a single, continuous green area for better results');
       score -= 0.1;
     }
 
     // Position validation
-    const positionValidation = this.validatePosition(detectedArea, imageWidth, imageHeight, placementType);
+    const positionValidation = this.validatePosition(
+      detectedArea,
+      imageWidth,
+      imageHeight,
+      placementType
+    );
     warnings.push(...positionValidation.warnings);
     recommendations.push(...positionValidation.recommendations);
     score -= positionValidation.scorePenalty;
 
-    const isValid = warnings.length === 0 || !warnings.some(w => w.includes('required'));
-    
+    const isValid = warnings.length === 0 || !warnings.some((w) => w.includes('required'));
+
     return {
       isValid,
       warnings,
       recommendations,
       score: Math.max(0, score),
-      usableArea
+      usableArea,
     };
   }
 
@@ -162,7 +173,7 @@ export class ConstraintCalculator {
     const areaCenterY = bounds.y + bounds.height / 2;
 
     const edgeDistances = this.calculateEdgeDistances(bounds, imageWidth, imageHeight);
-    
+
     // Calculate compactness (how well the area fills its bounding box)
     const boundingBoxArea = bounds.width * bounds.height;
     const compactness = boundingBoxArea > 0 ? detectedArea.pixels / boundingBoxArea : 0;
@@ -173,32 +184,32 @@ export class ConstraintCalculator {
       aspectRatio: detectedArea.aspectRatio,
       centerOffset: {
         x: areaCenterX - centerX,
-        y: areaCenterY - centerY
+        y: areaCenterY - centerY,
       },
       edgeDistances,
       fragmentCount: detectedArea.contours.length,
-      compactness
+      compactness,
     };
   }
 
   /**
    * Calculate usable area within constraints
    */
-  private static calculateUsableArea(
-    detectedArea: DetectedArea,
-    dimensions: ConstraintDimensions
-  ) {
+  private static calculateUsableArea(detectedArea: DetectedArea, dimensions: ConstraintDimensions) {
     const { bounds } = detectedArea;
-    
+
     // Apply padding to ensure logos fit comfortably
     const padding = 10;
     const usableWidth = Math.max(0, bounds.width - padding * 2);
     const usableHeight = Math.max(0, bounds.height - padding * 2);
-    
+
     // Ensure usable area meets minimum requirements
     const finalWidth = Math.max(dimensions.minWidth, Math.min(dimensions.maxWidth, usableWidth));
-    const finalHeight = Math.max(dimensions.minHeight, Math.min(dimensions.maxHeight, usableHeight));
-    
+    const finalHeight = Math.max(
+      dimensions.minHeight,
+      Math.min(dimensions.maxHeight, usableHeight)
+    );
+
     const usablePixels = finalWidth * finalHeight;
     const totalImagePixels = bounds.width * bounds.height;
     const usablePercentage = totalImagePixels > 0 ? (usablePixels / totalImagePixels) * 100 : 0;
@@ -210,8 +221,8 @@ export class ConstraintCalculator {
         x: bounds.x + padding,
         y: bounds.y + padding,
         width: finalWidth,
-        height: finalHeight
-      }
+        height: finalHeight,
+      },
     };
   }
 
@@ -228,21 +239,22 @@ export class ConstraintCalculator {
           return {
             isValid: false,
             warning: 'Horizontal placement area is too tall/narrow for typical logos',
-            recommendation: 'Consider making the green area wider for horizontal logo placement'
+            recommendation: 'Consider making the green area wider for horizontal logo placement',
           };
         }
         break;
-      
+
       case 'vertical':
         if (aspectRatio > 2.0) {
           return {
             isValid: false,
             warning: 'Vertical placement area is too wide for typical logos',
-            recommendation: 'Consider making the green area taller/narrower for vertical logo placement'
+            recommendation:
+              'Consider making the green area taller/narrower for vertical logo placement',
           };
         }
         break;
-      
+
       case 'all_over':
         // All-over patterns are more flexible with aspect ratios
         break;
@@ -263,7 +275,7 @@ export class ConstraintCalculator {
       top: bounds.y,
       left: bounds.x,
       bottom: imageHeight - (bounds.y + bounds.height),
-      right: imageWidth - (bounds.x + bounds.width)
+      right: imageWidth - (bounds.x + bounds.width),
     };
   }
 
@@ -283,7 +295,9 @@ export class ConstraintCalculator {
     Object.entries(edgeDistances).forEach(([edge, distance]) => {
       if (distance < minSafeDistance) {
         warnings.push(`Green area is very close to ${edge} edge (${distance}px)`);
-        recommendations.push(`Move green area at least ${minSafeDistance}px away from ${edge} edge`);
+        recommendations.push(
+          `Move green area at least ${minSafeDistance}px away from ${edge} edge`
+        );
         scorePenalty += 0.05;
       }
     });
@@ -320,11 +334,13 @@ export class ConstraintCalculator {
           scorePenalty += 0.1;
         }
         break;
-      
+
       case 'vertical':
         if (offsetX > imageWidth * 0.3) {
           warnings.push('Vertical placement area is positioned too far from center horizontally');
-          recommendations.push('Consider positioning the green area closer to the horizontal center');
+          recommendations.push(
+            'Consider positioning the green area closer to the horizontal center'
+          );
           scorePenalty += 0.1;
         }
         break;
@@ -350,20 +366,28 @@ export class ConstraintCalculator {
     }
 
     if (detectedArea.percentage < 10) {
-      recommendations.push('Consider increasing the size of the constraint area for better logo visibility');
+      recommendations.push(
+        'Consider increasing the size of the constraint area for better logo visibility'
+      );
     }
 
     if (detectedArea.contours.length > 1) {
-      recommendations.push('Use a single, continuous green shape rather than multiple separate areas');
+      recommendations.push(
+        'Use a single, continuous green shape rather than multiple separate areas'
+      );
     }
 
     // Placement-specific recommendations
     switch (placementType) {
       case 'horizontal':
-        recommendations.push('For horizontal placement, ensure the green area is wide enough for typical logo proportions');
+        recommendations.push(
+          'For horizontal placement, ensure the green area is wide enough for typical logo proportions'
+        );
         break;
       case 'vertical':
-        recommendations.push('For vertical placement, ensure the green area is tall enough for stacked logos');
+        recommendations.push(
+          'For vertical placement, ensure the green area is tall enough for stacked logos'
+        );
         break;
       case 'all_over':
         recommendations.push('For all-over patterns, mark the entire printable area with green');

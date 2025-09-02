@@ -19,21 +19,37 @@ export default function CreateMockupPage() {
         {/* Progress Indicator */}
         <div className="flex items-center justify-center mb-12">
           <div className="flex items-center space-x-4">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
-            }`}>
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                step >= 1
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+              }`}
+            >
               1
             </div>
-            <div className={`w-24 h-1 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`} />
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
-            }`}>
+            <div
+              className={`w-24 h-1 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+            />
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                step >= 2
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+              }`}
+            >
               2
             </div>
-            <div className={`w-24 h-1 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`} />
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
-            }`}>
+            <div
+              className={`w-24 h-1 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+            />
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                step >= 3
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+              }`}
+            >
               3
             </div>
           </div>
@@ -78,7 +94,9 @@ export default function CreateMockupPage() {
                   <Input type="file" className="mt-4" accept="image/*" />
                 </div>
                 <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                  <Button variant="outline" onClick={() => setStep(1)}>
+                    Back
+                  </Button>
                   <Button onClick={() => setStep(3)}>Continue</Button>
                 </div>
               </div>
@@ -104,7 +122,9 @@ export default function CreateMockupPage() {
                   </label>
                 </div>
                 <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+                  <Button variant="outline" onClick={() => setStep(2)}>
+                    Back
+                  </Button>
                   <Button variant="success">Generate Mockup</Button>
                 </div>
               </div>

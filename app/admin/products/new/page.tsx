@@ -12,7 +12,11 @@ import { TagsMetadataStep } from '@/components/product-form/TagsMetadataStep';
 import { ImagesStep } from '@/components/product-form/ImagesStep';
 import { ReviewStep } from '@/components/product-form/ReviewStep';
 import { generateSku } from '@/lib/utils/sku-generator';
-import { validateProductForm, getStepValidation, type ProductFormData } from '@/lib/utils/form-validation';
+import {
+  validateProductForm,
+  getStepValidation,
+  type ProductFormData,
+} from '@/lib/utils/form-validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -60,8 +64,8 @@ export default function NewProductPage() {
       <div className="min-h-screen flex items-center justify-center">
         <Card>
           <CardBody>
-            <Alert 
-              type="error" 
+            <Alert
+              type="error"
               message={`You don't have permission to create products. Current role: ${user?.role || 'No role'}`}
             />
             <div className="mt-4">
@@ -79,7 +83,7 @@ export default function NewProductPage() {
 
   // Handle field changes
   const handleFieldChange = useCallback((field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -141,15 +145,14 @@ export default function NewProductPage() {
 
       const data = await response.json();
       setSuccess('Product created successfully!');
-      
+
       // Clear auto-saved data
       clearSavedData();
-      
+
       // Redirect to dashboard after a short delay
       setTimeout(() => {
         router.push('/admin/dashboard');
       }, 2000);
-
     } catch (error) {
       console.error('Create product error:', error);
       setError(error instanceof Error ? error.message : 'Failed to create product');
@@ -201,12 +204,7 @@ export default function NewProductPage() {
       id: 'tags-metadata',
       title: 'Tags & Metadata',
       description: 'Tags for better searchability',
-      component: (
-        <TagsMetadataStep
-          data={{ tags: formData.tags }}
-          onChange={handleFieldChange}
-        />
-      ),
+      component: <TagsMetadataStep data={{ tags: formData.tags }} onChange={handleFieldChange} />,
       isValid: getStepValidation(2, formData),
       canSkip: true,
     },
@@ -231,12 +229,7 @@ export default function NewProductPage() {
       id: 'review',
       title: 'Review',
       description: 'Review and submit',
-      component: (
-        <ReviewStep
-          data={formData}
-          onEdit={handleStepEdit}
-        />
-      ),
+      component: <ReviewStep data={formData} onEdit={handleStepEdit} />,
       isValid: true,
     },
   ];
@@ -270,17 +263,11 @@ export default function NewProductPage() {
 
         <Card>
           <CardBody>
-            {error && (
-              <Alert type="error" message={error} className="mb-6" />
-            )}
-            
-            {success && (
-              <Alert type="success" message={success} className="mb-6" />
-            )}
+            {error && <Alert type="error" message={error} className="mb-6" />}
 
-            {loading && (
-              <Alert type="info" message="Creating product..." className="mb-6" />
-            )}
+            {success && <Alert type="success" message={success} className="mb-6" />}
+
+            {loading && <Alert type="info" message="Creating product..." className="mb-6" />}
 
             <MultiStepWizard
               steps={steps}

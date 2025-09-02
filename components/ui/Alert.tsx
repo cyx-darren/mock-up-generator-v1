@@ -94,8 +94,10 @@ export const Alert: React.FC<AlertProps> = ({
               'ml-3 inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2',
               styles.text,
               type === 'info' && 'hover:bg-blue-100 dark:hover:bg-blue-800/30 focus:ring-blue-600',
-              type === 'success' && 'hover:bg-green-100 dark:hover:bg-green-800/30 focus:ring-green-600',
-              type === 'warning' && 'hover:bg-yellow-100 dark:hover:bg-yellow-800/30 focus:ring-yellow-600',
+              type === 'success' &&
+                'hover:bg-green-100 dark:hover:bg-green-800/30 focus:ring-green-600',
+              type === 'warning' &&
+                'hover:bg-yellow-100 dark:hover:bg-yellow-800/30 focus:ring-yellow-600',
               type === 'error' && 'hover:bg-red-100 dark:hover:bg-red-800/30 focus:ring-red-600'
             )}
           >
@@ -119,7 +121,13 @@ interface ToastProps {
   message: string;
   duration?: number;
   onClose?: () => void;
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';
+  position?:
+    | 'top-right'
+    | 'top-left'
+    | 'bottom-right'
+    | 'bottom-left'
+    | 'top-center'
+    | 'bottom-center';
 }
 
 export const Toast: React.FC<ToastProps> = ({
@@ -235,11 +243,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            {...toast}
-            onClose={() => removeToast(toast.id)}
-          />
+          <Toast key={toast.id} {...toast} onClose={() => removeToast(toast.id)} />
         ))}
       </div>
     </ToastContext.Provider>

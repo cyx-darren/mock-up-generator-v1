@@ -32,10 +32,9 @@ export async function POST(request: NextRequest) {
     clearAuthCookies(response);
 
     return response;
-
   } catch (error) {
     console.error('Logout error:', error);
-    
+
     // Still clear cookies even if session invalidation fails
     const response = NextResponse.json({
       success: true,

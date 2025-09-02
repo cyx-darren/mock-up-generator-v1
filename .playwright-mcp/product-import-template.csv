@@ -1,0 +1,4 @@
+name,description,sku,category,price,status,tags,thumbnail_url,primary_image_url,additional_images
+Premium Coffee Mug,High-quality ceramic coffee mug with heat retention technology,MUG-001,drinkware,19.99,active,coffee;ceramic;gift,https://example.com/mug-thumb.jpg,https://example.com/mug-main.jpg,https://example.com/mug-1.jpg;https://example.com/mug-2.jpg
+Executive Pen Set,Luxury pen set with engraving options for corporate gifting,PEN-002,office,45.99,active,pen;executive;engraving,https://example.com/pen-thumb.jpg,https://example.com/pen-main.jpg,
+Eco-Friendly Tote Bag,Sustainable canvas tote bag made from recycled materials,,bags,12.50,draft,eco-friendly;tote;canvas;sustainable,,,

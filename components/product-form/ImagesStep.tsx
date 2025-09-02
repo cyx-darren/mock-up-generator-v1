@@ -23,7 +23,10 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
   };
 
   const removeAdditionalImage = (index: number) => {
-    onChange('additional_images', data.additional_images.filter((_, i) => i !== index));
+    onChange(
+      'additional_images',
+      data.additional_images.filter((_, i) => i !== index)
+    );
   };
 
   const validateImageUrl = (url: string) => {
@@ -44,13 +47,9 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
             onChange={(e) => onChange('thumbnail_url', e.target.value)}
             placeholder="https://example.com/thumbnail.jpg"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Square format recommended (1:1 ratio)
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Square format recommended (1:1 ratio)</p>
           {data.thumbnail_url && !validateImageUrl(data.thumbnail_url) && (
-            <p className="text-xs text-red-500 mt-1">
-              Invalid image URL format
-            </p>
+            <p className="text-xs text-red-500 mt-1">Invalid image URL format</p>
           )}
         </div>
 
@@ -64,13 +63,9 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
             onChange={(e) => onChange('primary_image_url', e.target.value)}
             placeholder="https://example.com/primary.jpg"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            High resolution product image
-          </p>
+          <p className="text-xs text-gray-500 mt-1">High resolution product image</p>
           {data.primary_image_url && !validateImageUrl(data.primary_image_url) && (
-            <p className="text-xs text-red-500 mt-1">
-              Invalid image URL format
-            </p>
+            <p className="text-xs text-red-500 mt-1">Invalid image URL format</p>
           )}
         </div>
       </div>
@@ -95,7 +90,9 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
 
         {data.primary_image_url && validateImageUrl(data.primary_image_url) && (
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-2">Primary Image Preview</h4>
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              Primary Image Preview
+            </h4>
             <div className="w-48 h-32 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
               <img
                 src={data.primary_image_url}
@@ -115,7 +112,7 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
         <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">
           Additional Images (Optional)
         </h4>
-        
+
         <div className="flex space-x-2 mb-4">
           <Input
             type="url"
@@ -127,7 +124,11 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
           <button
             type="button"
             onClick={addAdditionalImage}
-            disabled={!newImageUrl.trim() || data.additional_images.length >= 5 || !validateImageUrl(newImageUrl)}
+            disabled={
+              !newImageUrl.trim() ||
+              data.additional_images.length >= 5 ||
+              !validateImageUrl(newImageUrl)
+            }
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             Add
@@ -142,7 +143,10 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
         {data.additional_images.length > 0 && (
           <div className="space-y-3">
             {data.additional_images.map((imageUrl, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center space-x-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg"
+              >
                 <div className="w-16 h-16 border border-gray-300 dark:border-gray-600 rounded overflow-hidden bg-gray-50 dark:bg-gray-800 flex-shrink-0">
                   <img
                     src={imageUrl}
@@ -154,9 +158,7 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 dark:text-white truncate">
-                    {imageUrl}
-                  </p>
+                  <p className="text-sm text-gray-900 dark:text-white truncate">{imageUrl}</p>
                 </div>
                 <button
                   type="button"
@@ -178,9 +180,7 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
       </div>
 
       <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-        <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-          📸 Image Guidelines
-        </h4>
+        <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">📸 Image Guidelines</h4>
         <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
           <li>• Use high-quality images (at least 800x600px)</li>
           <li>• Ensure good lighting and clear product visibility</li>

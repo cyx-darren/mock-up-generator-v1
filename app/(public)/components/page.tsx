@@ -3,7 +3,14 @@
 import React, { useState } from 'react';
 import { Container } from '@/components/layout/Container';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardDescription, CardBody, CardFooter } from '@/components/ui/Card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardBody,
+  CardFooter,
+} from '@/components/ui/Card';
 import { Input, Textarea, Select, Checkbox } from '@/components/ui/Input';
 import { Modal, Dialog } from '@/components/ui/Modal';
 import { Spinner, Loading, Skeleton, Progress } from '@/components/ui/Loading';
@@ -156,7 +163,9 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
 
         {/* Form Components */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Form Components</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Form Components
+          </h2>
           <Card>
             <CardBody>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -170,8 +179,18 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
                     label="Input with Icon"
                     placeholder="Search..."
                     leftIcon={
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
                       </svg>
                     }
                   />
@@ -190,11 +209,7 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
                   />
                 </div>
                 <div className="space-y-4">
-                  <Textarea
-                    label="Textarea"
-                    placeholder="Enter longer text"
-                    rows={4}
-                  />
+                  <Textarea label="Textarea" placeholder="Enter longer text" rows={4} />
                   <div className="space-y-2">
                     <Checkbox label="Checkbox Option 1" />
                     <Checkbox label="Checkbox Option 2" defaultChecked />
@@ -208,7 +223,9 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
 
         {/* Modals */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Modals & Dialogs</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Modals & Dialogs
+          </h2>
           <Card>
             <CardBody>
               <div className="flex gap-4">
@@ -252,7 +269,9 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
 
         {/* Loading Components */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Loading Components</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Loading Components
+          </h2>
           <Card>
             <CardBody>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -300,7 +319,9 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
 
         {/* Alerts & Toasts */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Alerts & Toasts</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+            Alerts & Toasts
+          </h2>
           <Card>
             <CardBody>
               <div className="space-y-6">
@@ -320,11 +341,7 @@ const ComponentShowcaseContent: React.FC<ComponentShowcaseContentProps> = ({
                       title="Success"
                       message="Action completed successfully!"
                     />
-                    <Alert
-                      type="warning"
-                      title="Warning"
-                      message="Please review your settings."
-                    />
+                    <Alert type="warning" title="Warning" message="Please review your settings." />
                     <Alert
                       type="error"
                       title="Error"

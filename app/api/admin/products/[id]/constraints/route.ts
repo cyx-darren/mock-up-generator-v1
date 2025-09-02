@@ -3,10 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { verifyAdminSession } from '@/lib/auth/admin-session';
 
 // GET /api/admin/products/[id]/constraints
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await verifyAdminSession(request);
     if (!session.success) {
@@ -36,7 +33,8 @@ export async function GET(
     // Fetch all constraints for this product
     const { data: constraints, error: constraintsError } = await supabase
       .from('placement_constraints')
-      .select(`
+      .select(
+        `
         id,
         placement_type,
         constraint_image_url,
@@ -53,7 +51,8 @@ export async function GET(
         is_validated,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq('item_id', productId)
       .order('created_at', { ascending: true });
 
@@ -64,14 +63,10 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      constraints: constraints || []
+      constraints: constraints || [],
     });
-
   } catch (error) {
     console.error('Get constraints error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

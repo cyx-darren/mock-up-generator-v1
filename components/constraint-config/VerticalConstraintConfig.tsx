@@ -54,7 +54,7 @@ export function VerticalConstraintConfig({
   productId,
   existingConstraint,
   onSave,
-  onCancel
+  onCancel,
 }: VerticalConstraintConfigProps) {
   const [constraintImage, setConstraintImage] = useState<ConstraintImagePreviewData | null>(null);
   const [dimensions, setDimensions] = useState<ConstraintDimensions>({
@@ -67,9 +67,7 @@ export function VerticalConstraintConfig({
     x: existingConstraint?.defaultXPosition || 150,
     y: existingConstraint?.defaultYPosition || 50,
   });
-  const [guidelines, setGuidelines] = useState(
-    existingConstraint?.guidelinesText || ''
-  );
+  const [guidelines, setGuidelines] = useState(existingConstraint?.guidelinesText || '');
   const [isEnabled, setIsEnabled] = useState(existingConstraint?.isEnabled ?? true);
   const [isDetecting, setIsDetecting] = useState(false);
   const [error, setError] = useState('');
@@ -82,7 +80,7 @@ export function VerticalConstraintConfig({
   // Handle file upload completion
   const handleFileUpload = useCallback(async (files: { file: File; url: string }[]) => {
     if (files.length === 0) return;
-    
+
     const uploadedFile = files[0];
     const constraintImageData: ConstraintImagePreviewData = {
       file: uploadedFile.file,
@@ -97,84 +95,93 @@ export function VerticalConstraintConfig({
   }, []);
 
   // Detect green areas in the uploaded image
-  const detectGreenAreas = useCallback(async (file: File) => {
-    setIsDetecting(true);
-    try {
-      // Create image element for processing
-      const img = new Image();
-      const canvas = canvasRef.current;
-      
-      if (!canvas) {
-        throw new Error('Canvas not available');
+  const detectGreenAreas = useCallback(
+    async (file: File) => {
+      setIsDetecting(true);
+      try {
+        // Create image element for processing
+        const img = new Image();
+        const canvas = canvasRef.current;
+
+        if (!canvas) {
+          throw new Error('Canvas not available');
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          throw new Error('Cannot get canvas context');
+        }
+
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            // Set canvas dimensions to match image
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+
+            // Draw image on canvas
+            ctx.drawImage(img, 0, 0);
+
+            // Get image data for analysis
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const detectedArea = analyzeGreenPixels(imageData, canvas.width, canvas.height);
+
+            if (constraintImage) {
+              setConstraintImage((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      detectedArea,
+                    }
+                  : null
+              );
+            }
+
+            resolve();
+          };
+
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = URL.createObjectURL(file);
+        });
+      } catch (error) {
+        console.error('Green area detection error:', error);
+        setError(error instanceof Error ? error.message : 'Failed to detect green areas');
+      } finally {
+        setIsDetecting(false);
       }
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('Cannot get canvas context');
-      }
-
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => {
-          // Set canvas dimensions to match image
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          
-          // Draw image on canvas
-          ctx.drawImage(img, 0, 0);
-          
-          // Get image data for analysis
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const detectedArea = analyzeGreenPixels(imageData, canvas.width, canvas.height);
-          
-          if (constraintImage) {
-            setConstraintImage(prev => prev ? {
-              ...prev,
-              detectedArea
-            } : null);
-          }
-          
-          resolve();
-        };
-        
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = URL.createObjectURL(file);
-      });
-
-    } catch (error) {
-      console.error('Green area detection error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to detect green areas');
-    } finally {
-      setIsDetecting(false);
-    }
-  }, [constraintImage]);
+    },
+    [constraintImage]
+  );
 
   // Analyze green pixels in image data - optimized for vertical detection
   const analyzeGreenPixels = (imageData: ImageData, width: number, height: number) => {
     const data = imageData.data;
     let greenPixelCount = 0;
-    let minX = width, minY = height, maxX = 0, maxY = 0;
+    let minX = width,
+      minY = height,
+      maxX = 0,
+      maxY = 0;
     let verticalSegments = new Map<number, number>(); // Track vertical distribution
 
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      
+
       // Check if pixel is green (adjusted thresholds for vertical detection)
       if (g > 100 && g > r * 1.4 && g > b * 1.4) {
         greenPixelCount++;
-        
+
         // Calculate pixel position
         const pixelIndex = i / 4;
         const x = pixelIndex % width;
         const y = Math.floor(pixelIndex / width);
-        
+
         // Update bounds
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x);
         maxY = Math.max(maxY, y);
-        
+
         // Track vertical distribution
         const ySegment = Math.floor(y / 10);
         verticalSegments.set(ySegment, (verticalSegments.get(ySegment) || 0) + 1);
@@ -183,7 +190,7 @@ export function VerticalConstraintConfig({
 
     const totalPixels = width * height;
     const percentage = (greenPixelCount / totalPixels) * 100;
-    
+
     // Check if the green area is primarily vertical
     const boundsWidth = maxX - minX;
     const boundsHeight = maxY - minY;
@@ -196,26 +203,26 @@ export function VerticalConstraintConfig({
         x: minX,
         y: minY,
         width: boundsWidth,
-        height: boundsHeight
+        height: boundsHeight,
       },
       isVertical,
-      verticalSegments: verticalSegments.size
+      verticalSegments: verticalSegments.size,
     };
   };
 
   // Handle dimension changes
   const handleDimensionChange = useCallback((field: keyof ConstraintDimensions, value: number) => {
-    setDimensions(prev => ({
+    setDimensions((prev) => ({
       ...prev,
-      [field]: Math.max(0, value)
+      [field]: Math.max(0, value),
     }));
   }, []);
 
   // Handle position changes
   const handlePositionChange = useCallback((field: keyof ConstraintPosition, value: number) => {
-    setPosition(prev => ({
+    setPosition((prev) => ({
       ...prev,
-      [field]: Math.max(0, value)
+      [field]: Math.max(0, value),
     }));
   }, []);
 
@@ -234,8 +241,10 @@ export function VerticalConstraintConfig({
         productId,
         placementType: 'vertical',
         constraintImageUrl: constraintImage?.url || existingConstraint?.constraintImageUrl,
-        detectedAreaPixels: constraintImage?.detectedArea?.pixels || existingConstraint?.detectedAreaPixels,
-        detectedAreaPercentage: constraintImage?.detectedArea?.percentage || existingConstraint?.detectedAreaPercentage,
+        detectedAreaPixels:
+          constraintImage?.detectedArea?.pixels || existingConstraint?.detectedAreaPixels,
+        detectedAreaPercentage:
+          constraintImage?.detectedArea?.percentage || existingConstraint?.detectedAreaPercentage,
         minLogoWidth: dimensions.minWidth,
         minLogoHeight: dimensions.minHeight,
         maxLogoWidth: dimensions.maxWidth,
@@ -261,7 +270,7 @@ export function VerticalConstraintConfig({
     position,
     guidelines,
     isEnabled,
-    onSave
+    onSave,
   ]);
 
   // Clear errors
@@ -319,10 +328,10 @@ export function VerticalConstraintConfig({
               Constraint Image
             </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Upload an image with green areas marking where logos can be placed vertically. 
-              This is ideal for tall products like water bottles, tumblers, or banners.
+              Upload an image with green areas marking where logos can be placed vertically. This is
+              ideal for tall products like water bottles, tumblers, or banners.
             </p>
-            
+
             {!existingConstraint?.constraintImageUrl && !constraintImage && (
               <FileUploadManager
                 onUploadComplete={handleFileUpload}
@@ -354,11 +363,17 @@ export function VerticalConstraintConfig({
                 {constraintImage?.detectedArea && (
                   <div className="mt-2 p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded">
                     <p className="text-sm text-green-800 dark:text-green-200">
-                      <strong>Vertical Detection Results:</strong><br />
-                      Green pixels: {constraintImage.detectedArea.pixels.toLocaleString()}<br />
+                      <strong>Vertical Detection Results:</strong>
+                      <br />
+                      Green pixels: {constraintImage.detectedArea.pixels.toLocaleString()}
+                      <br />
                       Coverage: {constraintImage.detectedArea.percentage}%<br />
-                      Bounds: {constraintImage.detectedArea.bounds.width} × {constraintImage.detectedArea.bounds.height}px<br />
-                      {constraintImage.detectedArea.isVertical ? '✓ Vertical orientation detected' : '⚠ Consider adjusting for vertical orientation'}
+                      Bounds: {constraintImage.detectedArea.bounds.width} ×{' '}
+                      {constraintImage.detectedArea.bounds.height}px
+                      <br />
+                      {constraintImage.detectedArea.isVertical
+                        ? '✓ Vertical orientation detected'
+                        : '⚠ Consider adjusting for vertical orientation'}
                     </p>
                   </div>
                 )}
@@ -381,11 +396,7 @@ export function VerticalConstraintConfig({
               </div>
             )}
 
-            <canvas
-              ref={canvasRef}
-              className="hidden"
-              aria-hidden="true"
-            />
+            <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
           </div>
 
           {/* Dimension Input Fields - Optimized for vertical logos */}
@@ -416,7 +427,9 @@ export function VerticalConstraintConfig({
                 <Input
                   type="number"
                   value={dimensions.minHeight}
-                  onChange={(e) => handleDimensionChange('minHeight', parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleDimensionChange('minHeight', parseInt(e.target.value) || 0)
+                  }
                   min="1"
                   placeholder="80"
                 />
@@ -440,7 +453,9 @@ export function VerticalConstraintConfig({
                 <Input
                   type="number"
                   value={dimensions.maxHeight}
-                  onChange={(e) => handleDimensionChange('maxHeight', parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    handleDimensionChange('maxHeight', parseInt(e.target.value) || 0)
+                  }
                   min="1"
                   placeholder="600"
                 />
@@ -497,7 +512,8 @@ export function VerticalConstraintConfig({
               placeholder="Enter guidelines for vertical logo placement (e.g., 'For vertical placement, ensure your logo is oriented in portrait mode. The logo should be centered within the green area and maintain appropriate padding from edges...')"
             />
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              These guidelines will help users understand how to optimize their logo for vertical placement.
+              These guidelines will help users understand how to optimize their logo for vertical
+              placement.
             </p>
           </div>
 

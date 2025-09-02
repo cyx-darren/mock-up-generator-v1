@@ -135,7 +135,7 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
     const now = Date.now();
     const time = new Date(timestamp).getTime();
     const diff = now - time;
-    
+
     if (diff < 60 * 1000) return 'just now';
     if (diff < 60 * 60 * 1000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 24 * 60 * 60 * 1000) return `${Math.floor(diff / 3600000)}h ago`;
@@ -144,10 +144,14 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200';
-      case 'warning': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'error': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-200';
+      case 'healthy':
+        return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-200';
+      case 'warning':
+        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'error':
+        return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-200';
+      default:
+        return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
@@ -197,11 +201,7 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
             Last updated: {formatTimeAgo(statistics.lastUpdated)}
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={handleRefresh}
-          disabled={loading}
-        >
+        <Button variant="outline" onClick={handleRefresh} disabled={loading}>
           {loading ? 'Refreshing...' : 'Refresh'}
         </Button>
       </div>
@@ -251,48 +251,42 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                 {statistics.products.withHorizontalPlacement}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Horizontal Placement
-              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Horizontal Placement</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2 dark:bg-gray-700">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(statistics.products.withHorizontalPlacement / Math.max(statistics.products.total, 1)) * 100}%` 
+                  style={{
+                    width: `${(statistics.products.withHorizontalPlacement / Math.max(statistics.products.total, 1)) * 100}%`,
                   }}
                 ></div>
               </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                 {statistics.products.withVerticalPlacement}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Vertical Placement
-              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Vertical Placement</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2 dark:bg-gray-700">
-                <div 
+                <div
                   className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(statistics.products.withVerticalPlacement / Math.max(statistics.products.total, 1)) * 100}%` 
+                  style={{
+                    width: `${(statistics.products.withVerticalPlacement / Math.max(statistics.products.total, 1)) * 100}%`,
                   }}
                 ></div>
               </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                 {statistics.products.withAllOverPlacement}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                All-Over Print
-              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">All-Over Print</div>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2 dark:bg-gray-700">
-                <div 
+                <div
                   className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(statistics.products.withAllOverPlacement / Math.max(statistics.products.total, 1)) * 100}%` 
+                  style={{
+                    width: `${(statistics.products.withAllOverPlacement / Math.max(statistics.products.total, 1)) * 100}%`,
                   }}
                 ></div>
               </div>
@@ -305,10 +299,10 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              System Health
-            </h3>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(statistics.systemHealth.overall)}`}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">System Health</h3>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(statistics.systemHealth.overall)}`}
+            >
               {statistics.systemHealth.overall}
             </span>
           </div>
@@ -316,7 +310,9 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
         <CardBody>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.database.status)}`}>
+              <div
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.database.status)}`}
+              >
                 Database
               </div>
               <div className="text-lg font-semibold mt-2">
@@ -324,9 +320,11 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
               </div>
               <div className="text-xs text-gray-500">Latency</div>
             </div>
-            
+
             <div className="text-center">
-              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.api.status)}`}>
+              <div
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.api.status)}`}
+              >
                 API
               </div>
               <div className="text-lg font-semibold mt-2">
@@ -334,9 +332,11 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
               </div>
               <div className="text-xs text-gray-500">Uptime</div>
             </div>
-            
+
             <div className="text-center">
-              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.storage.status)}`}>
+              <div
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.storage.status)}`}
+              >
                 Storage
               </div>
               <div className="text-lg font-semibold mt-2">
@@ -344,9 +344,11 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
               </div>
               <div className="text-xs text-gray-500">Used</div>
             </div>
-            
+
             <div className="text-center">
-              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.errors.status)}`}>
+              <div
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statistics.systemHealth.errors.status)}`}
+              >
                 Errors
               </div>
               <div className="text-lg font-semibold mt-2">
@@ -395,9 +397,7 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Recent Activity
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
           </CardHeader>
           <CardBody>
             <div className="space-y-3">
@@ -406,9 +406,13 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
                   <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                   <div className="flex-grow min-w-0">
                     <p className="text-sm text-gray-900 dark:text-white">
-                      <span className="font-medium">{activity.user}</span> {activity.action.replace('.', ' ')}
+                      <span className="font-medium">{activity.user}</span>{' '}
+                      {activity.action.replace('.', ' ')}
                       {activity.table && (
-                        <span className="text-gray-500 dark:text-gray-400"> in {activity.table}</span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {' '}
+                          in {activity.table}
+                        </span>
                       )}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -443,10 +447,10 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{ 
-                        width: `${(category.total / Math.max(statistics.products.total, 1)) * 100}%` 
+                      style={{
+                        width: `${(category.total / Math.max(statistics.products.total, 1)) * 100}%`,
                       }}
                     ></div>
                   </div>
@@ -489,10 +493,11 @@ function StatCard({ title, value, trend, icon, description }: StatCardProps) {
                 </div>
                 {typeof trend !== 'undefined' && (
                   <div className="ml-2 flex items-baseline text-sm">
-                    <div className={`flex items-center ${
-                      trend > 0 ? 'text-green-600' : 
-                      trend < 0 ? 'text-red-600' : 'text-gray-400'
-                    }`}>
+                    <div
+                      className={`flex items-center ${
+                        trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-400'
+                      }`}
+                    >
                       {trend > 0 ? '↗' : trend < 0 ? '↘' : '→'}
                       <span className="ml-1">{Math.abs(trend)}%</span>
                     </div>
@@ -500,9 +505,7 @@ function StatCard({ title, value, trend, icon, description }: StatCardProps) {
                 )}
               </dd>
               {description && (
-                <dd className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {description}
-                </dd>
+                <dd className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</dd>
               )}
             </dl>
           </div>

@@ -58,14 +58,14 @@ export function MultiStepWizard({
     if (isLastStep) {
       onComplete();
     } else {
-      setCompletedSteps(prev => new Set(prev).add(currentStep));
-      setCurrentStep(prev => prev + 1);
+      setCompletedSteps((prev) => new Set(prev).add(currentStep));
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handlePrevious = () => {
     if (canGoPrevious()) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -91,7 +91,7 @@ export function MultiStepWizard({
           {steps.map((step, index) => {
             const status = getStepStatus(index);
             const isClickable = index <= currentStep || completedSteps.has(index);
-            
+
             return (
               <div key={step.id} className="flex items-center">
                 {/* Step Circle */}
@@ -133,21 +133,16 @@ export function MultiStepWizard({
                   >
                     {step.title}
                   </p>
-                  {step.description && (
-                    <p className="text-xs text-gray-500">{step.description}</p>
-                  )}
+                  {step.description && <p className="text-xs text-gray-500">{step.description}</p>}
                 </div>
 
                 {/* Connector Line */}
                 {index < steps.length - 1 && (
                   <div
-                    className={cn(
-                      'flex-1 h-0.5 mx-4 transition-colors duration-200',
-                      {
-                        'bg-green-500': completedSteps.has(index),
-                        'bg-gray-300': !completedSteps.has(index),
-                      }
-                    )}
+                    className={cn('flex-1 h-0.5 mx-4 transition-colors duration-200', {
+                      'bg-green-500': completedSteps.has(index),
+                      'bg-gray-300': !completedSteps.has(index),
+                    })}
                   />
                 )}
               </div>
@@ -168,10 +163,8 @@ export function MultiStepWizard({
             </p>
           )}
         </div>
-        
-        <div className="min-h-[400px]">
-          {steps[currentStep].component}
-        </div>
+
+        <div className="min-h-[400px]">{steps[currentStep].component}</div>
       </div>
 
       {/* Navigation Buttons */}
@@ -195,7 +188,7 @@ export function MultiStepWizard({
               Skip
             </Button>
           )}
-          
+
           <Button
             onClick={handleNext}
             disabled={!canGoNext() && !allowSkip}

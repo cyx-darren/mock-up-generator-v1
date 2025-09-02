@@ -11,14 +11,14 @@ export const GET = withPermission('canViewProducts', async (request, user) => {
       email: user.email,
       role: user.role,
     },
-    permissions: 'canViewProducts'
+    permissions: 'canViewProducts',
   });
 });
 
 // Example endpoint that requires super_admin role
 export const POST = withRole('super_admin', async (request, user) => {
   const body = await request.json();
-  
+
   return NextResponse.json({
     success: true,
     message: 'Super admin action performed',
@@ -27,7 +27,7 @@ export const POST = withRole('super_admin', async (request, user) => {
       email: user.email,
       role: user.role,
     },
-    action: body.action || 'test_action'
+    action: body.action || 'test_action',
   });
 });
 
@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await requireAnyRole(request, ['super_admin', 'product_manager']);
     const body = await request.json();
-    
+
     return NextResponse.json({
       success: true,
       message: 'Product management action performed',
@@ -46,14 +46,10 @@ export async function PUT(request: NextRequest) {
         role: user.role,
       },
       allowedRoles: ['super_admin', 'product_manager'],
-      action: body.action || 'update_product'
+      action: body.action || 'update_product',
     });
-    
   } catch (error: any) {
     const status = error.name === 'AuthenticationError' ? 401 : 403;
-    return NextResponse.json(
-      { error: error.message },
-      { status }
-    );
+    return NextResponse.json({ error: error.message }, { status });
   }
 }

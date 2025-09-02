@@ -7,10 +7,10 @@ export const SESSION_CONFIG = {
   IDLE_TIMEOUT: 30, // 30 minutes of inactivity
   ABSOLUTE_TIMEOUT: 12 * 60, // 12 hours absolute maximum
   WARNING_BEFORE_TIMEOUT: 5, // Show warning 5 minutes before timeout
-  
+
   // Activity tracking
   ACTIVITY_UPDATE_INTERVAL: 60, // Update activity every 60 seconds
-  
+
   // Concurrent sessions
   MAX_CONCURRENT_SESSIONS: 5, // Maximum concurrent sessions per user
   ENFORCE_SINGLE_SESSION: false, // If true, only one session allowed per user
@@ -50,7 +50,7 @@ function calculateAbsoluteExpiration(rememberMe: boolean): Date {
 // Check if session is expired
 export function isSessionExpired(session: SessionInfo): SessionValidation {
   const now = new Date();
-  
+
   // Check absolute expiration
   if (session.expiresAt < now) {
     return {
@@ -58,7 +58,7 @@ export function isSessionExpired(session: SessionInfo): SessionValidation {
       reason: 'expired',
     };
   }
-  
+
   // Check idle timeout
   const idleTime = (now.getTime() - session.lastActivity.getTime()) / 1000 / 60; // in minutes
   if (idleTime > SESSION_CONFIG.IDLE_TIMEOUT) {
@@ -67,16 +67,16 @@ export function isSessionExpired(session: SessionInfo): SessionValidation {
       reason: 'idle_timeout',
     };
   }
-  
+
   // Calculate remaining time
   const remainingTime = Math.min(
     (session.expiresAt.getTime() - now.getTime()) / 1000 / 60,
     SESSION_CONFIG.IDLE_TIMEOUT - idleTime
   );
-  
+
   // Check if warning should be shown
   const showWarning = remainingTime <= SESSION_CONFIG.WARNING_BEFORE_TIMEOUT;
-  
+
   return {
     isValid: true,
     remainingTime,
@@ -94,14 +94,11 @@ export async function createManagedSession(
   deviceInfo?: string
 ): Promise<void> {
   const supabase = createClient();
-  
+
   // Check concurrent sessions
   if (SESSION_CONFIG.ENFORCE_SINGLE_SESSION) {
     // Invalidate all existing sessions for single session mode
-    await supabase
-      .from('admin_sessions')
-      .update({ is_active: false })
-      .eq('user_id', userId);
+    await supabase.from('admin_sessions').update({ is_active: false }).eq('user_id', userId);
   } else {
     // Check concurrent session limit
     const { data: activeSessions } = await supabase
@@ -109,7 +106,7 @@ export async function createManagedSession(
       .select('id')
       .eq('user_id', userId)
       .eq('is_active', true);
-    
+
     if (activeSessions && activeSessions.length >= SESSION_CONFIG.MAX_CONCURRENT_SESSIONS) {
       // Invalidate oldest session
       const { data: oldestSession } = await supabase
@@ -120,7 +117,7 @@ export async function createManagedSession(
         .order('created_at', { ascending: true })
         .limit(1)
         .single();
-      
+
       if (oldestSession) {
         await supabase
           .from('admin_sessions')
@@ -129,24 +126,22 @@ export async function createManagedSession(
       }
     }
   }
-  
+
   // Create new session
   const now = new Date();
-  const { error } = await supabase
-    .from('admin_sessions')
-    .insert({
-      user_id: userId,
-      session_id: sessionId,
-      expires_at: calculateAbsoluteExpiration(rememberMe).toISOString(),
-      idle_expires_at: calculateIdleExpiration().toISOString(),
-      ip_address: ipAddress,
-      user_agent: userAgent,
-      device_info: deviceInfo,
-      last_activity: now.toISOString(),
-      created_at: now.toISOString(),
-      is_active: true,
-    });
-  
+  const { error } = await supabase.from('admin_sessions').insert({
+    user_id: userId,
+    session_id: sessionId,
+    expires_at: calculateAbsoluteExpiration(rememberMe).toISOString(),
+    idle_expires_at: calculateIdleExpiration().toISOString(),
+    ip_address: ipAddress,
+    user_agent: userAgent,
+    device_info: deviceInfo,
+    last_activity: now.toISOString(),
+    created_at: now.toISOString(),
+    is_active: true,
+  });
+
   if (error) {
     throw new Error(`Failed to create session: ${error.message}`);
   }
@@ -155,21 +150,21 @@ export async function createManagedSession(
 // Validate and refresh session
 export async function validateAndRefreshSession(sessionId: string): Promise<SessionValidation> {
   const supabase = createClient();
-  
+
   const { data: session, error } = await supabase
     .from('admin_sessions')
     .select('*')
     .eq('session_id', sessionId)
     .eq('is_active', true)
     .single();
-  
+
   if (error || !session) {
     return {
       isValid: false,
       reason: 'invalid',
     };
   }
-  
+
   const sessionInfo: SessionInfo = {
     sessionId: session.session_id,
     userId: session.user_id,
@@ -182,19 +177,16 @@ export async function validateAndRefreshSession(sessionId: string): Promise<Sess
     userAgent: session.user_agent,
     deviceInfo: session.device_info,
   };
-  
+
   const validation = isSessionExpired(sessionInfo);
-  
+
   if (!validation.isValid) {
     // Invalidate expired session
-    await supabase
-      .from('admin_sessions')
-      .update({ is_active: false })
-      .eq('session_id', sessionId);
-    
+    await supabase.from('admin_sessions').update({ is_active: false }).eq('session_id', sessionId);
+
     return validation;
   }
-  
+
   // Update activity if needed
   const timeSinceLastUpdate = (Date.now() - sessionInfo.lastActivity.getTime()) / 1000;
   if (timeSinceLastUpdate > SESSION_CONFIG.ACTIVITY_UPDATE_INTERVAL) {
@@ -206,26 +198,26 @@ export async function validateAndRefreshSession(sessionId: string): Promise<Sess
       })
       .eq('session_id', sessionId);
   }
-  
+
   return validation;
 }
 
 // Get all active sessions for a user
 export async function getUserSessions(userId: string): Promise<SessionInfo[]> {
   const supabase = createClient();
-  
+
   const { data: sessions, error } = await supabase
     .from('admin_sessions')
     .select('*')
     .eq('user_id', userId)
     .eq('is_active', true)
     .order('last_activity', { ascending: false });
-  
+
   if (error || !sessions) {
     return [];
   }
-  
-  return sessions.map(session => ({
+
+  return sessions.map((session) => ({
     sessionId: session.session_id,
     userId: session.user_id,
     createdAt: new Date(session.created_at),
@@ -242,34 +234,37 @@ export async function getUserSessions(userId: string): Promise<SessionInfo[]> {
 // Terminate a specific session
 export async function terminateSession(sessionId: string, userId?: string): Promise<void> {
   const supabase = createClient();
-  
+
   let query = supabase
     .from('admin_sessions')
     .update({ is_active: false })
     .eq('session_id', sessionId);
-  
+
   // Add user ID check for additional security
   if (userId) {
     query = query.eq('user_id', userId);
   }
-  
+
   const { error } = await query;
-  
+
   if (error) {
     throw new Error(`Failed to terminate session: ${error.message}`);
   }
 }
 
 // Terminate all sessions except current
-export async function terminateOtherSessions(userId: string, currentSessionId: string): Promise<void> {
+export async function terminateOtherSessions(
+  userId: string,
+  currentSessionId: string
+): Promise<void> {
   const supabase = createClient();
-  
+
   const { error } = await supabase
     .from('admin_sessions')
     .update({ is_active: false })
     .eq('user_id', userId)
     .neq('session_id', currentSessionId);
-  
+
   if (error) {
     throw new Error(`Failed to terminate other sessions: ${error.message}`);
   }
@@ -278,12 +273,12 @@ export async function terminateOtherSessions(userId: string, currentSessionId: s
 // Terminate ALL sessions for a user (used during password reset)
 export async function terminateAllUserSessions(userId: string): Promise<void> {
   const supabase = createClient();
-  
+
   const { error } = await supabase
     .from('admin_sessions')
     .update({ is_active: false })
     .eq('user_id', userId);
-  
+
   if (error) {
     throw new Error(`Failed to terminate all user sessions: ${error.message}`);
   }
@@ -292,17 +287,15 @@ export async function terminateAllUserSessions(userId: string): Promise<void> {
 // Get session statistics for admin dashboard
 export async function getSessionStatistics(userId?: string) {
   const supabase = createClient();
-  
-  let query = supabase
-    .from('admin_sessions')
-    .select('*');
-  
+
+  let query = supabase.from('admin_sessions').select('*');
+
   if (userId) {
     query = query.eq('user_id', userId);
   }
-  
+
   const { data: sessions, error } = await query;
-  
+
   if (error || !sessions) {
     return {
       totalSessions: 0,
@@ -311,23 +304,24 @@ export async function getSessionStatistics(userId?: string) {
       averageSessionDuration: 0,
     };
   }
-  
-  const activeSessions = sessions.filter(s => s.is_active).length;
-  const expiredSessions = sessions.filter(s => !s.is_active).length;
-  
+
+  const activeSessions = sessions.filter((s) => s.is_active).length;
+  const expiredSessions = sessions.filter((s) => !s.is_active).length;
+
   // Calculate average session duration
-  const durations = sessions.map(s => {
+  const durations = sessions.map((s) => {
     const start = new Date(s.created_at).getTime();
-    const end = s.is_active 
+    const end = s.is_active
       ? new Date(s.last_activity).getTime()
       : new Date(s.updated_at).getTime();
     return end - start;
   });
-  
-  const averageSessionDuration = durations.length > 0
-    ? durations.reduce((a, b) => a + b, 0) / durations.length / 1000 / 60 // in minutes
-    : 0;
-  
+
+  const averageSessionDuration =
+    durations.length > 0
+      ? durations.reduce((a, b) => a + b, 0) / durations.length / 1000 / 60 // in minutes
+      : 0;
+
   return {
     totalSessions: sessions.length,
     activeSessions,
@@ -339,32 +333,29 @@ export async function getSessionStatistics(userId?: string) {
 // Cleanup expired sessions (should be run periodically)
 export async function cleanupExpiredSessions(): Promise<number> {
   const supabase = createClient();
-  
+
   const now = new Date().toISOString();
-  
+
   // First, get count of expired sessions
   const { data: expiredSessions } = await supabase
     .from('admin_sessions')
     .select('id')
     .eq('is_active', true)
     .or(`expires_at.lt.${now},idle_expires_at.lt.${now}`);
-  
+
   const count = expiredSessions?.length || 0;
-  
+
   // Invalidate expired sessions
   await supabase
     .from('admin_sessions')
     .update({ is_active: false })
     .eq('is_active', true)
     .or(`expires_at.lt.${now},idle_expires_at.lt.${now}`);
-  
+
   // Delete very old sessions (older than 30 days)
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  await supabase
-    .from('admin_sessions')
-    .delete()
-    .lt('created_at', thirtyDaysAgo);
-  
+  await supabase.from('admin_sessions').delete().lt('created_at', thirtyDaysAgo);
+
   return count;
 }
 

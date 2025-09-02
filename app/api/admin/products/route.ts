@@ -2,17 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { verifyAccessToken } from '@/lib/auth/jwt';
 import { getAuthTokens } from '@/lib/auth/cookies';
+import { AuditLogger, getClientInfo } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -26,18 +24,12 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to read products
     if (user.role !== 'super_admin' && user.role !== 'product_manager') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     // Fetch products
@@ -54,13 +46,9 @@ export async function GET(request: NextRequest) {
       products: products || [],
       total: products?.length || 0,
     });
-
   } catch (error) {
     console.error('Products fetch error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -68,12 +56,9 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -87,18 +72,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to create products
     if (user.role !== 'super_admin' && user.role !== 'product_manager') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     const body = await request.json();
@@ -132,15 +111,13 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (existingProduct) {
-        return NextResponse.json(
-          { error: 'SKU already exists' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'SKU already exists' }, { status: 400 });
       }
     }
 
     // Generate SKU if not provided
-    const generatedSku = sku || `${category.toUpperCase().slice(0, 3)}-${Date.now().toString().slice(-6)}`;
+    const generatedSku =
+      sku || `${category.toUpperCase().slice(0, 3)}-${Date.now().toString().slice(-6)}`;
 
     // Create product
     const { data: product, error: createError } = await supabase
@@ -171,36 +148,32 @@ export async function POST(request: NextRequest) {
       throw new Error(createError.message);
     }
 
-    // Log audit trail
-    await supabase
-      .from('audit_log')
-      .insert({
-        user_id: user.id,
-        action: 'product.create',
-        table_name: 'gift_items',
-        record_id: product.id,
-        changes: {
-          created: {
-            name,
-            description,
-            category,
-            price,
-            sku: generatedSku,
-            status,
-          }
-        },
-      });
+    // Log audit trail using the new audit system
+    const clientInfo = getClientInfo(request);
+    await AuditLogger.log({
+      user_id: user.id,
+      user_email: user.email,
+      action: 'PRODUCT_CREATE',
+      resource_type: 'product',
+      resource_id: product.id,
+      resource_name: name,
+      details: {
+        name,
+        description,
+        category,
+        price,
+        sku: generatedSku,
+        status,
+      },
+      ...clientInfo,
+    });
 
     return NextResponse.json({
       success: true,
       product,
     });
-
   } catch (error) {
     console.error('Product creation error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

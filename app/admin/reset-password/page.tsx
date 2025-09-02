@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ function ResetPasswordForm() {
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     feedback: '',
-    isValid: false
+    isValid: false,
   });
 
   // Validate token on mount
@@ -103,7 +103,7 @@ function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!passwordStrength.isValid) {
       setError('Please choose a stronger password');
       return;
@@ -158,14 +158,24 @@ function ResetPasswordForm() {
         <Card className="w-full max-w-md p-8">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              <svg
+                className="w-6 h-6 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid Reset Link</h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <Button
-              onClick={() => window.location.href = '/admin/forgot-password'}
+              onClick={() => (window.location.href = '/admin/forgot-password')}
               className="w-full"
             >
               Request New Reset Link
@@ -182,18 +192,26 @@ function ResetPasswordForm() {
         <Card className="w-full max-w-md p-8">
           <div className="text-center">
             <div className="w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              <svg
+                className="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                ></path>
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Password Reset Successful</h1>
             <p className="text-gray-600 mb-6">
-              Your password has been successfully updated. You can now log in with your new password.
+              Your password has been successfully updated. You can now log in with your new
+              password.
             </p>
-            <Button
-              onClick={() => window.location.href = '/admin/login'}
-              className="w-full"
-            >
+            <Button onClick={() => (window.location.href = '/admin/login')} className="w-full">
               Go to Login
             </Button>
           </div>
@@ -218,9 +236,7 @@ function ResetPasswordForm() {
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Reset Password</h1>
-          <p className="text-gray-600">
-            Enter your new password below.
-          </p>
+          <p className="text-gray-600">Enter your new password below.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -240,16 +256,18 @@ function ResetPasswordForm() {
                   <span className={`text-sm ${getPasswordStrengthColor()}`}>
                     {passwordStrength.feedback}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {passwordStrength.score}/8
-                  </span>
+                  <span className="text-xs text-gray-500">{passwordStrength.score}/8</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      passwordStrength.score < 3 ? 'bg-red-500' :
-                      passwordStrength.score < 5 ? 'bg-yellow-500' :
-                      passwordStrength.score < 7 ? 'bg-green-500' : 'bg-green-600'
+                      passwordStrength.score < 3
+                        ? 'bg-red-500'
+                        : passwordStrength.score < 5
+                          ? 'bg-yellow-500'
+                          : passwordStrength.score < 7
+                            ? 'bg-green-500'
+                            : 'bg-green-600'
                     }`}
                     style={{ width: getPasswordStrengthWidth() }}
                   ></div>
@@ -293,7 +311,7 @@ function ResetPasswordForm() {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => window.location.href = '/admin/login'}
+              onClick={() => (window.location.href = '/admin/login')}
               className="text-sm text-blue-600 hover:text-blue-500"
             >
               Back to Login
@@ -307,16 +325,18 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md p-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </Card>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Card className="w-full max-w-md p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </Card>
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );

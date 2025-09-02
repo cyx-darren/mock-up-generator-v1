@@ -26,10 +26,12 @@ export interface DetectedArea {
     width: number;
     height: number;
   };
-  contours: Array<{
-    x: number;
-    y: number;
-  }[]>;
+  contours: Array<
+    {
+      x: number;
+      y: number;
+    }[]
+  >;
   centroid: {
     x: number;
     y: number;
@@ -63,15 +65,15 @@ export class GreenColorDetector {
    */
   detectGreenAreas(imageData: ImageData, width: number, height: number): DetectedArea {
     const mask = this.createGreenMask(imageData, width, height);
-    
+
     if (this.config.noiseReduction) {
       this.applyNoiseReduction(mask, width, height);
     }
-    
+
     if (this.config.morphologyOps) {
       this.applyMorphology(mask, width, height);
     }
-    
+
     return this.analyzeMask(mask, width, height);
   }
 
@@ -94,13 +96,13 @@ export class GreenColorDetector {
       }
 
       const pixelIndex = i / 4;
-      
+
       // Method 1: RGB-based detection
       const isGreenRGB = this.isGreenRGB(r, g, b);
-      
+
       // Method 2: HSV-based detection
       const isGreenHSV = this.isGreenHSV(r, g, b);
-      
+
       // Combine methods with tolerance
       if (isGreenRGB || isGreenHSV) {
         mask[pixelIndex] = 255;
@@ -126,7 +128,7 @@ export class GreenColorDetector {
    */
   private isGreenHSV(r: number, g: number, b: number): boolean {
     const hsv = this.rgbToHsv(r, g, b);
-    
+
     return (
       hsv.h >= this.config.hueRange[0] &&
       hsv.h <= this.config.hueRange[1] &&
@@ -269,8 +271,12 @@ export class GreenColorDetector {
    */
   private analyzeMask(mask: Uint8Array, width: number, height: number): DetectedArea {
     let greenPixelCount = 0;
-    let minX = width, minY = height, maxX = 0, maxY = 0;
-    let sumX = 0, sumY = 0;
+    let minX = width,
+      minY = height,
+      maxX = 0,
+      maxY = 0;
+    let sumX = 0,
+      sumY = 0;
 
     // Count pixels and find bounds
     for (let y = 0; y < height; y++) {
@@ -314,7 +320,7 @@ export class GreenColorDetector {
     // Calculate detection quality based on area size and compactness
     const areaRatio = greenPixelCount / (boundsWidth * boundsHeight);
     const sizeScore = Math.min(greenPixelCount / (width * height * 0.1), 1); // Prefer 10%+ coverage
-    const quality = (areaRatio * 0.6) + (sizeScore * 0.4);
+    const quality = areaRatio * 0.6 + sizeScore * 0.4;
 
     // Find contours (simplified edge detection)
     const contours = this.findContours(mask, width, height);
@@ -338,17 +344,22 @@ export class GreenColorDetector {
   /**
    * Simple contour detection using edge following
    */
-  private findContours(mask: Uint8Array, width: number, height: number): Array<{ x: number; y: number }[]> {
+  private findContours(
+    mask: Uint8Array,
+    width: number,
+    height: number
+  ): Array<{ x: number; y: number }[]> {
     const contours: Array<{ x: number; y: number }[]> = [];
     const visited = new Uint8Array(width * height);
 
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
         const index = y * width + x;
-        
+
         if (mask[index] > 128 && !visited[index] && this.isEdgePixel(mask, x, y, width, height)) {
           const contour = this.traceContour(mask, visited, x, y, width, height);
-          if (contour.length > 10) { // Filter out very small contours
+          if (contour.length > 10) {
+            // Filter out very small contours
             contours.push(contour);
           }
         }
@@ -361,7 +372,13 @@ export class GreenColorDetector {
   /**
    * Check if pixel is on the edge of a green area
    */
-  private isEdgePixel(mask: Uint8Array, x: number, y: number, width: number, height: number): boolean {
+  private isEdgePixel(
+    mask: Uint8Array,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): boolean {
     const index = y * width + x;
     if (mask[index] < 128) return false;
 
@@ -369,10 +386,10 @@ export class GreenColorDetector {
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
         if (dx === 0 && dy === 0) continue;
-        
+
         const nx = x + dx;
         const ny = y + dy;
-        
+
         if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
           const ni = ny * width + nx;
           if (mask[ni] < 128) {
@@ -398,20 +415,25 @@ export class GreenColorDetector {
   ): { x: number; y: number }[] {
     const contour: { x: number; y: number }[] = [];
     const directions = [
-      [-1, -1], [-1, 0], [-1, 1],
-      [0, -1],           [0, 1],
-      [1, -1],  [1, 0],  [1, 1],
+      [-1, -1],
+      [-1, 0],
+      [-1, 1],
+      [0, -1],
+      [0, 1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
     ];
 
     let x = startX;
     let y = startY;
     let steps = 0;
-    const maxSteps = Math.min(1000, width * height / 10); // Prevent infinite loops
+    const maxSteps = Math.min(1000, (width * height) / 10); // Prevent infinite loops
 
     while (steps < maxSteps) {
       const index = y * width + x;
       if (visited[index]) break;
-      
+
       visited[index] = 1;
       contour.push({ x, y });
 
@@ -420,7 +442,7 @@ export class GreenColorDetector {
       for (const [dx, dy] of directions) {
         const nx = x + dx;
         const ny = y + dy;
-        
+
         if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
           const ni = ny * width + nx;
           if (mask[ni] > 128 && !visited[ni] && this.isEdgePixel(mask, nx, ny, width, height)) {
