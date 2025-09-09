@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <!-- High-resolution Microsoft logo -->
+  <!-- Red square -->
+  <rect x="40" y="120" width="140" height="140" fill="#F25022"/>
+  <!-- Green square -->
+  <rect x="200" y="120" width="140" height="140" fill="#7FBA00"/>
+  <!-- Blue square -->
+  <rect x="40" y="280" width="140" height="140" fill="#00A4EF"/>
+  <!-- Yellow square -->
+  <rect x="200" y="280" width="140" height="140" fill="#FFB900"/>
+  <!-- Microsoft text -->
+  <text x="380" y="220" font-family="Segoe UI, Arial, sans-serif" font-size="88" fill="#737373" font-weight="300" dominant-baseline="middle">Microsoft</text>
+</svg>

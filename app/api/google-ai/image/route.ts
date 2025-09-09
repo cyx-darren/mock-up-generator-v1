@@ -25,19 +25,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the image generation model
+    // Get the image generation model with high-quality settings
     const generativeModel = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash-image-preview',
       generationConfig: {
-        temperature: 0.4, // Lower temperature for more consistent image generation
-        topP: 0.95,
-        topK: 40,
+        temperature: 0.2, // Optimal for high-quality, detailed image generation
+        topP: 0.95, // High creativity for better detail
+        topK: 40, // More diverse options for quality
         maxOutputTokens: 8192,
+        candidateCount: 1 // Single high-quality output
       },
     });
 
-    // Prepare enhanced prompt with options
-    let enhancedPrompt = prompt;
+    // Prepare enhanced prompt with high-quality options
+    let enhancedPrompt = `HIGH-RESOLUTION, CRYSTAL CLEAR: ${prompt}`;
     if (aspectRatio) {
       enhancedPrompt += ` [Aspect ratio: ${aspectRatio}]`;
     }
@@ -47,6 +48,8 @@ export async function POST(request: NextRequest) {
     if (includeText === false) {
       enhancedPrompt += ' [No text in image]';
     }
+    // Add quality emphasis
+    enhancedPrompt += ' [ULTRA-HIGH DEFINITION, PROFESSIONAL QUALITY, SHARP DETAILS, NO PIXELATION]';
 
     const startTime = Date.now();
     const imageGenerationTimeout = 60000; // 60 seconds timeout for image generation

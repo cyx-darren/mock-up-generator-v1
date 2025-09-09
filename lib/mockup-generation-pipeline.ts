@@ -122,47 +122,31 @@ export class MockupGenerationPipeline {
         request.placementType
       );
 
-      // Step 4: Combine product and logo images
-      console.log('About to combine images...');
-      const combinedImageUrl = await this.combineImages(
+      // Step 4: Generate mockup directly with Gemini - simple and effective
+      console.log('Generating mockup with simplified approach...');
+      const mockupImageUrl = await this.combineImages(
         request.product.imageUrl,
         processedLogo.processedImageUrl || processedLogo.file as string,
         appliedConstraints
       );
-      console.log('Combined image result:', combinedImageUrl ? 'Success' : 'Failed');
+      console.log('Mockup generation result:', mockupImageUrl ? 'Success' : 'Failed');
 
-      // Step 5: Generate constraint mask
-      const maskImageUrl = await this.generateConstraintMask(
-        request.product,
-        request.placementType,
-        appliedConstraints
-      );
-
-      // Step 6: Generate AI prompt
-      const prompt = await this.generatePrompt(request);
-
-      // Step 7: Normalize dimensions
-      const normalizedDimensions = await this.normalizeDimensions(combinedImageUrl);
-
-      // Step 8: Apply compression
-      const compressedImageUrl = await this.compressImage(combinedImageUrl);
-
-      // Step 9: Add watermark if needed
-      const finalImageUrl = await this.addWatermarkIfNeeded(compressedImageUrl);
+      // Skip all the complex processing - Gemini handles it all
+      const finalImageUrl = mockupImageUrl;
 
       const preparationTime = Date.now() - startTime;
 
       return {
         combinedImageUrl: finalImageUrl,
-        maskImageUrl,
-        prompt,
+        maskImageUrl: '', // Not needed with simplified approach
+        prompt: { finalPrompt: 'Simplified Gemini approach' } as GeneratedPrompt,
         metadata: {
           originalLogo: request.logo,
           product: request.product,
           constraints: appliedConstraints,
-          dimensions: normalizedDimensions,
-          compression: 0.8, // 80% quality
-          watermarked: false, // Set based on configuration
+          dimensions: { width: 800, height: 1200 },
+          compression: 1.0, // No compression - let Gemini handle quality
+          watermarked: false,
           preparationTime
         }
       };
@@ -460,9 +444,9 @@ export class MockupGenerationPipeline {
     logoImageUrl: string,
     constraints: AppliedConstraints
   ): Promise<string> {
-    console.log('Generating AI mockup using Nano Banana model:', { productImageUrl, logoImageUrl, constraints });
+    console.log('Generating simplified AI mockup:', { productImageUrl, logoImageUrl });
     
-    // Use Nano Banana (Gemini 2.5 Flash Image) model for mockup generation
+    // Use simplified Gemini approach for mockup generation
     if (typeof window === 'undefined') {
       return await this.generateAIMockup(productImageUrl, logoImageUrl, constraints);
     }
@@ -692,14 +676,9 @@ export class MockupGenerationPipeline {
     return categoryMap[product.category] || 'mug';
   }
 
-  private getAspectRatio(qualityLevel: string): '1:1' | '4:3' | '16:9' | '21:9' {
-    const ratioMap: Record<string, '1:1' | '4:3' | '16:9' | '21:9'> = {
-      'basic': '1:1',
-      'enhanced': '4:3',
-      'premium': '16:9',
-      'ultra': '21:9'
-    };
-    return ratioMap[qualityLevel] || '1:1';
+  private getAspectRatio(qualityLevel: string): '1:1' | '4:3' | '16:9' | '21:9' | '2:3' {
+    // Always use 2:3 aspect ratio for 800x1200 portrait orientation
+    return '2:3';
   }
 
   private generateNegativePrompt(): string {
@@ -727,7 +706,7 @@ export class MockupGenerationPipeline {
   }
 
   /**
-   * Generate AI mockup using Nano Banana (Gemini 2.5 Flash Image) model with multi-image composition
+   * Generate AI mockup using simplified Gemini approach
    */
   private async generateAIMockup(
     productImageUrl: string,
@@ -735,23 +714,20 @@ export class MockupGenerationPipeline {
     constraints: AppliedConstraints
   ): Promise<string> {
     try {
-      console.log('Starting AI mockup generation with Nano Banana model using direct multi-image composition');
+      console.log('Starting simplified AI mockup generation with Gemini');
 
-      // Use standard output dimensions for all mockups
-      const standardDimensions = { width: 800, height: 1200 };
-      console.log('Using standard mockup dimensions:', standardDimensions);
-
-      // Prepare input images for multi-image composition
+      // Prepare input images
       const inputImages = await this.prepareInputImages(productImageUrl, logoImageUrl);
       
-      // Create detailed prompt for direct image generation with composition
-      const mockupPrompt = await this.createDirectCompositionPrompt(constraints, standardDimensions);
+      // Simple, clear prompt - let Gemini understand and place the logo
+      const placementType = constraints.metadata.placementType;
+      const placement = placementType === 'center' ? 'center' : 
+                       placementType === 'horizontal' ? 'center' :
+                       'center';
       
-      // Use server-side Google AI client directly for image generation with multi-image input
-      const { getGoogleAIClient } = await import('./google-ai-client');
-      const serverClient = getGoogleAIClient();
+      const simplePrompt = `Place the provided logo on the ${placement} of this bottle. Keep the original product image unchanged, just add the logo on the bottle surface. Output dimensions must be 800x1200 pixels. High quality, professional result.`;
       
-      // Create a specialized model for image generation with multi-image input
+      // Create Gemini client
       const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
         process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
       );
@@ -759,39 +735,36 @@ export class MockupGenerationPipeline {
       const imageModel = client.getGenerativeModel({
         model: 'gemini-2.5-flash-image-preview',
         generationConfig: {
-          temperature: 0.1, // Lower temperature for more consistent, complete images
-          topP: 0.8,
-          topK: 20,
-          maxOutputTokens: 8192,
-        },
+          temperature: 0.3,
+          topP: 0.9,
+          topK: 32,
+          maxOutputTokens: 8192
+        }
       });
 
-      // Prepare content parts with images and prompt
-      const parts: any[] = [{ text: mockupPrompt }];
-      
-      // Add the product image first (as base)
-      parts.push({
-        inlineData: {
-          data: inputImages[0].data,
-          mimeType: inputImages[0].mimeType,
+      // Send both images with simple prompt
+      const parts: any[] = [
+        { text: simplePrompt },
+        {
+          inlineData: {
+            data: inputImages[0].data,
+            mimeType: inputImages[0].mimeType,
+          },
         },
-      });
-      
-      // Add the logo image second (as overlay)
-      parts.push({
-        inlineData: {
-          data: inputImages[1].data,
-          mimeType: inputImages[1].mimeType,
-        },
-      });
+        {
+          inlineData: {
+            data: inputImages[1].data,
+            mimeType: inputImages[1].mimeType,
+          },
+        }
+      ];
 
-      console.log('Generating image with multi-image composition...');
+      console.log('Generating mockup with simplified approach...');
       
-      // Generate the image directly with both input images
       const result = await imageModel.generateContent(parts);
       const response = await result.response;
       
-      // Extract generated images from response
+      // Extract generated image
       const candidates = response.candidates || [];
       let generatedImageData: string | null = null;
       let mimeType = 'image/png';
@@ -810,17 +783,16 @@ export class MockupGenerationPipeline {
       }
 
       if (!generatedImageData) {
-        throw new Error('No images generated by Nano Banana model in multi-image composition');
+        throw new Error('No images generated by Gemini');
       }
 
-      // Convert to data URL
+      // Return the result directly - let Gemini handle the composition
       const dataUrl = `data:${mimeType};base64,${generatedImageData}`;
-      
-      console.log('Successfully generated AI mockup using Nano Banana model with direct multi-image composition');
+      console.log('Successfully generated mockup with simplified approach');
       return dataUrl;
 
     } catch (error: any) {
-      console.error('AI mockup generation with direct multi-image composition failed:', error);
+      console.error('Simplified AI mockup generation failed:', error);
       throw new Error(`Failed to generate AI mockup: ${error.message}`);
     }
   }
@@ -865,31 +837,21 @@ export class MockupGenerationPipeline {
   }
 
   /**
-   * Prepare input images for multi-image composition
+   * Prepare input images - simple conversion to base64
    */
   private async prepareInputImages(
     productImageUrl: string,
     logoImageUrl: string
   ): Promise<Array<{ data: string; mimeType: string }>> {
-    const images: Array<{ data: string; mimeType: string }> = [];
-    
     try {
-      // Convert product image URL to base64
+      // Simply convert both images to base64 - no processing
       const productImageData = await this.convertImageToBase64(productImageUrl);
-      images.push({
-        data: productImageData.data,
-        mimeType: productImageData.mimeType
-      });
-      
-      // Convert logo image to base64 (handle data URLs)
       const logoImageData = await this.convertImageToBase64(logoImageUrl);
-      images.push({
-        data: logoImageData.data,
-        mimeType: logoImageData.mimeType
-      });
       
-      console.log('Prepared', images.length, 'input images for composition');
-      return images;
+      return [
+        { data: productImageData.data, mimeType: productImageData.mimeType },
+        { data: logoImageData.data, mimeType: logoImageData.mimeType }
+      ];
       
     } catch (error) {
       console.error('Error preparing input images:', error);
@@ -947,6 +909,85 @@ export class MockupGenerationPipeline {
   }
 
   /**
+   * Ensure generated image has exact target dimensions
+   */
+  private async ensureExactDimensions(
+    imageDataUrl: string,
+    targetDimensions: { width: number; height: number }
+  ): Promise<string> {
+    try {
+      // Server-side processing using canvas
+      if (typeof window === 'undefined') {
+        const { createCanvas, loadImage } = await import('canvas');
+        
+        // Load the generated image
+        const img = await loadImage(imageDataUrl);
+        
+        // Check if dimensions are already correct
+        if (img.width === targetDimensions.width && img.height === targetDimensions.height) {
+          console.log('Generated image already has correct dimensions:', { width: img.width, height: img.height });
+          return imageDataUrl;
+        }
+        
+        console.log('Resizing image from', { width: img.width, height: img.height }, 'to', targetDimensions);
+        
+        // Create high-quality canvas with exact target dimensions
+        const canvas = createCanvas(targetDimensions.width, targetDimensions.height);
+        const ctx = canvas.getContext('2d');
+        
+        // Set high-quality image rendering settings
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.patternQuality = 'best';
+        ctx.quality = 'best';
+        
+        // Calculate scaling to fit while maintaining aspect ratio, then center
+        const sourceAspect = img.width / img.height;
+        const targetAspect = targetDimensions.width / targetDimensions.height;
+        
+        let drawWidth, drawHeight, offsetX, offsetY;
+        
+        if (sourceAspect > targetAspect) {
+          // Source is wider - fit to height
+          drawHeight = targetDimensions.height;
+          drawWidth = drawHeight * sourceAspect;
+          offsetX = (targetDimensions.width - drawWidth) / 2;
+          offsetY = 0;
+        } else {
+          // Source is taller - fit to width
+          drawWidth = targetDimensions.width;
+          drawHeight = drawWidth / sourceAspect;
+          offsetX = 0;
+          offsetY = (targetDimensions.height - drawHeight) / 2;
+        }
+        
+        // Fill background with white
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetDimensions.width, targetDimensions.height);
+        
+        // Draw resized image with high quality
+        ctx.drawImage(img as any, offsetX, offsetY, drawWidth, drawHeight);
+        
+        // Convert back to high-quality data URL
+        const buffer = canvas.toBuffer('image/png', {
+          compressionLevel: 0, // No compression for maximum quality
+          filters: canvas.PNG_FILTER_NONE // Fastest, highest quality
+        });
+        const base64 = buffer.toString('base64');
+        return `data:image/png;base64,${base64}`;
+      }
+      
+      // Client-side fallback (should not be needed in this context)
+      return imageDataUrl;
+      
+    } catch (error) {
+      console.error('Error ensuring exact dimensions:', error);
+      // Return original if processing fails
+      return imageDataUrl;
+    }
+  }
+
+  /**
    * Create detailed prompt for direct multi-image composition
    */
   private async createDirectCompositionPrompt(
@@ -959,7 +1000,7 @@ export class MockupGenerationPipeline {
     // Create placement description based on constraints
     const placementDescription = this.createPlacementDescription(placementType, position);
     
-    const prompt = `Create a COMPLETE, FULL product mockup image by compositing the provided images.
+    const prompt = `Create a HIGH-RESOLUTION, PROFESSIONAL product mockup image by compositing the provided images.
 
 INPUT IMAGES:
 - Image 1: Bamboo Water Bottle (use as the complete base image)
@@ -968,16 +1009,23 @@ INPUT IMAGES:
 COMPOSITION TASK:
 Recreate the ENTIRE Bamboo Water Bottle from Image 1 with the Microsoft logo from Image 2 overlaid ${placementDescription}.
 
-CRITICAL REQUIREMENTS:
-1. Generate a COMPLETE, FULL ${targetDimensions.width}×${targetDimensions.height} pixel image
-2. Use the EXACT bottle from Image 1 as the base - preserve its appearance completely
-3. Maintain the bottle's natural proportions within the ${targetDimensions.width}×${targetDimensions.height} canvas
-4. Include the entire bottle fitted properly within the specified dimensions
-5. Preserve ALL aspects of the original bottle: colors, lighting, shadows, background
-6. Add ONLY the Microsoft logo from Image 2 as an overlay ${placementDescription}
-7. DO NOT crop, cut, or show partial images
-8. DO NOT stretch or distort the bottle - it should look naturally proportioned
-9. Compose the bottle professionally within the portrait ${targetDimensions.width}×${targetDimensions.height} frame
+QUALITY REQUIREMENTS:
+1. Generate a CRISP, HIGH-RESOLUTION ${targetDimensions.width}×${targetDimensions.height} pixel image
+2. Maintain MAXIMUM image quality with sharp, clear details
+3. Use PROFESSIONAL commercial photography quality
+4. Ensure ALL elements are CRYSTAL CLEAR and HIGH-DEFINITION
+5. NO pixelation, blurriness, or quality degradation
+6. PHOTO-REALISTIC rendering with fine details preserved
+
+COMPOSITION REQUIREMENTS:
+1. Use the EXACT bottle from Image 1 as the base - preserve its appearance completely
+2. Maintain the bottle's natural proportions within the ${targetDimensions.width}×${targetDimensions.height} canvas
+3. Include the entire bottle fitted properly within the specified dimensions
+4. Preserve ALL aspects of the original bottle: colors, lighting, shadows, background
+5. Add ONLY the Microsoft logo from Image 2 as an overlay ${placementDescription}
+6. DO NOT crop, cut, or show partial images
+7. DO NOT stretch or distort the bottle - it should look naturally proportioned
+8. Compose the bottle professionally within the portrait ${targetDimensions.width}×${targetDimensions.height} frame
 
 LOGO INTEGRATION:
 - Place the Microsoft logo ${placementDescription} on the bottle surface
@@ -996,18 +1044,26 @@ OUTPUT SPECIFICATIONS:
 
 DIMENSION REQUIREMENTS:
 - Output image width: ${targetDimensions.width} pixels (EXACT)
-- Output image height: ${targetDimensions.height} pixels (EXACT)
-- Portrait orientation with proper bottle proportions
+- Output image height: ${targetDimensions.height} pixels (EXACT) 
+- Portrait orientation (2:3 aspect ratio)
 - The bottle should look natural and realistic within these dimensions
 - DO NOT stretch or distort the bottle - fit it naturally within the canvas
+- ASPECT RATIO: Must be ${(targetDimensions.width / targetDimensions.height).toFixed(3)}:1 (portrait)
+- Generate the image in EXACT ${targetDimensions.width}×${targetDimensions.height} resolution
 
 QUALITY REQUIREMENTS:
+- ULTRA-HIGH DEFINITION, CRYSTAL CLEAR rendering
+- SHARP, CRISP edges and fine details throughout
+- PROFESSIONAL commercial photography quality (studio lighting)
+- ZERO pixelation, blur, or quality degradation
+- MAXIMUM resolution and clarity at ${targetDimensions.width}×${targetDimensions.height} pixels
 - Natural, properly proportioned bottle appearance
-- Professional product photography composition
 - The bottle should fit well within the ${targetDimensions.width}×${targetDimensions.height} frame
 - No stretching, squashing, or unnatural distortion
+- HIGH-FIDELITY color reproduction and accurate textures
+- PROFESSIONAL studio-quality lighting and shadows
 
-Generate the complete ${targetDimensions.width}×${targetDimensions.height} pixel image now with the bottle properly composed within the frame.`;
+Generate the complete ULTRA-HIGH-QUALITY ${targetDimensions.width}×${targetDimensions.height} pixel image now with MAXIMUM clarity and sharpness.`;
 
     return prompt;
   }
