@@ -3,9 +3,13 @@
  * Input preparation and processing system for AI mockup generation
  */
 
-import { getPromptEngineeringService, PromptGenerationRequest, GeneratedPrompt } from './prompt-engineering';
-import { getGoogleAIApiClient, ImageGenerationOptions } from './google-ai-api-client';
-import { getAIRequestHandler, RequestBuilder } from './ai-request-handler';
+import {
+  getPromptEngineeringService,
+  PromptGenerationRequest,
+  GeneratedPrompt,
+} from './prompt-engineering';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+// Removed AI request handler - using direct Google AI integration
 
 // Applied constraints interface for the pipeline
 export interface AppliedConstraints {
@@ -99,8 +103,10 @@ export interface MockupGenerationResult {
 
 export class MockupGenerationPipeline {
   private promptService = getPromptEngineeringService();
-  private googleAIClient = getGoogleAIApiClient();
-  private requestHandler = getAIRequestHandler();
+  private googleAI = new GoogleGenerativeAI(
+    process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
+  );
+  // Using direct Google AI integration instead of request handler
 
   /**
    * Main pipeline method - prepares inputs for mockup generation
@@ -126,7 +132,7 @@ export class MockupGenerationPipeline {
       console.log('Generating mockup with simplified approach...');
       const mockupImageUrl = await this.combineImages(
         request.product.imageUrl,
-        processedLogo.processedImageUrl || processedLogo.file as string,
+        processedLogo.processedImageUrl || (processedLogo.file as string),
         appliedConstraints
       );
       console.log('Mockup generation result:', mockupImageUrl ? 'Success' : 'Failed');
@@ -147,10 +153,9 @@ export class MockupGenerationPipeline {
           dimensions: { width: 800, height: 1200 },
           compression: 1.0, // No compression - let Gemini handle quality
           watermarked: false,
-          preparationTime
-        }
+          preparationTime,
+        },
       };
-
     } catch (error: any) {
       throw new Error(`Input preparation failed: ${error.message}`);
     }
@@ -161,12 +166,12 @@ export class MockupGenerationPipeline {
    */
   async generateMockup(request: MockupGenerationRequest): Promise<MockupGenerationResult> {
     const mockupId = this.generateMockupId();
-    
+
     const result: MockupGenerationResult = {
       id: mockupId,
       status: 'pending',
       preparedInput: {} as PreparedInput,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     try {
@@ -174,53 +179,28 @@ export class MockupGenerationPipeline {
       result.status = 'processing';
       result.preparedInput = await this.prepareInputs(request);
 
-      // Step 2: Create AI generation request
-      const aiRequest: RequestBuilder = this.requestHandler.createRequest({
-        type: 'mockup_generation',
-        priority: 'medium',
-        metadata: {
-          mockupId,
-          productId: request.product.id,
-          placementType: request.placementType
-        }
-      });
-
-      // Step 3: Prepare AI generation options
-      const generationOptions: ImageGenerationOptions = {
-        prompt: result.preparedInput.prompt.finalPrompt,
-        aspectRatio: this.getAspectRatio(request.qualityLevel),
-        seed: Math.floor(Math.random() * 1000000),
-        includeText: !!request.customText,
-        negativePrompt: this.generateNegativePrompt(),
-        guidanceScale: this.getGuidanceScale(request.qualityLevel),
-        numInferenceSteps: this.getInferenceSteps(request.qualityLevel)
-      };
-
-      // Step 4: Submit to AI request handler
-      const jobId = await this.requestHandler.addJob(aiRequest, generationOptions);
-
-      // Step 5: Monitor job progress (simplified - would be handled by request handler)
+      // Step 2: Generate mockup directly (no request handler needed)
+      // The actual mockup generation is already happening in prepareInputs -> combineImages
       result.status = 'completed'; // This would be updated by the actual AI processing
       result.generatedImageUrl = result.preparedInput.combinedImageUrl; // Set the generated mockup image
       result.completedAt = new Date();
       result.processingTime = Date.now() - result.createdAt.getTime();
-      
+
       console.log('PIPELINE DEBUG - Combined image URL:', {
         combinedImageUrl: result.preparedInput.combinedImageUrl?.substring(0, 100) + '...',
         combinedImageUrlLength: result.preparedInput.combinedImageUrl?.length || 0,
-        combinedImageUrlExists: !!result.preparedInput.combinedImageUrl
+        combinedImageUrlExists: !!result.preparedInput.combinedImageUrl,
       });
-      
+
       console.log('Generated mockup result:', {
         id: result.id,
         status: result.status,
         hasGeneratedImageUrl: !!result.generatedImageUrl,
         generatedImageUrlLength: result.generatedImageUrl?.length || 0,
-        preparationTime: result.preparedInput.metadata.preparationTime
+        preparationTime: result.preparedInput.metadata.preparationTime,
       });
 
       return result;
-
     } catch (error: any) {
       result.status = 'failed';
       result.error = error.message;
@@ -249,7 +229,7 @@ export class MockupGenerationPipeline {
     // For now, return as-is
     return {
       ...logo,
-      processedImageUrl: typeof logo.file === 'string' ? logo.file : URL.createObjectURL(logo.file)
+      processedImageUrl: typeof logo.file === 'string' ? logo.file : URL.createObjectURL(logo.file),
     };
   }
 
@@ -262,19 +242,21 @@ export class MockupGenerationPipeline {
       // Import constraint application service
       const { getConstraintApplicationService } = await import('./constraint-application');
       const constraintService = getConstraintApplicationService();
-      
+
       // Load constraint for this product and placement type
       const constraint = await constraintService.getConstraintForPlacement(
         product.id,
         placementType as 'horizontal' | 'vertical' | 'all_over'
       );
-      
+
       if (!constraint) {
-        console.log(`No constraint found for product ${product.id} with placement ${placementType}, using fallback`);
+        console.log(
+          `No constraint found for product ${product.id} with placement ${placementType}, using fallback`
+        );
         // Fallback to center placement with reasonable defaults
         return this.createFallbackConstraints(placementType);
       }
-      
+
       // Use the detected green pixel areas for logo placement
       // Instead of using just default position, we need to place the logo within the actual detected green areas
       const requestedPlacement = await this.calculateOptimalPlacementFromConstraintImage(
@@ -282,13 +264,13 @@ export class MockupGenerationPipeline {
         logo,
         product
       );
-      
+
       // Convert to pipeline format using actual detected green pixel area
       const appliedConstraints: AppliedConstraints = {
         isValid: true,
         position: {
           x: requestedPlacement.x / 800, // Normalize to 0-1 (assuming 800px image width)
-          y: requestedPlacement.y / 1200 // Normalize to 0-1 (assuming 1200px image height)
+          y: requestedPlacement.y / 1200, // Normalize to 0-1 (assuming 1200px image height)
         },
         scale: Math.min(
           requestedPlacement.width / 200, // Normalize scale based on expected logo size
@@ -298,27 +280,28 @@ export class MockupGenerationPipeline {
           x: requestedPlacement.x,
           y: requestedPlacement.y,
           width: requestedPlacement.width,
-          height: requestedPlacement.height
+          height: requestedPlacement.height,
         },
         violations: [],
-        adjustments: [`Logo positioned within detected green constraint area for ${placementType} placement`],
+        adjustments: [
+          `Logo positioned within detected green constraint area for ${placementType} placement`,
+        ],
         metadata: {
           placementType: placementType as any,
           originalPosition: { x: constraint.default_x / 800, y: constraint.default_y / 1200 },
-          appliedAt: new Date()
-        }
+          appliedAt: new Date(),
+        },
       };
 
       console.log(`Applied real constraints for ${placementType} placement:`, appliedConstraints);
       return appliedConstraints;
-      
     } catch (error) {
       console.error('Error applying constraints:', error);
       // Fallback to safe defaults if constraint application fails
       return this.createFallbackConstraints(placementType);
     }
   }
-  
+
   /**
    * Calculate optimal logo placement within detected green constraint areas
    */
@@ -328,33 +311,36 @@ export class MockupGenerationPipeline {
     product: ProductInput
   ): Promise<{ x: number; y: number; width: number; height: number }> {
     try {
-      console.log('calculateOptimalPlacementFromConstraintImage called with constraint:', constraint);
-      
+      console.log(
+        'calculateOptimalPlacementFromConstraintImage called with constraint:',
+        constraint
+      );
+
       // Skip image processing on server-side, use constraint defaults
       if (typeof window === 'undefined') {
         console.log('Server-side: using constraint defaults instead of image processing');
         console.log('Constraint data received:', constraint);
-        
+
         // Use actual constraint data from database with proper field names
         const logoX = constraint?.default_x || 300;
         const logoY = constraint?.default_y || 400;
         const logoWidth = constraint?.max_logo_width || 150;
         const logoHeight = constraint?.max_logo_height || 150;
-        
+
         console.log('Using constraint placement:', { logoX, logoY, logoWidth, logoHeight });
-        
+
         return {
           x: logoX,
           y: logoY,
           width: logoWidth,
-          height: logoHeight
+          height: logoHeight,
         };
       }
 
       // If we have constraint image URL, analyze the green pixels (client-side only)
       if (constraint.constraint_image_url) {
         const { detectGreenConstraints } = await import('@/lib/color-detection');
-        
+
         // Load the constraint image and detect green areas
         const constraintImage = new Image();
         await new Promise((resolve, reject) => {
@@ -362,25 +348,26 @@ export class MockupGenerationPipeline {
           constraintImage.onerror = reject;
           constraintImage.src = constraint.constraint_image_url;
         });
-        
+
         // Create canvas to process the image
         const canvas = document.createElement('canvas');
         canvas.width = constraintImage.width;
         canvas.height = constraintImage.height;
         const ctx = canvas.getContext('2d')!;
         ctx.drawImage(constraintImage, 0, 0);
-        
+
         // Get image data and detect green areas
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const detectedAreas = detectGreenConstraints(imageData);
-        
+
         if (detectedAreas.length > 0) {
           // Use the largest detected green area
-          const largestArea = detectedAreas.reduce((prev, current) => 
-            (prev.bounds.width * prev.bounds.height) > (current.bounds.width * current.bounds.height) 
-              ? prev : current
+          const largestArea = detectedAreas.reduce((prev, current) =>
+            prev.bounds.width * prev.bounds.height > current.bounds.width * current.bounds.height
+              ? prev
+              : current
           );
-          
+
           // Calculate logo placement within the green area
           // Place logo in the center of the green area with appropriate scaling
           const logoSize = Math.min(
@@ -388,24 +375,23 @@ export class MockupGenerationPipeline {
             largestArea.bounds.height * 0.8, // 80% of green area height
             200 // Maximum logo size
           );
-          
+
           return {
             x: largestArea.bounds.x + (largestArea.bounds.width - logoSize) / 2,
             y: largestArea.bounds.y + (largestArea.bounds.height - logoSize) / 2,
             width: logoSize,
-            height: logoSize
+            height: logoSize,
           };
         }
       }
-      
+
       // Fallback to constraint defaults if green pixel detection fails
       return {
         x: constraint?.default_x || 300,
         y: constraint?.default_y || 400,
         width: constraint?.max_logo_width || 150,
-        height: constraint?.max_logo_height || 150
+        height: constraint?.max_logo_height || 150,
       };
-      
     } catch (error) {
       console.error('Error calculating placement from constraint image:', error);
       // Fallback to constraint defaults
@@ -413,7 +399,7 @@ export class MockupGenerationPipeline {
         x: constraint?.default_x || 300,
         y: constraint?.default_y || 400,
         width: constraint?.max_logo_width || 150,
-        height: constraint?.max_logo_height || 150
+        height: constraint?.max_logo_height || 150,
       };
     }
   }
@@ -427,38 +413,43 @@ export class MockupGenerationPipeline {
         x: 200,
         y: 300,
         width: 400,
-        height: 200
+        height: 200,
       },
       violations: [],
-      adjustments: [`Using fallback constraints for ${placementType} placement - no admin constraints found`],
+      adjustments: [
+        `Using fallback constraints for ${placementType} placement - no admin constraints found`,
+      ],
       metadata: {
         placementType: placementType as any,
         originalPosition: { x: 0.5, y: 0.5 },
-        appliedAt: new Date()
-      }
+        appliedAt: new Date(),
+      },
     };
   }
 
   private async combineImages(
     productImageUrl: string,
     logoImageUrl: string,
-    constraints: AppliedConstraints
+    constraints: AppliedConstraints,
+    productType?: string
   ): Promise<string> {
-    console.log('Generating simplified AI mockup:', { productImageUrl, logoImageUrl });
-    
+    console.log('[combineImages] Starting image combination');
+    console.log('[combineImages] Product type:', productType);
+    console.log('[combineImages] Product URL:', productImageUrl?.substring(0, 100));
+
     // Use simplified Gemini approach for mockup generation
     if (typeof window === 'undefined') {
-      return await this.generateAIMockup(productImageUrl, logoImageUrl, constraints);
+      return await this.generateAIMockup(productImageUrl, logoImageUrl, constraints, productType);
     }
-    
+
     // Proxy external URLs through our API to avoid CORS (client-side fallback)
     const proxiedProductUrl = this.getProxiedUrl(productImageUrl);
     const proxiedLogoUrl = this.getProxiedUrl(logoImageUrl);
-    
+
     // Create canvas and combine images
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) {
       throw new Error('Canvas context not available');
     }
@@ -491,17 +482,17 @@ export class MockupGenerationPipeline {
 
       // Draw logo with constraints applied
       const logoX = constraints.position.x * canvas.width - (logoImg.width * constraints.scale) / 2;
-      const logoY = constraints.position.y * canvas.height - (logoImg.height * constraints.scale) / 2;
+      const logoY =
+        constraints.position.y * canvas.height - (logoImg.height * constraints.scale) / 2;
       const logoWidth = logoImg.width * constraints.scale;
       const logoHeight = logoImg.height * constraints.scale;
 
       ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
 
       return canvas.toDataURL('image/png');
-      
     } catch (error) {
       console.error('Error combining images:', error);
-      
+
       // Fallback to mock image if proxy fails
       canvas.width = 400;
       canvas.height = 600;
@@ -509,21 +500,21 @@ export class MockupGenerationPipeline {
       // Draw mock product background
       ctx.fillStyle = '#4CAF50';
       ctx.fillRect(100, 100, 200, 400);
-      
+
       // Draw bottle cap
       ctx.fillStyle = '#2E7D32';
       ctx.fillRect(120, 80, 160, 40);
-      
+
       // Draw logo area
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(120, 200, 160, 100);
-      
+
       // Draw mock logo
       ctx.fillStyle = '#0066CC';
       ctx.font = '16px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('TEST LOGO', 200, 250);
-      
+
       // Add placement info
       ctx.fillStyle = '#000';
       ctx.font = '12px Arial';
@@ -545,13 +536,16 @@ export class MockupGenerationPipeline {
     constraints: AppliedConstraints
   ): Promise<string> {
     // Generate a mask image showing the constraint area
-    
+
     // Use server-side canvas when running server-side
     if (typeof window === 'undefined') {
       const { createCanvas } = await import('canvas');
-      const canvas = createCanvas(constraints.constraintArea.width, constraints.constraintArea.height);
+      const canvas = createCanvas(
+        constraints.constraintArea.width,
+        constraints.constraintArea.height
+      );
       const ctx = canvas.getContext('2d');
-      
+
       // Fill with black (masked area)
       ctx.fillStyle = 'black';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -567,11 +561,11 @@ export class MockupGenerationPipeline {
 
       return canvas.toDataURL('image/png');
     }
-    
+
     // Client-side fallback
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) {
       throw new Error('Canvas context not available');
     }
@@ -603,7 +597,7 @@ export class MockupGenerationPipeline {
       stylePreferences: request.stylePreferences,
       customText: request.customText,
       brandColors: request.brandColors,
-      additionalRequirements: request.additionalRequirements
+      additionalRequirements: request.additionalRequirements,
     };
 
     return this.promptService.generatePrompt(promptRequest);
@@ -611,20 +605,20 @@ export class MockupGenerationPipeline {
 
   private async normalizeDimensions(imageUrl: string): Promise<{ width: number; height: number }> {
     console.log('Normalizing dimensions for:', imageUrl);
-    
+
     // Skip dimension normalization on server-side, use defaults
     if (typeof window === 'undefined') {
       console.log('Server-side: using default normalized dimensions');
       return {
         width: 800,
-        height: 600
+        height: 600,
       };
     }
-    
+
     try {
       // Use proxied URL to avoid CORS
       const proxiedUrl = this.getProxiedUrl(imageUrl);
-      
+
       const img = new Image();
       img.crossOrigin = 'anonymous';
       await new Promise<void>((resolve, reject) => {
@@ -636,17 +630,17 @@ export class MockupGenerationPipeline {
       // Return normalized dimensions (e.g., max 1024px)
       const maxSize = 1024;
       const ratio = Math.min(maxSize / img.width, maxSize / img.height);
-      
+
       return {
         width: Math.round(img.width * ratio),
-        height: Math.round(img.height * ratio)
+        height: Math.round(img.height * ratio),
       };
     } catch (error) {
       console.warn('Failed to get image dimensions, using defaults:', error);
       // Fallback dimensions
       return {
         width: 400,
-        height: 600
+        height: 600,
       };
     }
   }
@@ -666,11 +660,11 @@ export class MockupGenerationPipeline {
   private getProductTypeFromProduct(product: ProductInput): string {
     // Map product category to prompt engineering product type
     const categoryMap: Record<string, string> = {
-      'Drinkware': 'mug',
-      'Apparel': 'tshirt',
-      'Office': 'pen',
-      'Stationery': 'notebook',
-      'Bags': 'tote_bag'
+      Drinkware: 'mug',
+      Apparel: 'tshirt',
+      Office: 'pen',
+      Stationery: 'notebook',
+      Bags: 'tote_bag',
     };
 
     return categoryMap[product.category] || 'mug';
@@ -687,20 +681,20 @@ export class MockupGenerationPipeline {
 
   private getGuidanceScale(qualityLevel: string): number {
     const scaleMap: Record<string, number> = {
-      'basic': 7.5,
-      'enhanced': 10.0,
-      'premium': 12.5,
-      'ultra': 15.0
+      basic: 7.5,
+      enhanced: 10.0,
+      premium: 12.5,
+      ultra: 15.0,
     };
     return scaleMap[qualityLevel] || 7.5;
   }
 
   private getInferenceSteps(qualityLevel: string): number {
     const stepsMap: Record<string, number> = {
-      'basic': 20,
-      'enhanced': 30,
-      'premium': 40,
-      'ultra': 50
+      basic: 20,
+      enhanced: 30,
+      premium: 40,
+      ultra: 50,
     };
     return stepsMap[qualityLevel] || 20;
   }
@@ -711,22 +705,36 @@ export class MockupGenerationPipeline {
   private async generateAIMockup(
     productImageUrl: string,
     logoImageUrl: string,
-    constraints: AppliedConstraints
+    constraints: AppliedConstraints,
+    productType?: string
   ): Promise<string> {
     try {
-      console.log('Starting Canvas Compositing + AI Enhancement approach');
+      console.log('[generateAIMockup] Starting Canvas Compositing + AI Enhancement approach');
+      console.log('[generateAIMockup] Product type:', productType || 'product');
+      console.log('[generateAIMockup] Product URL:', productImageUrl?.substring(0, 100));
+      console.log('[generateAIMockup] Logo URL:', logoImageUrl?.substring(0, 100));
 
       // Step 1: Create canvas composite with original product + logo
-      const canvasComposite = await this.createCanvasComposite(productImageUrl, logoImageUrl, constraints);
-      
-      // Step 2: Send composite to Gemini for ENHANCEMENT only (not generation)
-      const enhancedImage = await this.enhanceCompositeWithAI(canvasComposite);
-      
-      console.log('Successfully generated mockup with Canvas + AI Enhancement');
-      return enhancedImage;
+      const canvasComposite = await this.createCanvasComposite(
+        productImageUrl,
+        logoImageUrl,
+        constraints
+      );
+      console.log('[generateAIMockup] Canvas composite created, length:', canvasComposite?.length);
 
+      // Step 2: Send composite to Gemini for ENHANCEMENT only (not generation)
+      const enhancedImage = await this.enhanceCompositeWithAI(canvasComposite, productType);
+      console.log('[generateAIMockup] Enhanced image received, length:', enhancedImage?.length);
+
+      if (!enhancedImage) {
+        console.error('[generateAIMockup] No enhanced image returned from AI');
+        throw new Error('No enhanced image returned from AI enhancement');
+      }
+
+      console.log('[generateAIMockup] Successfully generated mockup with Canvas + AI Enhancement');
+      return enhancedImage;
     } catch (error: any) {
-      console.error('Canvas + AI Enhancement mockup generation failed:', error);
+      console.error('[generateAIMockup] Canvas + AI Enhancement mockup generation failed:', error);
       throw new Error(`Failed to generate AI mockup: ${error.message}`);
     }
   }
@@ -740,66 +748,137 @@ export class MockupGenerationPipeline {
     constraints: AppliedConstraints
   ): Promise<string> {
     const { createCanvas, loadImage } = await import('canvas');
-    
+
     try {
-      // Load original product image
-      const productImg = await loadImage(productImageUrl);
-      console.log('Loaded original product image:', { width: productImg.width, height: productImg.height });
-      
-      // Load logo image
-      const logoImg = await loadImage(logoImageUrl);
-      console.log('Loaded logo image:', { width: logoImg.width, height: logoImg.height });
-      
+      console.log('[createCanvasComposite] Loading product image from:', productImageUrl);
+
+      // Load original product image with better error handling and format conversion
+      let productImg;
+      try {
+        // Convert WebP to a supported format if needed
+        const imageUrlToLoad = productImageUrl;
+
+        // Check if the image URL is WebP format
+        if (productImageUrl.includes('.webp')) {
+          console.log(
+            '[createCanvasComposite] Detected WebP format, converting to supported format...'
+          );
+
+          // For WebP images from external sources, try to fetch and convert to Buffer
+          const response = await fetch(productImageUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+          }
+
+          const imageBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(imageBuffer);
+
+          // Use sharp to convert WebP to PNG
+          const sharp = (await import('sharp')).default;
+          const convertedBuffer = await sharp(buffer).png().toBuffer();
+
+          console.log(
+            '[createCanvasComposite] Converted WebP to PNG buffer, size:',
+            convertedBuffer.length
+          );
+          productImg = await loadImage(convertedBuffer);
+        } else {
+          productImg = await loadImage(productImageUrl);
+        }
+
+        console.log('[createCanvasComposite] Loaded original product image:', {
+          width: productImg.width,
+          height: productImg.height,
+        });
+      } catch (productImageError) {
+        console.error('[createCanvasComposite] Failed to load product image:', productImageError);
+        throw new Error(
+          `Failed to load product image from ${productImageUrl}: ${productImageError.message}`
+        );
+      }
+
+      console.log(
+        '[createCanvasComposite] Loading logo image from:',
+        logoImageUrl?.substring(0, 50) + '...'
+      );
+
+      // Load logo image with better error handling
+      let logoImg;
+      try {
+        logoImg = await loadImage(logoImageUrl);
+        console.log('[createCanvasComposite] Loaded logo image:', {
+          width: logoImg.width,
+          height: logoImg.height,
+        });
+      } catch (logoImageError) {
+        console.error('[createCanvasComposite] Failed to load logo image:', logoImageError);
+        throw new Error(`Failed to load logo image: ${logoImageError.message}`);
+      }
+
       // Create canvas with original product dimensions (800x1200)
       const canvas = createCanvas(800, 1200);
       const ctx = canvas.getContext('2d');
-      
+
       // Set high-quality rendering
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      
+
       // Draw original product image (preserve exactly)
       ctx.drawImage(productImg as any, 0, 0, 800, 1200);
-      
+
       // Calculate logo placement (center of bottle)
       const logoWidth = 200; // Appropriate size for bottle
       const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
       const logoX = (800 - logoWidth) / 2; // Center horizontally
       const logoY = 500; // Center on bottle (adjust as needed)
-      
+
       // Draw logo as FLAT overlay - no effects, no shadows
       ctx.globalCompositeOperation = 'source-over'; // Simple overlay
       ctx.shadowBlur = 0; // No shadow blur
       ctx.shadowOffsetX = 0; // No shadow offset
       ctx.shadowOffsetY = 0; // No shadow offset
       ctx.drawImage(logoImg as any, logoX, logoY, logoWidth, logoHeight);
-      
+
       // Convert to high-quality data URL
       const buffer = canvas.toBuffer('image/png', {
         compressionLevel: 0, // No compression
-        filters: canvas.PNG_FILTER_NONE
+        filters: canvas.PNG_FILTER_NONE,
       });
       const base64 = buffer.toString('base64');
-      
+
       console.log('Canvas composite created successfully');
       return `data:image/png;base64,${base64}`;
-      
     } catch (error) {
       console.error('Error creating canvas composite:', error);
-      throw new Error(`Failed to create canvas composite: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create canvas composite: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Enhance the canvas composite using AI to make logo look realistic
    */
-  private async enhanceCompositeWithAI(compositeImageUrl: string): Promise<string> {
+  private async enhanceCompositeWithAI(
+    compositeImageUrl: string,
+    productType?: string
+  ): Promise<string> {
     try {
+      console.log('[enhanceCompositeWithAI] Starting AI enhancement');
+      console.log('[enhanceCompositeWithAI] Product type:', productType || 'product');
+
       // Convert composite to base64 for Gemini
       const compositeData = await this.convertImageToBase64(compositeImageUrl);
-      
+      console.log(
+        '[enhanceCompositeWithAI] Composite data prepared, length:',
+        compositeData?.data?.length
+      );
+
+      // Get proper product description
+      const productDescription = productType || 'product';
+
       // Enhancement prompt - NO SHADOWS, keep logo FLAT
-      const enhancementPrompt = `Enhance this product mockup with the logo as a FLAT print:
+      const enhancementPrompt = `Enhance this ${productDescription} mockup with the logo as a FLAT print:
 
 IMPORTANT: This is an ENHANCEMENT task, NOT generation.
 Keep the product and overall composition exactly as shown.
@@ -818,20 +897,20 @@ CRITICAL REQUIREMENTS:
 - Keep all other elements unchanged
 
 Output: The same image with logo as a clean, flat surface print.`;
-      
+
       // Create Gemini client
       const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
         process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
       );
-      
+
       const imageModel = client.getGenerativeModel({
         model: 'gemini-2.5-flash-image-preview',
         generationConfig: {
           temperature: 0.1, // Low temperature for consistent enhancement
           topP: 0.8,
           topK: 16,
-          maxOutputTokens: 8192
-        }
+          maxOutputTokens: 8192,
+        },
       });
 
       // Send composite with enhancement prompt
@@ -842,19 +921,20 @@ Output: The same image with logo as a clean, flat surface print.`;
             data: compositeData.data,
             mimeType: compositeData.mimeType,
           },
-        }
+        },
       ];
 
-      console.log('Enhancing composite with AI...');
-      
+      console.log('[enhanceCompositeWithAI] Sending to Gemini for enhancement...');
+
       const result = await imageModel.generateContent(parts);
       const response = await result.response;
-      
+      console.log('[enhanceCompositeWithAI] Gemini response received');
+
       // Extract enhanced image
       const candidates = response.candidates || [];
       let enhancedImageData: string | null = null;
       let mimeType = 'image/png';
-      
+
       for (const candidate of candidates) {
         if (candidate.content && candidate.content.parts) {
           for (const part of candidate.content.parts) {
@@ -870,14 +950,17 @@ Output: The same image with logo as a clean, flat surface print.`;
 
       if (!enhancedImageData) {
         // If enhancement fails, return the canvas composite as fallback
-        console.log('AI enhancement failed, returning canvas composite');
+        console.log(
+          '[enhanceCompositeWithAI] WARNING: No enhanced image data in response, returning canvas composite'
+        );
+        console.log('[enhanceCompositeWithAI] Response candidates:', candidates?.length);
         return compositeImageUrl;
       }
 
       const enhancedDataUrl = `data:${mimeType};base64,${enhancedImageData}`;
-      console.log('AI enhancement completed successfully');
+      console.log('[enhanceCompositeWithAI] AI enhancement completed successfully');
+      console.log('[enhanceCompositeWithAI] Enhanced data URL length:', enhancedDataUrl?.length);
       return enhancedDataUrl;
-      
     } catch (error) {
       console.error('Error enhancing composite with AI:', error);
       // Return original composite if enhancement fails
@@ -888,7 +971,9 @@ Output: The same image with logo as a clean, flat surface print.`;
   /**
    * Get original product image dimensions
    */
-  private async getProductImageDimensions(productImageUrl: string): Promise<{ width: number; height: number }> {
+  private async getProductImageDimensions(
+    productImageUrl: string
+  ): Promise<{ width: number; height: number }> {
     try {
       // Use server-side image dimensions detection
       if (typeof window === 'undefined') {
@@ -897,7 +982,7 @@ Output: The same image with logo as a clean, flat surface print.`;
         console.log('Detected actual product image dimensions:', dimensions);
         return dimensions;
       }
-      
+
       // Client-side fallback for data URLs
       if (productImageUrl.startsWith('data:')) {
         return new Promise((resolve, reject) => {
@@ -907,7 +992,7 @@ Output: The same image with logo as a clean, flat surface print.`;
           img.src = productImageUrl;
         });
       }
-      
+
       // Client-side fallback for HTTP URLs
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -916,7 +1001,6 @@ Output: The same image with logo as a clean, flat surface print.`;
         img.onerror = () => reject(new Error('Failed to load image'));
         img.src = productImageUrl;
       });
-      
     } catch (error) {
       console.error('Error getting image dimensions:', error);
       // Fallback to standard product image dimensions
@@ -935,48 +1019,52 @@ Output: The same image with logo as a clean, flat surface print.`;
       // Simply convert both images to base64 - no processing
       const productImageData = await this.convertImageToBase64(productImageUrl);
       const logoImageData = await this.convertImageToBase64(logoImageUrl);
-      
+
       return [
         { data: productImageData.data, mimeType: productImageData.mimeType },
-        { data: logoImageData.data, mimeType: logoImageData.mimeType }
+        { data: logoImageData.data, mimeType: logoImageData.mimeType },
       ];
-      
     } catch (error) {
       console.error('Error preparing input images:', error);
-      throw new Error(`Failed to prepare input images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to prepare input images: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Convert image URL to base64 data
    */
-  private async convertImageToBase64(imageUrl: string): Promise<{ data: string; mimeType: string }> {
+  private async convertImageToBase64(
+    imageUrl: string
+  ): Promise<{ data: string; mimeType: string }> {
     // Handle data URLs
     if (imageUrl.startsWith('data:')) {
       const [header, data] = imageUrl.split(',');
       const mimeType = header.split(':')[1].split(';')[0];
       return { data, mimeType };
     }
-    
+
     // For HTTP URLs, fetch and convert to base64
     try {
       const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       }
-      
+
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const data = buffer.toString('base64');
-      
+
       // Determine MIME type from response or URL
       const mimeType = response.headers.get('content-type') || this.getMimeTypeFromUrl(imageUrl);
-      
+
       return { data, mimeType };
-      
     } catch (error) {
       console.error('Error fetching image:', error);
-      throw new Error(`Failed to fetch image from ${imageUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to fetch image from ${imageUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -986,12 +1074,12 @@ Output: The same image with logo as a clean, flat surface print.`;
   private getMimeTypeFromUrl(url: string): string {
     const extension = url.split('.').pop()?.toLowerCase();
     const mimeTypes: Record<string, string> = {
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'webp': 'image/webp',
-      'svg': 'image/svg+xml'
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      svg: 'image/svg+xml',
     };
     return mimeTypes[extension || ''] || 'image/png';
   }
@@ -1007,34 +1095,42 @@ Output: The same image with logo as a clean, flat surface print.`;
       // Server-side processing using canvas
       if (typeof window === 'undefined') {
         const { createCanvas, loadImage } = await import('canvas');
-        
+
         // Load the generated image
         const img = await loadImage(imageDataUrl);
-        
+
         // Check if dimensions are already correct
         if (img.width === targetDimensions.width && img.height === targetDimensions.height) {
-          console.log('Generated image already has correct dimensions:', { width: img.width, height: img.height });
+          console.log('Generated image already has correct dimensions:', {
+            width: img.width,
+            height: img.height,
+          });
           return imageDataUrl;
         }
-        
-        console.log('Resizing image from', { width: img.width, height: img.height }, 'to', targetDimensions);
-        
+
+        console.log(
+          'Resizing image from',
+          { width: img.width, height: img.height },
+          'to',
+          targetDimensions
+        );
+
         // Create high-quality canvas with exact target dimensions
         const canvas = createCanvas(targetDimensions.width, targetDimensions.height);
         const ctx = canvas.getContext('2d');
-        
+
         // Set high-quality image rendering settings
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.patternQuality = 'best';
         ctx.quality = 'best';
-        
+
         // Calculate scaling to fit while maintaining aspect ratio, then center
         const sourceAspect = img.width / img.height;
         const targetAspect = targetDimensions.width / targetDimensions.height;
-        
+
         let drawWidth, drawHeight, offsetX, offsetY;
-        
+
         if (sourceAspect > targetAspect) {
           // Source is wider - fit to height
           drawHeight = targetDimensions.height;
@@ -1048,26 +1144,25 @@ Output: The same image with logo as a clean, flat surface print.`;
           offsetX = 0;
           offsetY = (targetDimensions.height - drawHeight) / 2;
         }
-        
+
         // Fill background with white
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, targetDimensions.width, targetDimensions.height);
-        
+
         // Draw resized image with high quality
         ctx.drawImage(img as any, offsetX, offsetY, drawWidth, drawHeight);
-        
+
         // Convert back to high-quality data URL
         const buffer = canvas.toBuffer('image/png', {
           compressionLevel: 0, // No compression for maximum quality
-          filters: canvas.PNG_FILTER_NONE // Fastest, highest quality
+          filters: canvas.PNG_FILTER_NONE, // Fastest, highest quality
         });
         const base64 = buffer.toString('base64');
         return `data:image/png;base64,${base64}`;
       }
-      
+
       // Client-side fallback (should not be needed in this context)
       return imageDataUrl;
-      
     } catch (error) {
       console.error('Error ensuring exact dimensions:', error);
       // Return original if processing fails
@@ -1084,10 +1179,10 @@ Output: The same image with logo as a clean, flat surface print.`;
   ): Promise<string> {
     const placementType = constraints.metadata.placementType;
     const position = constraints.position;
-    
+
     // Create placement description based on constraints
     const placementDescription = this.createPlacementDescription(placementType, position);
-    
+
     const prompt = `Create a HIGH-RESOLUTION, PROFESSIONAL product mockup image by compositing the provided images.
 
 INPUT IMAGES:
@@ -1164,10 +1259,10 @@ Generate the complete ULTRA-HIGH-QUALITY ${targetDimensions.width}×${targetDime
   ): Promise<string> {
     const placementType = constraints.metadata.placementType;
     const position = constraints.position;
-    
+
     // Create placement description based on constraints
     const placementDescription = this.createPlacementDescription(placementType, position);
-    
+
     const prompt = `You are given two images:
 1. The first image is a Bamboo Water Bottle product photo
 2. The second image is a Microsoft logo
@@ -1206,13 +1301,13 @@ Generate a detailed composition plan describing how to combine these images whil
   ): Promise<string> {
     const placementType = constraints.metadata.placementType;
     const position = constraints.position;
-    
+
     // Determine product type from URL or use generic description
     const productType = this.inferProductTypeFromUrl(productImageUrl);
-    
+
     // Create placement description based on constraints
     const placementDescription = this.createPlacementDescription(placementType, position);
-    
+
     // Generate comprehensive prompt that emphasizes preserving the original product appearance
     const prompt = `Create a professional product mockup that preserves the exact appearance of the original ${productType} while adding a Microsoft logo overlay. 
 
@@ -1254,7 +1349,7 @@ The result should be the original ${productType} with a professionally applied M
    */
   private inferProductTypeFromUrl(productImageUrl: string): string {
     const url = productImageUrl.toLowerCase();
-    
+
     if (url.includes('mug') || url.includes('cup')) return 'coffee mug';
     if (url.includes('bottle') || url.includes('water')) return 'water bottle';
     if (url.includes('shirt') || url.includes('tshirt')) return 't-shirt';
@@ -1263,31 +1358,35 @@ The result should be the original ${productType} with a professionally applied M
     if (url.includes('notebook') || url.includes('journal')) return 'notebook';
     if (url.includes('keychain') || url.includes('key')) return 'keychain';
     if (url.includes('cap') || url.includes('hat')) return 'cap';
-    
+
     return 'corporate gift item'; // Generic fallback
   }
 
   /**
    * Create placement description for AI prompt
    */
-  private createPlacementDescription(placementType: string, position: { x: number; y: number }): string {
+  private createPlacementDescription(
+    placementType: string,
+    position: { x: number; y: number }
+  ): string {
     const descriptions = {
-      'horizontal': `horizontally centered on the main surface of the product`,
-      'vertical': `vertically oriented on the product surface`,
+      horizontal: `horizontally centered on the main surface of the product`,
+      vertical: `vertically oriented on the product surface`,
       'all-over': `as a repeating pattern across the entire product surface`,
-      'corner': `in the corner area of the product`,
-      'center': `perfectly centered on the main visible surface`
+      corner: `in the corner area of the product`,
+      center: `perfectly centered on the main visible surface`,
     };
-    
-    let baseDescription = descriptions[placementType as keyof typeof descriptions] || descriptions['center'];
-    
+
+    let baseDescription =
+      descriptions[placementType as keyof typeof descriptions] || descriptions['center'];
+
     // Add position-specific details based on normalized coordinates
     if (position.x < 0.3) baseDescription += ', positioned towards the left side';
     else if (position.x > 0.7) baseDescription += ', positioned towards the right side';
-    
+
     if (position.y < 0.3) baseDescription += ', in the upper area';
     else if (position.y > 0.7) baseDescription += ', in the lower area';
-    
+
     return baseDescription;
   }
 
@@ -1300,12 +1399,15 @@ The result should be the original ${productType} with a professionally applied M
     if (imageUrl.startsWith('data:') || imageUrl.startsWith('blob:') || imageUrl.startsWith('/')) {
       return imageUrl;
     }
-    
+
     // Otherwise, proxy through our API
     return `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
   }
 
-  private async loadImageWithFallback(imageUrl: string, type: 'product' | 'logo'): Promise<HTMLImageElement> {
+  private async loadImageWithFallback(
+    imageUrl: string,
+    type: 'product' | 'logo'
+  ): Promise<HTMLImageElement> {
     try {
       // Try loading with CORS first
       const img = new Image();
@@ -1318,29 +1420,29 @@ The result should be the original ${productType} with a professionally applied M
       return img;
     } catch (error) {
       console.warn(`CORS failed for ${type} image, using fallback:`, error);
-      
+
       // Create a fallback image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       if (type === 'product') {
         // Create a mock product image
         canvas.width = 400;
         canvas.height = 600;
-        
+
         if (ctx) {
           // Green bottle shape
           ctx.fillStyle = '#4CAF50';
           ctx.fillRect(100, 100, 200, 400);
-          
+
           // Bottle cap
           ctx.fillStyle = '#2E7D32';
           ctx.fillRect(120, 80, 160, 40);
-          
+
           // Label area (where logo will go)
           ctx.fillStyle = '#FFFFFF';
           ctx.fillRect(120, 200, 160, 100);
-          
+
           // Text
           ctx.fillStyle = '#000';
           ctx.font = '16px Arial';
@@ -1357,7 +1459,7 @@ The result should be the original ${productType} with a professionally applied M
         });
         return img;
       }
-      
+
       // Convert canvas to image
       const fallbackImg = new Image();
       await new Promise<void>((resolve, reject) => {
@@ -1365,7 +1467,7 @@ The result should be the original ${productType} with a professionally applied M
         fallbackImg.onerror = reject;
         fallbackImg.src = canvas.toDataURL();
       });
-      
+
       return fallbackImg;
     }
   }

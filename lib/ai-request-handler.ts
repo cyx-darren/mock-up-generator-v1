@@ -3,7 +3,8 @@
  * Centralized system for managing AI generation requests
  */
 
-import { GoogleAIApiClient, ImageGenerationOptions, ImageGenerationResponse } from './google-ai-api-client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ImageGenerationOptions, ImageGenerationResponse } from './google-ai-api-client';
 
 // Types
 export interface RequestJob {
@@ -74,18 +75,20 @@ export class AIRequestHandler {
   private completedJobs: RequestJob[] = [];
   private metrics: RequestMetrics;
   private options: QueueOptions;
-  private googleAIClient: GoogleAIApiClient;
+  private googleAI: GoogleGenerativeAI;
   private processingInterval?: NodeJS.Timeout;
   private metricsInterval?: NodeJS.Timeout;
 
   constructor(options: Partial<QueueOptions> = {}) {
     this.options = { ...DEFAULT_QUEUE_OPTIONS, ...options };
-    this.googleAIClient = new GoogleAIApiClient();
+    this.googleAI = new GoogleGenerativeAI(
+      process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
+    );
     this.metrics = this.initializeMetrics();
-    
+
     // Start processing queue
     this.startProcessing();
-    
+
     // Start metrics collection
     if (this.options.enableMetrics) {
       this.startMetricsCollection();
@@ -143,10 +146,10 @@ export class AIRequestHandler {
 
     // Insert job based on priority
     this.insertJobByPriority(job);
-    
+
     this.metrics.totalRequests++;
     this.metrics.queueLength = this.queue.length;
-    
+
     this.log('info', `Job ${job.id} added to queue with priority ${job.priority}`, {
       jobId: job.id,
       type: job.type,
@@ -188,11 +191,11 @@ export class AIRequestHandler {
     if (activeJob) return activeJob;
 
     // Check queue
-    const queuedJob = this.queue.find(job => job.id === jobId);
+    const queuedJob = this.queue.find((job) => job.id === jobId);
     if (queuedJob) return queuedJob;
 
     // Check completed jobs
-    const completedJob = this.completedJobs.find(job => job.id === jobId);
+    const completedJob = this.completedJobs.find((job) => job.id === jobId);
     if (completedJob) return completedJob;
 
     return null;
@@ -203,7 +206,7 @@ export class AIRequestHandler {
    */
   cancelJob(jobId: string): boolean {
     // Remove from queue
-    const queueIndex = this.queue.findIndex(job => job.id === jobId);
+    const queueIndex = this.queue.findIndex((job) => job.id === jobId);
     if (queueIndex !== -1) {
       const job = this.queue[queueIndex];
       job.status = 'cancelled';
@@ -265,7 +268,7 @@ export class AIRequestHandler {
     });
 
     // Process job asynchronously
-    this.processJob(job).catch(error => {
+    this.processJob(job).catch((error) => {
       this.log('error', `Unexpected error processing job ${job.id}`, { error: error.message });
     });
   }
@@ -299,21 +302,23 @@ export class AIRequestHandler {
         jobId: job.id,
         processingTime: job.completedAt.getTime() - job.startedAt!.getTime(),
       });
-
     } catch (error: any) {
       // Job failed
       job.error = error.message;
-      
+
       // Retry if attempts remain
       if (job.retryCount < job.maxRetries) {
         job.retryCount++;
         job.status = 'pending';
-        
+
         // Add back to queue with delay
-        setTimeout(() => {
-          this.insertJobByPriority(job);
-          this.metrics.queueLength = this.queue.length;
-        }, this.options.retryDelay * Math.pow(2, job.retryCount - 1)); // Exponential backoff
+        setTimeout(
+          () => {
+            this.insertJobByPriority(job);
+            this.metrics.queueLength = this.queue.length;
+          },
+          this.options.retryDelay * Math.pow(2, job.retryCount - 1)
+        ); // Exponential backoff
 
         this.log('warn', `Job ${job.id} failed, retrying (${job.retryCount}/${job.maxRetries})`, {
           jobId: job.id,
@@ -341,7 +346,7 @@ export class AIRequestHandler {
 
   private completeJob(job: RequestJob): void {
     this.completedJobs.push(job);
-    
+
     // Update metrics
     if (job.status === 'completed') {
       this.metrics.completedRequests++;
@@ -360,12 +365,85 @@ export class AIRequestHandler {
    */
   private async processImageGeneration(job: RequestJob): Promise<ImageGenerationResponse> {
     const options = job.payload as ImageGenerationOptions;
-    return await this.googleAIClient.generateImage(options);
+
+    // Get the image generation model
+    const generativeModel = this.googleAI.getGenerativeModel({
+      model: 'gemini-2.5-flash-image-preview',
+      generationConfig: {
+        temperature: 0.2,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 8192,
+        candidateCount: 1,
+      },
+    });
+
+    // Prepare enhanced prompt
+    let enhancedPrompt = `HIGH-RESOLUTION, CRYSTAL CLEAR: ${options.prompt}`;
+    if (options.aspectRatio) {
+      enhancedPrompt += ` [Aspect ratio: ${options.aspectRatio}]`;
+    }
+    if (options.seed) {
+      enhancedPrompt += ` [Seed: ${options.seed}]`;
+    }
+    if (options.includeText === false) {
+      enhancedPrompt += ' [No text in image]';
+    }
+    enhancedPrompt +=
+      ' [ULTRA-HIGH DEFINITION, PROFESSIONAL QUALITY, SHARP DETAILS, NO PIXELATION]';
+
+    const startTime = Date.now();
+    const result = await generativeModel.generateContent(enhancedPrompt);
+    const response = await result.response;
+    const responseTime = Date.now() - startTime;
+
+    // Extract images from response
+    const images = [];
+    const candidates = response.candidates || [];
+
+    for (const candidate of candidates) {
+      if (candidate.content && candidate.content.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            images.push({
+              data: part.inlineData.data,
+              mimeType: part.inlineData.mimeType || 'image/png',
+              seed: options.seed,
+            });
+          }
+        }
+      }
+    }
+
+    if (images.length === 0) {
+      throw new Error('No images were generated from the prompt');
+    }
+
+    return {
+      images,
+      prompt: options.prompt,
+      model: 'gemini-2.5-flash-image-preview',
+      tokensUsed: response.usageMetadata?.totalTokenCount,
+      responseTime,
+      hasWatermark: true,
+    };
   }
 
   private async processTextGeneration(job: RequestJob): Promise<any> {
     const { prompt, model } = job.payload;
-    return await this.googleAIClient.generateContent({ prompt, model });
+
+    const generativeModel = this.googleAI.getGenerativeModel({
+      model: model || 'gemini-1.5-flash',
+    });
+
+    const result = await generativeModel.generateContent(prompt);
+    const response = await result.response;
+
+    return {
+      text: response.text(),
+      model: model || 'gemini-1.5-flash',
+      tokensUsed: response.usageMetadata?.totalTokenCount,
+    };
   }
 
   private async processMockupGeneration(job: RequestJob): Promise<any> {
@@ -394,22 +472,24 @@ export class AIRequestHandler {
     // Calculate average processing time
     const recentJobs = this.completedJobs.slice(-100); // Last 100 jobs
     const processingTimes = recentJobs
-      .filter(job => job.startedAt && job.completedAt)
-      .map(job => job.completedAt!.getTime() - job.startedAt!.getTime());
+      .filter((job) => job.startedAt && job.completedAt)
+      .map((job) => job.completedAt!.getTime() - job.startedAt!.getTime());
 
-    this.metrics.averageProcessingTime = processingTimes.length > 0
-      ? processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length
-      : 0;
+    this.metrics.averageProcessingTime =
+      processingTimes.length > 0
+        ? processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length
+        : 0;
 
     // Calculate throughput (requests per minute)
     const oneMinuteAgo = new Date(Date.now() - 60000);
     const recentCompletedJobs = this.completedJobs.filter(
-      job => job.completedAt && job.completedAt > oneMinuteAgo
+      (job) => job.completedAt && job.completedAt > oneMinuteAgo
     );
     this.metrics.throughput = recentCompletedJobs.length;
 
     if (recentCompletedJobs.length > 0) {
-      this.metrics.lastProcessedAt = recentCompletedJobs[recentCompletedJobs.length - 1].completedAt;
+      this.metrics.lastProcessedAt =
+        recentCompletedJobs[recentCompletedJobs.length - 1].completedAt;
     }
 
     this.log('debug', 'Metrics updated', {
@@ -451,7 +531,7 @@ export class AIRequestHandler {
       mockup_generation: 0,
     };
 
-    this.queue.forEach(job => {
+    this.queue.forEach((job) => {
       jobsByPriority[job.priority]++;
       jobsByType[job.type]++;
     });
@@ -506,7 +586,7 @@ export class AIRequestHandler {
     if (this.metricsInterval) {
       clearInterval(this.metricsInterval);
     }
-    
+
     this.log('info', 'AI Request Handler shutting down', {
       pendingJobs: this.queue.length,
       activeJobs: this.activeJobs.size,
