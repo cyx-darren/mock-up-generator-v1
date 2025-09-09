@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Red square -->
+  <rect x="0" y="0" width="100" height="75" fill="#F25022"/>
+  <!-- Green square -->
+  <rect x="110" y="0" width="100" height="75" fill="#7FBA00"/>
+  <!-- Blue square -->
+  <rect x="0" y="85" width="100" height="75" fill="#00A4EF"/>
+  <!-- Yellow square -->
+  <rect x="110" y="85" width="100" height="75" fill="#FFB900"/>
+  <!-- Microsoft text -->
+  <text x="230" y="95" font-family="Segoe UI, Arial, sans-serif" font-size="72" fill="#737373" font-weight="300">Microsoft</text>
+</svg>

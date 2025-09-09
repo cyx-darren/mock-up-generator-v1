@@ -24,22 +24,26 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
     productImageUrl,
     logoImageUrl,
     logoPlacement,
-    outputWidth = 800,
-    outputHeight = 600
+    outputWidth,
+    outputHeight
   } = options;
-
-  // Create canvas
-  const canvas = createCanvas(outputWidth, outputHeight);
-  const ctx = canvas.getContext('2d');
 
   try {
     console.log('Loading product image from:', productImageUrl);
-    // Load product image
+    // Load product image first to get its dimensions
     const productImg = await loadImage(productImageUrl);
     console.log('Product image loaded successfully, dimensions:', productImg.width, 'x', productImg.height);
     
-    // Draw product image (scaled to fit canvas)
-    ctx.drawImage(productImg, 0, 0, outputWidth, outputHeight);
+    // Use original product image dimensions if not specified
+    const canvasWidth = outputWidth || productImg.width;
+    const canvasHeight = outputHeight || productImg.height;
+    
+    // Create canvas with product image dimensions
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext('2d');
+    
+    // Draw product image at original size (no scaling)
+    ctx.drawImage(productImg, 0, 0, canvasWidth, canvasHeight);
 
     console.log('Loading logo image from:', logoImageUrl.startsWith('data:') ? `data URL (${logoImageUrl.length} chars)` : logoImageUrl);
     // Load logo image - handle data URLs properly
@@ -86,14 +90,41 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
     }
     console.log('Logo image loaded successfully, dimensions:', logoImg.width, 'x', logoImg.height);
     
-    // Draw logo at specified position
-    console.log('Drawing logo at position:', logoPlacement);
+    // Calculate logo placement with proper scaling to fit within constraints
+    const maxLogoWidth = Math.min(logoPlacement.width, canvasWidth * 0.4); // Don't exceed 40% of canvas width
+    const maxLogoHeight = Math.min(logoPlacement.height, canvasHeight * 0.4); // Don't exceed 40% of canvas height
+    
+    // Maintain aspect ratio while fitting within max dimensions
+    const logoAspectRatio = logoImg.width / logoImg.height;
+    let finalLogoWidth = maxLogoWidth;
+    let finalLogoHeight = maxLogoHeight;
+    
+    if (finalLogoWidth / finalLogoHeight > logoAspectRatio) {
+      // Width is too wide, constrain by height
+      finalLogoWidth = finalLogoHeight * logoAspectRatio;
+    } else {
+      // Height is too tall, constrain by width
+      finalLogoHeight = finalLogoWidth / logoAspectRatio;
+    }
+    
+    // Ensure logo is positioned within canvas bounds
+    const logoX = Math.max(0, Math.min(logoPlacement.x, canvasWidth - finalLogoWidth));
+    const logoY = Math.max(0, Math.min(logoPlacement.y, canvasHeight - finalLogoHeight));
+    
+    console.log('Drawing logo at calculated position:', {
+      originalPlacement: logoPlacement,
+      finalPosition: { x: logoX, y: logoY, width: finalLogoWidth, height: finalLogoHeight },
+      logoOriginalSize: { width: logoImg.width, height: logoImg.height },
+      canvasSize: { width: canvasWidth, height: canvasHeight }
+    });
+    
+    // Draw logo overlay on product image
     ctx.drawImage(
       logoImg,
-      logoPlacement.x,
-      logoPlacement.y,
-      logoPlacement.width,
-      logoPlacement.height
+      logoX,
+      logoY,
+      finalLogoWidth,
+      finalLogoHeight
     );
 
     // Convert to data URL

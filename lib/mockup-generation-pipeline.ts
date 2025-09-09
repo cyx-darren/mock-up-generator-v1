@@ -349,11 +349,21 @@ export class MockupGenerationPipeline {
       // Skip image processing on server-side, use constraint defaults
       if (typeof window === 'undefined') {
         console.log('Server-side: using constraint defaults instead of image processing');
+        console.log('Constraint data received:', constraint);
+        
+        // Use actual constraint data from database with proper field names
+        const logoX = constraint?.default_x || 300;
+        const logoY = constraint?.default_y || 400;
+        const logoWidth = constraint?.max_logo_width || 150;
+        const logoHeight = constraint?.max_logo_height || 150;
+        
+        console.log('Using constraint placement:', { logoX, logoY, logoWidth, logoHeight });
+        
         return {
-          x: constraint?.default_x_position || 300,
-          y: constraint?.default_y_position || 400,
-          width: 150,
-          height: 150
+          x: logoX,
+          y: logoY,
+          width: logoWidth,
+          height: logoHeight
         };
       }
 
@@ -406,20 +416,20 @@ export class MockupGenerationPipeline {
       
       // Fallback to constraint defaults if green pixel detection fails
       return {
-        x: constraint?.default_x_position || 300,
-        y: constraint?.default_y_position || 400,
-        width: 150,
-        height: 150
+        x: constraint?.default_x || 300,
+        y: constraint?.default_y || 400,
+        width: constraint?.max_logo_width || 150,
+        height: constraint?.max_logo_height || 150
       };
       
     } catch (error) {
       console.error('Error calculating placement from constraint image:', error);
       // Fallback to constraint defaults
       return {
-        x: constraint?.default_x_position || 300,
-        y: constraint?.default_y_position || 400,
-        width: 150,
-        height: 150
+        x: constraint?.default_x || 300,
+        y: constraint?.default_y || 400,
+        width: constraint?.max_logo_width || 150,
+        height: constraint?.max_logo_height || 150
       };
     }
   }
@@ -450,24 +460,11 @@ export class MockupGenerationPipeline {
     logoImageUrl: string,
     constraints: AppliedConstraints
   ): Promise<string> {
-    console.log('Combining images:', { productImageUrl, logoImageUrl, constraints });
+    console.log('Generating AI mockup using Nano Banana model:', { productImageUrl, logoImageUrl, constraints });
     
-    // Use server-side image processing when running server-side
+    // Use Nano Banana (Gemini 2.5 Flash Image) model for mockup generation
     if (typeof window === 'undefined') {
-      const { combineImages } = await import('./server-image-utils');
-      
-      return await combineImages({
-        productImageUrl: productImageUrl,
-        logoImageUrl: logoImageUrl,
-        logoPlacement: {
-          x: constraints.constraintArea.x,
-          y: constraints.constraintArea.y,
-          width: constraints.constraintArea.width,
-          height: constraints.constraintArea.height
-        },
-        outputWidth: 800,
-        outputHeight: 600
-      });
+      return await this.generateAIMockup(productImageUrl, logoImageUrl, constraints);
     }
     
     // Proxy external URLs through our API to avoid CORS (client-side fallback)
@@ -727,6 +724,427 @@ export class MockupGenerationPipeline {
       'ultra': 50
     };
     return stepsMap[qualityLevel] || 20;
+  }
+
+  /**
+   * Generate AI mockup using Nano Banana (Gemini 2.5 Flash Image) model with multi-image composition
+   */
+  private async generateAIMockup(
+    productImageUrl: string,
+    logoImageUrl: string,
+    constraints: AppliedConstraints
+  ): Promise<string> {
+    try {
+      console.log('Starting AI mockup generation with Nano Banana model using direct multi-image composition');
+
+      // Use standard output dimensions for all mockups
+      const standardDimensions = { width: 800, height: 1200 };
+      console.log('Using standard mockup dimensions:', standardDimensions);
+
+      // Prepare input images for multi-image composition
+      const inputImages = await this.prepareInputImages(productImageUrl, logoImageUrl);
+      
+      // Create detailed prompt for direct image generation with composition
+      const mockupPrompt = await this.createDirectCompositionPrompt(constraints, standardDimensions);
+      
+      // Use server-side Google AI client directly for image generation with multi-image input
+      const { getGoogleAIClient } = await import('./google-ai-client');
+      const serverClient = getGoogleAIClient();
+      
+      // Create a specialized model for image generation with multi-image input
+      const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
+        process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
+      );
+      
+      const imageModel = client.getGenerativeModel({
+        model: 'gemini-2.5-flash-image-preview',
+        generationConfig: {
+          temperature: 0.1, // Lower temperature for more consistent, complete images
+          topP: 0.8,
+          topK: 20,
+          maxOutputTokens: 8192,
+        },
+      });
+
+      // Prepare content parts with images and prompt
+      const parts: any[] = [{ text: mockupPrompt }];
+      
+      // Add the product image first (as base)
+      parts.push({
+        inlineData: {
+          data: inputImages[0].data,
+          mimeType: inputImages[0].mimeType,
+        },
+      });
+      
+      // Add the logo image second (as overlay)
+      parts.push({
+        inlineData: {
+          data: inputImages[1].data,
+          mimeType: inputImages[1].mimeType,
+        },
+      });
+
+      console.log('Generating image with multi-image composition...');
+      
+      // Generate the image directly with both input images
+      const result = await imageModel.generateContent(parts);
+      const response = await result.response;
+      
+      // Extract generated images from response
+      const candidates = response.candidates || [];
+      let generatedImageData: string | null = null;
+      let mimeType = 'image/png';
+      
+      for (const candidate of candidates) {
+        if (candidate.content && candidate.content.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.inlineData && part.inlineData.data) {
+              generatedImageData = part.inlineData.data;
+              mimeType = part.inlineData.mimeType || 'image/png';
+              break;
+            }
+          }
+        }
+        if (generatedImageData) break;
+      }
+
+      if (!generatedImageData) {
+        throw new Error('No images generated by Nano Banana model in multi-image composition');
+      }
+
+      // Convert to data URL
+      const dataUrl = `data:${mimeType};base64,${generatedImageData}`;
+      
+      console.log('Successfully generated AI mockup using Nano Banana model with direct multi-image composition');
+      return dataUrl;
+
+    } catch (error: any) {
+      console.error('AI mockup generation with direct multi-image composition failed:', error);
+      throw new Error(`Failed to generate AI mockup: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get original product image dimensions
+   */
+  private async getProductImageDimensions(productImageUrl: string): Promise<{ width: number; height: number }> {
+    try {
+      // Use server-side image dimensions detection
+      if (typeof window === 'undefined') {
+        const { getImageDimensions } = await import('./server-image-utils');
+        const dimensions = await getImageDimensions(productImageUrl);
+        console.log('Detected actual product image dimensions:', dimensions);
+        return dimensions;
+      }
+      
+      // Client-side fallback for data URLs
+      if (productImageUrl.startsWith('data:')) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve({ width: img.width, height: img.height });
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = productImageUrl;
+        });
+      }
+      
+      // Client-side fallback for HTTP URLs
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = productImageUrl;
+      });
+      
+    } catch (error) {
+      console.error('Error getting image dimensions:', error);
+      // Fallback to standard product image dimensions
+      return { width: 800, height: 1200 };
+    }
+  }
+
+  /**
+   * Prepare input images for multi-image composition
+   */
+  private async prepareInputImages(
+    productImageUrl: string,
+    logoImageUrl: string
+  ): Promise<Array<{ data: string; mimeType: string }>> {
+    const images: Array<{ data: string; mimeType: string }> = [];
+    
+    try {
+      // Convert product image URL to base64
+      const productImageData = await this.convertImageToBase64(productImageUrl);
+      images.push({
+        data: productImageData.data,
+        mimeType: productImageData.mimeType
+      });
+      
+      // Convert logo image to base64 (handle data URLs)
+      const logoImageData = await this.convertImageToBase64(logoImageUrl);
+      images.push({
+        data: logoImageData.data,
+        mimeType: logoImageData.mimeType
+      });
+      
+      console.log('Prepared', images.length, 'input images for composition');
+      return images;
+      
+    } catch (error) {
+      console.error('Error preparing input images:', error);
+      throw new Error(`Failed to prepare input images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Convert image URL to base64 data
+   */
+  private async convertImageToBase64(imageUrl: string): Promise<{ data: string; mimeType: string }> {
+    // Handle data URLs
+    if (imageUrl.startsWith('data:')) {
+      const [header, data] = imageUrl.split(',');
+      const mimeType = header.split(':')[1].split(';')[0];
+      return { data, mimeType };
+    }
+    
+    // For HTTP URLs, fetch and convert to base64
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const data = buffer.toString('base64');
+      
+      // Determine MIME type from response or URL
+      const mimeType = response.headers.get('content-type') || this.getMimeTypeFromUrl(imageUrl);
+      
+      return { data, mimeType };
+      
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      throw new Error(`Failed to fetch image from ${imageUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Get MIME type from URL extension
+   */
+  private getMimeTypeFromUrl(url: string): string {
+    const extension = url.split('.').pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'svg': 'image/svg+xml'
+    };
+    return mimeTypes[extension || ''] || 'image/png';
+  }
+
+  /**
+   * Create detailed prompt for direct multi-image composition
+   */
+  private async createDirectCompositionPrompt(
+    constraints: AppliedConstraints,
+    targetDimensions: { width: number; height: number }
+  ): Promise<string> {
+    const placementType = constraints.metadata.placementType;
+    const position = constraints.position;
+    
+    // Create placement description based on constraints
+    const placementDescription = this.createPlacementDescription(placementType, position);
+    
+    const prompt = `Create a COMPLETE, FULL product mockup image by compositing the provided images.
+
+INPUT IMAGES:
+- Image 1: Bamboo Water Bottle (use as the complete base image)
+- Image 2: Microsoft logo (overlay onto the bottle)
+
+COMPOSITION TASK:
+Recreate the ENTIRE Bamboo Water Bottle from Image 1 with the Microsoft logo from Image 2 overlaid ${placementDescription}.
+
+CRITICAL REQUIREMENTS:
+1. Generate a COMPLETE, FULL ${targetDimensions.width}×${targetDimensions.height} pixel image
+2. Use the EXACT bottle from Image 1 as the base - preserve its appearance completely
+3. Maintain the bottle's natural proportions within the ${targetDimensions.width}×${targetDimensions.height} canvas
+4. Include the entire bottle fitted properly within the specified dimensions
+5. Preserve ALL aspects of the original bottle: colors, lighting, shadows, background
+6. Add ONLY the Microsoft logo from Image 2 as an overlay ${placementDescription}
+7. DO NOT crop, cut, or show partial images
+8. DO NOT stretch or distort the bottle - it should look naturally proportioned
+9. Compose the bottle professionally within the portrait ${targetDimensions.width}×${targetDimensions.height} frame
+
+LOGO INTEGRATION:
+- Place the Microsoft logo ${placementDescription} on the bottle surface
+- Maintain the logo's original colors (red, green, blue, yellow squares + "Microsoft" text)
+- Make it appear as a realistic print/emboss on the bottle
+- Scale appropriately and add natural shadows/surface interaction
+
+OUTPUT SPECIFICATIONS:
+- Generate a COMPLETE, FULL-SIZE product mockup image
+- EXACT OUTPUT DIMENSIONS: ${targetDimensions.width} pixels wide × ${targetDimensions.height} pixels tall
+- ASPECT RATIO: ${(targetDimensions.width / targetDimensions.height).toFixed(3)}:1 (portrait orientation)
+- The bottle should be properly proportioned within the ${targetDimensions.width}×${targetDimensions.height} canvas
+- Include the entire bottle and its background/context fitted within the specified dimensions
+- Maintain professional product photography quality
+- Result should be the complete original Bamboo Water Bottle with Microsoft logo professionally applied
+
+DIMENSION REQUIREMENTS:
+- Output image width: ${targetDimensions.width} pixels (EXACT)
+- Output image height: ${targetDimensions.height} pixels (EXACT)
+- Portrait orientation with proper bottle proportions
+- The bottle should look natural and realistic within these dimensions
+- DO NOT stretch or distort the bottle - fit it naturally within the canvas
+
+QUALITY REQUIREMENTS:
+- Natural, properly proportioned bottle appearance
+- Professional product photography composition
+- The bottle should fit well within the ${targetDimensions.width}×${targetDimensions.height} frame
+- No stretching, squashing, or unnatural distortion
+
+Generate the complete ${targetDimensions.width}×${targetDimensions.height} pixel image now with the bottle properly composed within the frame.`;
+
+    return prompt;
+  }
+
+  /**
+   * Create detailed prompt for multi-image composition
+   */
+  private async createMultiImageCompositionPrompt(
+    constraints: AppliedConstraints
+  ): Promise<string> {
+    const placementType = constraints.metadata.placementType;
+    const position = constraints.position;
+    
+    // Create placement description based on constraints
+    const placementDescription = this.createPlacementDescription(placementType, position);
+    
+    const prompt = `You are given two images:
+1. The first image is a Bamboo Water Bottle product photo
+2. The second image is a Microsoft logo
+
+TASK: Create a professional product mockup by combining these images. The Microsoft logo should be overlaid onto the Bamboo Water Bottle ${placementDescription}.
+
+CRITICAL REQUIREMENTS:
+- Use the EXACT Bamboo Water Bottle from the first image as the base
+- Preserve the bottle's original appearance, colors, lighting, and background completely
+- Only add the Microsoft logo from the second image as an overlay
+- Position the Microsoft logo ${placementDescription}
+- The logo should appear as a realistic print or emboss on the bottle surface
+- Maintain proper scaling and positioning based on the bottle's dimensions
+- Add realistic shadows and surface interaction for the logo
+- Keep the Microsoft logo colors intact (red, green, blue, yellow squares with "Microsoft" text)
+
+COMPOSITION GUIDELINES:
+- The result should look like the original Bamboo Water Bottle with a professionally applied Microsoft logo
+- No other changes to the product, background, or lighting
+- High-quality, photorealistic rendering
+- Commercial photography appearance
+- The logo should integrate naturally with the bottle's surface texture
+
+Generate a detailed composition plan describing how to combine these images while preserving the original bottle and adding only the Microsoft logo overlay.`;
+
+    return prompt;
+  }
+
+  /**
+   * Create detailed prompt for Nano Banana model mockup generation
+   */
+  private async createMockupPrompt(
+    productImageUrl: string,
+    logoImageUrl: string,
+    constraints: AppliedConstraints
+  ): Promise<string> {
+    const placementType = constraints.metadata.placementType;
+    const position = constraints.position;
+    
+    // Determine product type from URL or use generic description
+    const productType = this.inferProductTypeFromUrl(productImageUrl);
+    
+    // Create placement description based on constraints
+    const placementDescription = this.createPlacementDescription(placementType, position);
+    
+    // Generate comprehensive prompt that emphasizes preserving the original product appearance
+    const prompt = `Create a professional product mockup that preserves the exact appearance of the original ${productType} while adding a Microsoft logo overlay. 
+
+CRITICAL REQUIREMENTS:
+- Keep the original product's exact shape, color, material, and design unchanged
+- The product should look identical to the source image in all aspects except for the logo addition
+- Preserve original product dimensions and proportions
+- Maintain the exact same background and lighting as the original
+- Only add the Microsoft logo as an overlay element
+
+Product preservation:
+- Original ${productType} appearance must be maintained exactly
+- Same material texture, color gradients, and surface properties
+- Identical lighting conditions and shadows from original
+- Preserve all product details and characteristics
+- Same camera angle and perspective as original
+
+Logo placement requirements:
+- Place Microsoft logo ${placementDescription}
+- Logo should appear as a realistic print/emboss overlay on the product surface
+- Maintain Microsoft logo colors (red, green, blue, yellow squares with "Microsoft" text)
+- Logo should integrate naturally with the product surface
+- Proper scaling and positioning according to constraints
+- Realistic shadows and surface interaction
+
+Quality standards:
+- Photorealistic rendering that matches original product photo quality
+- Professional commercial photography appearance
+- High resolution and sharp details
+- No alterations to the base product beyond logo addition
+
+The result should be the original ${productType} with a professionally applied Microsoft logo, maintaining all original product characteristics while adding the logo overlay at the specified position.`;
+
+    return prompt;
+  }
+
+  /**
+   * Infer product type from image URL
+   */
+  private inferProductTypeFromUrl(productImageUrl: string): string {
+    const url = productImageUrl.toLowerCase();
+    
+    if (url.includes('mug') || url.includes('cup')) return 'coffee mug';
+    if (url.includes('bottle') || url.includes('water')) return 'water bottle';
+    if (url.includes('shirt') || url.includes('tshirt')) return 't-shirt';
+    if (url.includes('bag') || url.includes('tote')) return 'tote bag';
+    if (url.includes('pen') || url.includes('pencil')) return 'pen';
+    if (url.includes('notebook') || url.includes('journal')) return 'notebook';
+    if (url.includes('keychain') || url.includes('key')) return 'keychain';
+    if (url.includes('cap') || url.includes('hat')) return 'cap';
+    
+    return 'corporate gift item'; // Generic fallback
+  }
+
+  /**
+   * Create placement description for AI prompt
+   */
+  private createPlacementDescription(placementType: string, position: { x: number; y: number }): string {
+    const descriptions = {
+      'horizontal': `horizontally centered on the main surface of the product`,
+      'vertical': `vertically oriented on the product surface`,
+      'all-over': `as a repeating pattern across the entire product surface`,
+      'corner': `in the corner area of the product`,
+      'center': `perfectly centered on the main visible surface`
+    };
+    
+    let baseDescription = descriptions[placementType as keyof typeof descriptions] || descriptions['center'];
+    
+    // Add position-specific details based on normalized coordinates
+    if (position.x < 0.3) baseDescription += ', positioned towards the left side';
+    else if (position.x > 0.7) baseDescription += ', positioned towards the right side';
+    
+    if (position.y < 0.3) baseDescription += ', in the upper area';
+    else if (position.y > 0.7) baseDescription += ', in the lower area';
+    
+    return baseDescription;
   }
 
   private generateMockupId(): string {

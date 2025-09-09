@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if file type is supported by Remove.bg
-    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic'];
+    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/svg+xml'];
     if (!supportedTypes.includes(file.type.toLowerCase())) {
       return NextResponse.json(
-        { error: `File type ${file.type} is not supported. Please use JPEG, PNG, WebP, or HEIC format.` },
+        { error: `File type ${file.type} is not supported. Please use JPEG, PNG, WebP, HEIC, or SVG format.` },
         { status: 400 }
       );
     }
