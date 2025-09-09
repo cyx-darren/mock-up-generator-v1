@@ -255,7 +255,7 @@ export class QualityValidator {
           minimumEdgeDistance: 20,
         },
         technical: {
-          minimumResolution: { width: 1200, height: 800 },
+          minimumResolution: { width: 1200, height: 1200 },
           maximumFileSize: 2 * 1024 * 1024, // 2MB
           requireColorProfile: true,
         },
@@ -642,7 +642,7 @@ export class QualityValidator {
 
     // Resolution adequacy
     const adequate = width >= 800 && height >= 600;
-    const recommendedMinimum = { width: 1200, height: 800 };
+    const recommendedMinimum = { width: 1200, height: 1200 };
 
     // Aspect ratio
     const aspectRatio = width / height;

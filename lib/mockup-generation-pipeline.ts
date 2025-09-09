@@ -273,8 +273,8 @@ export class MockupGenerationPipeline {
         product
       );
 
-      // Use product dimensions for normalization, with fallback to standard values
-      const imageWidth = productDimensions?.width || 800;
+      // Use product dimensions for normalization, with fallback to square format
+      const imageWidth = productDimensions?.width || 1200;
       const imageHeight = productDimensions?.height || 1200;
 
       console.log('Using dimensions for constraint normalization:', { imageWidth, imageHeight });
@@ -517,21 +517,21 @@ export class MockupGenerationPipeline {
     } catch (error) {
       console.error('Error combining images:', error);
 
-      // Fallback to mock image if proxy fails
-      canvas.width = 400;
+      // Fallback to mock image if proxy fails (square format)
+      canvas.width = 600;
       canvas.height = 600;
 
-      // Draw mock product background
+      // Draw mock product background (centered square)
       ctx.fillStyle = '#4CAF50';
-      ctx.fillRect(100, 100, 200, 400);
+      ctx.fillRect(150, 100, 300, 400);
 
       // Draw bottle cap
       ctx.fillStyle = '#2E7D32';
-      ctx.fillRect(120, 80, 160, 40);
+      ctx.fillRect(200, 80, 200, 40);
 
-      // Draw logo area
+      // Draw logo area (centered)
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(120, 200, 160, 100);
+      ctx.fillRect(200, 250, 200, 100);
 
       // Draw mock logo
       ctx.fillStyle = '#0066CC';
@@ -632,10 +632,10 @@ export class MockupGenerationPipeline {
 
     // Skip dimension normalization on server-side, use defaults
     if (typeof window === 'undefined') {
-      console.log('Server-side: using default normalized dimensions');
+      console.log('Server-side: using default square dimensions');
       return {
-        width: 800,
-        height: 600,
+        width: 1200,
+        height: 1200,
       };
     }
 
@@ -696,7 +696,8 @@ export class MockupGenerationPipeline {
 
   private getAspectRatio(qualityLevel: string): '1:1' | '4:3' | '16:9' | '21:9' | '2:3' {
     // This method is deprecated - use calculateAspectRatio instead
-    return '2:3';
+    // Default to square format for consistent output
+    return '1:1';
   }
 
   private calculateAspectRatio(dimensions: { width: number; height: number }): string {
@@ -1072,9 +1073,9 @@ Output: The same image with logo as a clean, flat surface print, maintaining exa
     } catch (error) {
       console.error('Error getting image dimensions:', error);
       console.warn('Using fallback dimensions - image may be distorted');
-      // Use reasonable fallback dimensions based on common product image sizes
+      // Use square fallback dimensions for consistent output
       // This prevents complete failure but logs a warning
-      return { width: 600, height: 800 }; // 3:4 aspect ratio (common for product photos)
+      return { width: 1200, height: 1200 }; // 1:1 aspect ratio (square format)
     }
   }
 
@@ -1298,10 +1299,10 @@ OUTPUT SPECIFICATIONS:
 DIMENSION REQUIREMENTS:
 - Output image width: ${targetDimensions.width} pixels (EXACT)
 - Output image height: ${targetDimensions.height} pixels (EXACT) 
-- Portrait orientation (2:3 aspect ratio)
+- Square format (1:1 aspect ratio)
 - The bottle should look natural and realistic within these dimensions
 - DO NOT stretch or distort the bottle - fit it naturally within the canvas
-- ASPECT RATIO: Must be ${(targetDimensions.width / targetDimensions.height).toFixed(3)}:1 (portrait)
+- ASPECT RATIO: Must be ${(targetDimensions.width / targetDimensions.height).toFixed(3)}:1 (square format)
 - Generate the image in EXACT ${targetDimensions.width}×${targetDimensions.height} resolution
 
 QUALITY REQUIREMENTS:
@@ -1496,28 +1497,28 @@ The result should be the original ${productType} with a professionally applied M
       const ctx = canvas.getContext('2d');
 
       if (type === 'product') {
-        // Create a mock product image
-        canvas.width = 400;
+        // Create a mock product image (square format)
+        canvas.width = 600;
         canvas.height = 600;
 
         if (ctx) {
-          // Green bottle shape
+          // Green bottle shape (centered)
           ctx.fillStyle = '#4CAF50';
-          ctx.fillRect(100, 100, 200, 400);
+          ctx.fillRect(150, 100, 300, 400);
 
           // Bottle cap
           ctx.fillStyle = '#2E7D32';
-          ctx.fillRect(120, 80, 160, 40);
+          ctx.fillRect(200, 80, 200, 40);
 
           // Label area (where logo will go)
           ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(120, 200, 160, 100);
+          ctx.fillRect(200, 250, 200, 100);
 
           // Text
           ctx.fillStyle = '#000';
           ctx.font = '16px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText('Product Mock', 200, 550);
+          ctx.fillText('Product Mock', 300, 550);
         }
       } else {
         // Use the original logo image without CORS
