@@ -767,7 +767,11 @@ export class MockupGenerationPipeline {
       const logoX = (800 - logoWidth) / 2; // Center horizontally
       const logoY = 500; // Center on bottle (adjust as needed)
       
-      // Draw logo overlay
+      // Draw logo as FLAT overlay - no effects, no shadows
+      ctx.globalCompositeOperation = 'source-over'; // Simple overlay
+      ctx.shadowBlur = 0; // No shadow blur
+      ctx.shadowOffsetX = 0; // No shadow offset
+      ctx.shadowOffsetY = 0; // No shadow offset
       ctx.drawImage(logoImg as any, logoX, logoY, logoWidth, logoHeight);
       
       // Convert to high-quality data URL
@@ -794,22 +798,26 @@ export class MockupGenerationPipeline {
       // Convert composite to base64 for Gemini
       const compositeData = await this.convertImageToBase64(compositeImageUrl);
       
-      // Enhancement prompt - explicitly request ENHANCEMENT not GENERATION
-      const enhancementPrompt = `Enhance this product mockup to make the logo look more realistic:
+      // Enhancement prompt - NO SHADOWS, keep logo FLAT
+      const enhancementPrompt = `Enhance this product mockup with the logo as a FLAT print:
 
 IMPORTANT: This is an ENHANCEMENT task, NOT generation.
 Keep the product and overall composition exactly as shown.
-Only enhance the realism of the logo on the bottle surface.
 
-Enhancements needed:
-- Add subtle shadows and lighting effects to the logo
-- Make the logo appear naturally printed/embossed on the bottle surface
-- Adjust logo perspective to match bottle curvature if needed
-- Add realistic surface interaction (slight reflection, depth)
+CRITICAL REQUIREMENTS:
+- NO drop shadows on the logo
+- NO 3D effects or depth
+- NO darkening or shadow effects
+- Keep logo FLAT on the surface
+- Simple surface print like screen printing or a decal
+- Maintain original logo colors exactly (no darkening)
+- Logo should appear as a flat print directly on the bottle
+- Adjust perspective to follow bottle curvature ONLY
+- NO artistic embellishments or effects
 - Maintain the exact product image and dimensions (800x1200)
 - Keep all other elements unchanged
 
-Output: The same image with enhanced logo realism only.`;
+Output: The same image with logo as a clean, flat surface print.`;
       
       // Create Gemini client
       const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
