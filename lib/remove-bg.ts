@@ -51,9 +51,7 @@ export class RemoveBgClient {
     
     // For client-side, we'll handle the key requirement when actually making API calls
     // This prevents initialization errors when the component is just being imported
-    if (!this.apiKey && typeof window === 'undefined') {
-      throw new Error('Remove.bg API key is required');
-    }
+    // Note: We no longer throw an error here to allow fallback handling at the API level
   }
 
   async removeBackground(

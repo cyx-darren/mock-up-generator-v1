@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RemoveBgClient } from '@/lib/remove-bg';
 
 export async function POST(request: NextRequest) {
+  let file: File | null = null; // Fixed variable scope
+  
   try {
     // Get the uploaded file from form data
     const formData = await request.formData();
-    const file = formData.get('image') as File;
+    file = formData.get('image') as File;
     
     if (!file) {
       return NextResponse.json(
@@ -39,6 +41,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if Remove.bg API key is available
+    if (!process.env.REMOVE_BG_API_KEY) {
+      // Fallback: return original image when API key is not configured
+      console.warn('Remove.bg API key not configured, returning original image');
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:${file.type};base64,${base64}`;
+
+      return NextResponse.json({
+        success: true,
+        processedImage: dataUrl,
+        fallback: true,
+        message: 'Background removal not available, using original image'
+      });
+    }
+
     // Initialize Remove.bg client with API key from environment
     const removeBgClient = new RemoveBgClient(process.env.REMOVE_BG_API_KEY);
     
@@ -60,25 +80,29 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Background removal error:', error);
     
-    // Return specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes('API key')) {
-        return NextResponse.json(
-          { error: 'Background removal service configuration error' },
-          { status: 500 }
-        );
-      }
-      if (error.message.includes('rate limit')) {
-        return NextResponse.json(
-          { error: 'Background removal service temporarily unavailable' },
-          { status: 429 }
-        );
-      }
-    }
+    // If Remove.bg API fails, provide fallback with original image
+    console.warn('Remove.bg API failed, returning original image as fallback');
+    
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      const dataUrl = `data:${file.type};base64,${base64}`;
 
-    return NextResponse.json(
-      { error: 'Failed to process image' },
-      { status: 500 }
-    );
+      console.log('Fallback: Successfully created data URL, length:', dataUrl.length);
+
+      return NextResponse.json({
+        success: true,
+        processedImage: dataUrl,
+        fallback: true,
+        message: 'Background removal service unavailable, using original image'
+      });
+    } catch (fallbackError) {
+      console.error('Fallback processing failed:', fallbackError);
+      return NextResponse.json(
+        { error: 'Failed to process image even with fallback' },
+        { status: 500 }
+      );
+    }
   }
 }

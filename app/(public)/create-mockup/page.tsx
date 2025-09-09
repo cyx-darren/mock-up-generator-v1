@@ -7,7 +7,6 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
-import { MockupGenerationPipeline } from '@/lib/mockup-generation-pipeline';
 import { OutputEnhancer } from '@/lib/output-enhancement';
 import { FormatConverter } from '@/lib/format-conversion';
 import { QualityValidator } from '@/lib/quality-validation';
@@ -115,7 +114,6 @@ function CreateMockupContent() {
   const [progress, setProgress] = useState<string>('');
 
   // Services
-  const [pipeline] = useState(() => new MockupGenerationPipeline());
   const [enhancer, setEnhancer] = useState<OutputEnhancer | null>(null);
   const [converter] = useState(() => new FormatConverter());
   const [validator] = useState(() => new QualityValidator());
@@ -272,40 +270,39 @@ function CreateMockupContent() {
         return;
       }
 
-      // Generate mockup
+      // Generate mockup via API
       setProgress('Preparing your mockup...');
       
-      const result = await pipeline.generateMockup({
-        logo: {
-          file: processedLogo,
-          processedImageUrl: processedLogo,
-          originalDimensions: { width: 200, height: 100 },
-          format: 'png',
-          hasTransparency: true
+      const apiResponse = await fetch('/api/generate-mockup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        product: {
-          id: product.id,
-          name: product.name,
-          imageUrl: product.primary_image_url || '',
-          category: product.category,
-          constraints: {
-            horizontal: selectedPlacement === 'horizontal' ? constraint : undefined,
-            vertical: selectedPlacement === 'vertical' ? constraint : undefined,
-            allOver: selectedPlacement === 'all_over' ? constraint : undefined
-          }
-        },
-        placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
-        qualityLevel: 'enhanced',
-        stylePreferences: {
-          lighting: 'natural',
-          angle: 'front',
-          background: 'neutral'
-        }
+        body: JSON.stringify({
+          logo: {
+            file: processedLogo,
+            processedImageUrl: processedLogo,
+            originalDimensions: { width: 200, height: 100 },
+            format: 'png',
+            hasTransparency: true
+          },
+          product: {
+            id: product.id,
+            name: product.name,
+            imageUrl: product.primary_image_url || '',
+            category: product.category
+          },
+          placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement
+        })
       });
 
-      if (result.status === 'failed') {
-        throw new Error(result.error || 'Failed to generate mockup');
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        throw new Error(errorData.error || 'Failed to generate mockup');
       }
+
+      const apiResult = await apiResponse.json();
+      const result = apiResult.result;
 
       if (!result.generatedImageUrl) {
         throw new Error('No image URL returned from pipeline');

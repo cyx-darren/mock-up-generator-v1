@@ -75,15 +75,21 @@ export interface ConstraintApplicationOptions {
   enforceAspectRatio: boolean;
 }
 
-// Initialize Supabase client - use shared instance to avoid client-side env issues
-import { supabase } from './supabase';
+// Initialize Supabase client - use admin client for server-side operations
+import { supabase, supabaseAdmin } from './supabase';
 
 export class ConstraintApplicationService {
+  // Get the appropriate Supabase client (admin for server-side, regular for client-side)
+  private getSupabaseClient() {
+    // Use admin client when available (server-side), otherwise use regular client
+    return typeof window === 'undefined' && supabaseAdmin ? supabaseAdmin : supabase;
+  }
   /**
    * Load admin-configured constraints for a product
    */
   async loadConstraints(giftItemId: string): Promise<PlacementConstraint[]> {
-    const { data, error } = await supabase
+    const client = this.getSupabaseClient();
+    const { data, error } = await client
       .from('placement_constraints')
       .select('*')
       .eq('item_id', giftItemId)
@@ -105,7 +111,8 @@ export class ConstraintApplicationService {
     giftItemId: string, 
     placementType: 'horizontal' | 'vertical' | 'all_over'
   ): Promise<PlacementConstraint | null> {
-    const { data, error } = await supabase
+    const client = this.getSupabaseClient();
+    const { data, error } = await client
       .from('placement_constraints')
       .select('*')
       .eq('item_id', giftItemId)

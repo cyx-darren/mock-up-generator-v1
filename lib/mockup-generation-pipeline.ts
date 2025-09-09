@@ -220,6 +220,20 @@ export class MockupGenerationPipeline {
       result.generatedImageUrl = result.preparedInput.combinedImageUrl; // Set the generated mockup image
       result.completedAt = new Date();
       result.processingTime = Date.now() - result.createdAt.getTime();
+      
+      console.log('PIPELINE DEBUG - Combined image URL:', {
+        combinedImageUrl: result.preparedInput.combinedImageUrl?.substring(0, 100) + '...',
+        combinedImageUrlLength: result.preparedInput.combinedImageUrl?.length || 0,
+        combinedImageUrlExists: !!result.preparedInput.combinedImageUrl
+      });
+      
+      console.log('Generated mockup result:', {
+        id: result.id,
+        status: result.status,
+        hasGeneratedImageUrl: !!result.generatedImageUrl,
+        generatedImageUrlLength: result.generatedImageUrl?.length || 0,
+        preparationTime: result.preparedInput.metadata.preparationTime
+      });
 
       return result;
 
@@ -330,7 +344,20 @@ export class MockupGenerationPipeline {
     product: ProductInput
   ): Promise<{ x: number; y: number; width: number; height: number }> {
     try {
-      // If we have constraint image URL, analyze the green pixels
+      console.log('calculateOptimalPlacementFromConstraintImage called with constraint:', constraint);
+      
+      // Skip image processing on server-side, use constraint defaults
+      if (typeof window === 'undefined') {
+        console.log('Server-side: using constraint defaults instead of image processing');
+        return {
+          x: constraint?.default_x_position || 300,
+          y: constraint?.default_y_position || 400,
+          width: 150,
+          height: 150
+        };
+      }
+
+      // If we have constraint image URL, analyze the green pixels (client-side only)
       if (constraint.constraint_image_url) {
         const { detectGreenConstraints } = await import('@/lib/color-detection');
         
@@ -379,8 +406,8 @@ export class MockupGenerationPipeline {
       
       // Fallback to constraint defaults if green pixel detection fails
       return {
-        x: constraint.default_x_position || 300,
-        y: constraint.default_y_position || 400,
+        x: constraint?.default_x_position || 300,
+        y: constraint?.default_y_position || 400,
         width: 150,
         height: 150
       };
@@ -389,8 +416,8 @@ export class MockupGenerationPipeline {
       console.error('Error calculating placement from constraint image:', error);
       // Fallback to constraint defaults
       return {
-        x: constraint.default_x_position || 300,
-        y: constraint.default_y_position || 400,
+        x: constraint?.default_x_position || 300,
+        y: constraint?.default_y_position || 400,
         width: 150,
         height: 150
       };
@@ -425,7 +452,25 @@ export class MockupGenerationPipeline {
   ): Promise<string> {
     console.log('Combining images:', { productImageUrl, logoImageUrl, constraints });
     
-    // Proxy external URLs through our API to avoid CORS
+    // Use server-side image processing when running server-side
+    if (typeof window === 'undefined') {
+      const { combineImages } = await import('./server-image-utils');
+      
+      return await combineImages({
+        productImageUrl: productImageUrl,
+        logoImageUrl: logoImageUrl,
+        logoPlacement: {
+          x: constraints.constraintArea.x,
+          y: constraints.constraintArea.y,
+          width: constraints.constraintArea.width,
+          height: constraints.constraintArea.height
+        },
+        outputWidth: 800,
+        outputHeight: 600
+      });
+    }
+    
+    // Proxy external URLs through our API to avoid CORS (client-side fallback)
     const proxiedProductUrl = this.getProxiedUrl(productImageUrl);
     const proxiedLogoUrl = this.getProxiedUrl(logoImageUrl);
     
@@ -519,6 +564,30 @@ export class MockupGenerationPipeline {
     constraints: AppliedConstraints
   ): Promise<string> {
     // Generate a mask image showing the constraint area
+    
+    // Use server-side canvas when running server-side
+    if (typeof window === 'undefined') {
+      const { createCanvas } = await import('canvas');
+      const canvas = createCanvas(constraints.constraintArea.width, constraints.constraintArea.height);
+      const ctx = canvas.getContext('2d');
+      
+      // Fill with black (masked area)
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Add white area for constraint region (unmasked)
+      ctx.fillStyle = 'white';
+      ctx.fillRect(
+        Math.max(0, constraints.constraintArea.x),
+        Math.max(0, constraints.constraintArea.y),
+        Math.min(constraints.constraintArea.width, canvas.width),
+        Math.min(constraints.constraintArea.height, canvas.height)
+      );
+
+      return canvas.toDataURL('image/png');
+    }
+    
+    // Client-side fallback
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -561,6 +630,15 @@ export class MockupGenerationPipeline {
 
   private async normalizeDimensions(imageUrl: string): Promise<{ width: number; height: number }> {
     console.log('Normalizing dimensions for:', imageUrl);
+    
+    // Skip dimension normalization on server-side, use defaults
+    if (typeof window === 'undefined') {
+      console.log('Server-side: using default normalized dimensions');
+      return {
+        width: 800,
+        height: 600
+      };
+    }
     
     try {
       // Use proxied URL to avoid CORS
