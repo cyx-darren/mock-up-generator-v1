@@ -706,7 +706,7 @@ export class MockupGenerationPipeline {
   }
 
   /**
-   * Generate AI mockup using simplified Gemini approach
+   * Generate AI mockup using Canvas Compositing + AI Enhancement approach
    */
   private async generateAIMockup(
     productImageUrl: string,
@@ -714,18 +714,102 @@ export class MockupGenerationPipeline {
     constraints: AppliedConstraints
   ): Promise<string> {
     try {
-      console.log('Starting simplified AI mockup generation with Gemini');
+      console.log('Starting Canvas Compositing + AI Enhancement approach');
 
-      // Prepare input images
-      const inputImages = await this.prepareInputImages(productImageUrl, logoImageUrl);
+      // Step 1: Create canvas composite with original product + logo
+      const canvasComposite = await this.createCanvasComposite(productImageUrl, logoImageUrl, constraints);
       
-      // Simple, clear prompt - let Gemini understand and place the logo
-      const placementType = constraints.metadata.placementType;
-      const placement = placementType === 'center' ? 'center' : 
-                       placementType === 'horizontal' ? 'center' :
-                       'center';
+      // Step 2: Send composite to Gemini for ENHANCEMENT only (not generation)
+      const enhancedImage = await this.enhanceCompositeWithAI(canvasComposite);
       
-      const simplePrompt = `Place the provided logo on the ${placement} of this bottle. Keep the original product image unchanged, just add the logo on the bottle surface. Output dimensions must be 800x1200 pixels. High quality, professional result.`;
+      console.log('Successfully generated mockup with Canvas + AI Enhancement');
+      return enhancedImage;
+
+    } catch (error: any) {
+      console.error('Canvas + AI Enhancement mockup generation failed:', error);
+      throw new Error(`Failed to generate AI mockup: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create canvas composite with original product photo + logo overlay
+   */
+  private async createCanvasComposite(
+    productImageUrl: string,
+    logoImageUrl: string,
+    constraints: AppliedConstraints
+  ): Promise<string> {
+    const { createCanvas, loadImage } = await import('canvas');
+    
+    try {
+      // Load original product image
+      const productImg = await loadImage(productImageUrl);
+      console.log('Loaded original product image:', { width: productImg.width, height: productImg.height });
+      
+      // Load logo image
+      const logoImg = await loadImage(logoImageUrl);
+      console.log('Loaded logo image:', { width: logoImg.width, height: logoImg.height });
+      
+      // Create canvas with original product dimensions (800x1200)
+      const canvas = createCanvas(800, 1200);
+      const ctx = canvas.getContext('2d');
+      
+      // Set high-quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Draw original product image (preserve exactly)
+      ctx.drawImage(productImg as any, 0, 0, 800, 1200);
+      
+      // Calculate logo placement (center of bottle)
+      const logoWidth = 200; // Appropriate size for bottle
+      const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
+      const logoX = (800 - logoWidth) / 2; // Center horizontally
+      const logoY = 500; // Center on bottle (adjust as needed)
+      
+      // Draw logo overlay
+      ctx.drawImage(logoImg as any, logoX, logoY, logoWidth, logoHeight);
+      
+      // Convert to high-quality data URL
+      const buffer = canvas.toBuffer('image/png', {
+        compressionLevel: 0, // No compression
+        filters: canvas.PNG_FILTER_NONE
+      });
+      const base64 = buffer.toString('base64');
+      
+      console.log('Canvas composite created successfully');
+      return `data:image/png;base64,${base64}`;
+      
+    } catch (error) {
+      console.error('Error creating canvas composite:', error);
+      throw new Error(`Failed to create canvas composite: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Enhance the canvas composite using AI to make logo look realistic
+   */
+  private async enhanceCompositeWithAI(compositeImageUrl: string): Promise<string> {
+    try {
+      // Convert composite to base64 for Gemini
+      const compositeData = await this.convertImageToBase64(compositeImageUrl);
+      
+      // Enhancement prompt - explicitly request ENHANCEMENT not GENERATION
+      const enhancementPrompt = `Enhance this product mockup to make the logo look more realistic:
+
+IMPORTANT: This is an ENHANCEMENT task, NOT generation.
+Keep the product and overall composition exactly as shown.
+Only enhance the realism of the logo on the bottle surface.
+
+Enhancements needed:
+- Add subtle shadows and lighting effects to the logo
+- Make the logo appear naturally printed/embossed on the bottle surface
+- Adjust logo perspective to match bottle curvature if needed
+- Add realistic surface interaction (slight reflection, depth)
+- Maintain the exact product image and dimensions (800x1200)
+- Keep all other elements unchanged
+
+Output: The same image with enhanced logo realism only.`;
       
       // Create Gemini client
       const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
@@ -735,65 +819,61 @@ export class MockupGenerationPipeline {
       const imageModel = client.getGenerativeModel({
         model: 'gemini-2.5-flash-image-preview',
         generationConfig: {
-          temperature: 0.3,
-          topP: 0.9,
-          topK: 32,
+          temperature: 0.1, // Low temperature for consistent enhancement
+          topP: 0.8,
+          topK: 16,
           maxOutputTokens: 8192
         }
       });
 
-      // Send both images with simple prompt
+      // Send composite with enhancement prompt
       const parts: any[] = [
-        { text: simplePrompt },
+        { text: enhancementPrompt },
         {
           inlineData: {
-            data: inputImages[0].data,
-            mimeType: inputImages[0].mimeType,
-          },
-        },
-        {
-          inlineData: {
-            data: inputImages[1].data,
-            mimeType: inputImages[1].mimeType,
+            data: compositeData.data,
+            mimeType: compositeData.mimeType,
           },
         }
       ];
 
-      console.log('Generating mockup with simplified approach...');
+      console.log('Enhancing composite with AI...');
       
       const result = await imageModel.generateContent(parts);
       const response = await result.response;
       
-      // Extract generated image
+      // Extract enhanced image
       const candidates = response.candidates || [];
-      let generatedImageData: string | null = null;
+      let enhancedImageData: string | null = null;
       let mimeType = 'image/png';
       
       for (const candidate of candidates) {
         if (candidate.content && candidate.content.parts) {
           for (const part of candidate.content.parts) {
             if (part.inlineData && part.inlineData.data) {
-              generatedImageData = part.inlineData.data;
+              enhancedImageData = part.inlineData.data;
               mimeType = part.inlineData.mimeType || 'image/png';
               break;
             }
           }
         }
-        if (generatedImageData) break;
+        if (enhancedImageData) break;
       }
 
-      if (!generatedImageData) {
-        throw new Error('No images generated by Gemini');
+      if (!enhancedImageData) {
+        // If enhancement fails, return the canvas composite as fallback
+        console.log('AI enhancement failed, returning canvas composite');
+        return compositeImageUrl;
       }
 
-      // Return the result directly - let Gemini handle the composition
-      const dataUrl = `data:${mimeType};base64,${generatedImageData}`;
-      console.log('Successfully generated mockup with simplified approach');
-      return dataUrl;
-
-    } catch (error: any) {
-      console.error('Simplified AI mockup generation failed:', error);
-      throw new Error(`Failed to generate AI mockup: ${error.message}`);
+      const enhancedDataUrl = `data:${mimeType};base64,${enhancedImageData}`;
+      console.log('AI enhancement completed successfully');
+      return enhancedDataUrl;
+      
+    } catch (error) {
+      console.error('Error enhancing composite with AI:', error);
+      // Return original composite if enhancement fails
+      return compositeImageUrl;
     }
   }
 
