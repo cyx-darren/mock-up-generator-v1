@@ -3,44 +3,47 @@
  * Applies admin-configured constraints to ensure logos stay within designated areas
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 // Types
 export interface PlacementConstraint {
   id: string;
-  gift_item_id: string;
+  item_id: string;
   placement_type: 'horizontal' | 'vertical' | 'all_over';
-  is_enabled: boolean;
+  is_validated: boolean;
   
-  // Constraint area definition
-  constraint_x: number;
-  constraint_y: number;
-  constraint_width: number;
-  constraint_height: number;
+  // Constraint image and detection
+  constraint_image_url?: string;
+  detected_area_pixels?: number;
+  detected_area_percentage?: number;
   
   // Logo size limits
-  min_logo_width: number;
-  max_logo_width: number;
-  min_logo_height: number;
-  max_logo_height: number;
+  min_logo_width?: number;
+  max_logo_width?: number;
+  min_logo_height?: number;
+  max_logo_height?: number;
   
   // Default positioning
-  default_x: number;
-  default_y: number;
-  default_width: number;
-  default_height: number;
-  
-  // Safety margins
-  margin_top: number;
-  margin_right: number;
-  margin_bottom: number;
-  margin_left: number;
+  default_x_position?: number;
+  default_y_position?: number;
   
   // Guidelines and metadata
   guidelines_text?: string;
-  constraint_image_url?: string;
+  pattern_settings?: any;
   created_at: string;
   updated_at: string;
+  
+  // Computed fields for compatibility
+  constraint_x?: number;
+  constraint_y?: number;
+  constraint_width?: number;
+  constraint_height?: number;
+  default_x?: number;
+  default_y?: number;
+  default_width?: number;
+  default_height?: number;
+  margin_top?: number;
+  margin_right?: number;
+  margin_bottom?: number;
+  margin_left?: number;
 }
 
 export interface LogoPlacement {
@@ -72,10 +75,8 @@ export interface ConstraintApplicationOptions {
   enforceAspectRatio: boolean;
 }
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Initialize Supabase client - use shared instance to avoid client-side env issues
+import { supabase } from './supabase';
 
 export class ConstraintApplicationService {
   /**
@@ -85,8 +86,8 @@ export class ConstraintApplicationService {
     const { data, error } = await supabase
       .from('placement_constraints')
       .select('*')
-      .eq('gift_item_id', giftItemId)
-      .eq('is_enabled', true)
+      .eq('item_id', giftItemId)
+      .eq('is_validated', true)
       .order('placement_type');
 
     if (error) {
@@ -107,9 +108,9 @@ export class ConstraintApplicationService {
     const { data, error } = await supabase
       .from('placement_constraints')
       .select('*')
-      .eq('gift_item_id', giftItemId)
+      .eq('item_id', giftItemId)
       .eq('placement_type', placementType)
-      .eq('is_enabled', true)
+      .eq('is_validated', true)
       .single();
 
     if (error) {

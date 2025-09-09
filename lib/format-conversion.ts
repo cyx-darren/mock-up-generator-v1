@@ -333,6 +333,7 @@ export class FormatConverter {
         qualityValue = 1; // PNG doesn't use quality, but canvas expects it
         break;
       case 'jpg':
+      case 'jpeg':
         mimeType = 'image/jpeg';
         qualityValue = options.quality / 100;
         break;

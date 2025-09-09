@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('gift_items')
       .select('*')
-      .eq('status', 'active'); // Only show active products
+      .eq('is_active', true); // Only show active products
 
     // Apply filters
     if (category && category !== 'all') {
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     const { data: categoriesData } = await supabase
       .from('gift_items')
       .select('category')
-      .eq('status', 'active');
+      .eq('is_active', true);
 
     const uniqueCategories = [...new Set(categoriesData?.map(item => item.category) || [])];
 
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const { data: tagsData } = await supabase
       .from('gift_items')
       .select('tags')
-      .eq('status', 'active');
+      .eq('is_active', true);
 
     const allTags = new Set<string>();
     tagsData?.forEach(item => {

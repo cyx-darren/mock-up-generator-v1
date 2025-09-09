@@ -9,7 +9,7 @@ export default function CatalogPage() {
 
   const handleProductSelect = (product: any) => {
     // Navigate to mockup creation page with selected product
-    router.push(`/create?product=${product.id}`);
+    router.push(`/create-mockup?product=${product.id}`);
   };
 
   return (

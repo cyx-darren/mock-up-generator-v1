@@ -46,8 +46,12 @@ export class RemoveBgClient {
   private rateLimitMiddleware = createRateLimitMiddleware(removeBgRateLimiter);
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.REMOVE_BG_API_KEY || '';
-    if (!this.apiKey) {
+    // Get API key with proper client-side handling
+    this.apiKey = apiKey || (typeof window === 'undefined' ? process.env.REMOVE_BG_API_KEY : '') || '';
+    
+    // For client-side, we'll handle the key requirement when actually making API calls
+    // This prevents initialization errors when the component is just being imported
+    if (!this.apiKey && typeof window === 'undefined') {
       throw new Error('Remove.bg API key is required');
     }
   }
@@ -65,6 +69,11 @@ export class RemoveBgClient {
     options: RemoveBgOptions = {},
     userId?: string
   ): Promise<RemoveBgResponse> {
+    // Check if API key is available when actually making the call
+    if (!this.apiKey) {
+      throw new Error('Remove.bg API key is required for background removal');
+    }
+    
     const startTime = Date.now();
     const rateLimitKey = userId || 'global';
     

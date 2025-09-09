@@ -751,6 +751,77 @@
 
 ---
 
+## PHASE 5.5: CUSTOMER FLOW INTEGRATION
+
+**Duration:** Week 10-11  
+**Status:** 85% Complete - Core Infrastructure Working
+
+### 5.5 End-to-End Customer Integration
+
+#### 5.5.1 Create Page Product Integration
+
+(X) Read product ID from URL parameters
+(X) Fetch product details from database
+(X) Display selected product information
+(X) Load product images and metadata
+(X) Show available placement options
+(X) Handle missing/invalid product IDs
+**Verification:** Selected product displays correctly ✓
+
+#### 5.5.2 Logo Upload & Processing Integration
+
+(X) Connect file upload to Supabase storage
+(X) Integrate Remove.bg API for background removal
+(X) Display processed logo preview
+( ) Implement logo adjustment controls
+(X) Add error handling for failed uploads
+( ) Create retry mechanism
+**Verification:** Logo uploads and processes successfully ✓ (with proper file format)
+
+#### 5.5.3 Constraint & Placement Integration
+
+( ) Load product constraint configurations
+( ) Apply selected placement type constraints
+( ) Implement green area detection overlay
+( ) Validate logo fits within constraints
+( ) Show constraint guidelines to user
+( ) Handle constraint violations gracefully
+**Verification:** Constraints properly applied to logo
+
+#### 5.5.4 AI Generation Pipeline Integration
+
+( ) Connect to Google AI (Gemini) API
+( ) Prepare product + logo composite image
+( ) Apply constraint masks to generation
+( ) Implement generation progress tracking
+( ) Handle generation errors and timeouts
+( ) Cache successful generations
+**Verification:** Mockup generates with logo on product
+
+#### 5.5.5 Post-Processing & Result Display
+
+( ) Apply image enhancement algorithms
+( ) Implement quality validation checks
+( ) Display generated mockup result
+( ) Offer format conversion options (PNG/JPEG/WebP)
+( ) Add download functionality
+( ) Store result in user session
+**Verification:** User can download final mockup
+
+---
+
+## PHASE 5.5 COMPLETION CHECKLIST
+
+( ) Product selection working
+( ) Logo upload and processing functional
+( ) Constraints properly applied
+( ) AI generation successful
+( ) Results downloadable in multiple formats
+( ) Complete flow tested end-to-end
+**Sign-off Required:** Technical Lead
+
+---
+
 ## PHASE 6: USER EXPERIENCE & POLISH
 
 **Duration:** Week 11-12  

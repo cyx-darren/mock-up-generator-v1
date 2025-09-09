@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Initialize Supabase client only on server-side
+let supabase: any = null;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+function getSupabaseClient() {
+  if (!supabase) {
+    // Only initialize on server-side where env vars are available
+    if (typeof window === 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      supabase = createClient(supabaseUrl, supabaseServiceKey);
+    } else {
+      throw new Error('Audit logging is only available on the server-side');
+    }
+  }
+  return supabase;
+}
 
 export type AuditAction =
   | 'LOGIN'
@@ -53,7 +65,8 @@ export interface AuditFilter {
 export class AuditLogger {
   static async log(entry: AuditLogEntry): Promise<void> {
     try {
-      const { error } = await supabase.from('audit_log').insert([
+      const client = getSupabaseClient();
+      const { error } = await client.from('audit_log').insert([
         {
           ...entry,
           created_at: new Date().toISOString(),
@@ -71,7 +84,8 @@ export class AuditLogger {
 
   static async getAuditLogs(filter?: AuditFilter) {
     try {
-      let query = supabase.from('audit_log').select('*').order('created_at', { ascending: false });
+      const client = getSupabaseClient();
+      let query = client.from('audit_log').select('*').order('created_at', { ascending: false });
 
       if (filter) {
         if (filter.user_id) {
@@ -160,10 +174,11 @@ export class AuditLogger {
 
   static async applyRetentionPolicy(daysToKeep: number = 90): Promise<void> {
     try {
+      const client = getSupabaseClient();
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-      const { error } = await supabase
+      const { error } = await client
         .from('audit_log')
         .delete()
         .lt('created_at', cutoffDate.toISOString());
