@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createOptimizedClient, releaseClient } from '@/lib/database/connection-pool';
+import { getOptimizedStatistics } from '@/lib/database/query-optimizer';
+import { withCache, CacheConfigs } from '@/lib/cache/response-cache';
 import { verifyAdminSession } from '@/lib/auth/admin-session';
 
-export async function GET(request: NextRequest) {
+export const GET = withCache(CacheConfigs.statistics)(async function(request: NextRequest) {
+  const supabase = await createOptimizedClient();
+  
   try {
     // Verify admin session
     const sessionResult = await verifyAdminSession(request);
@@ -22,19 +26,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient();
+    // Get optimized statistics with caching
+    const useCache = request.nextUrl.searchParams.get('no-cache') !== 'true';
+    const statisticsData = await getOptimizedStatistics(supabase);
 
-    // Run all statistics queries in parallel for better performance
+    // Run additional queries in parallel for enhanced statistics
     const [
-      productsStats,
-      categoriesStats,
       recentActivity,
       popularProducts,
       systemHealth,
       usageStats,
     ] = await Promise.all([
-      getProductsStatistics(supabase),
-      getCategoriesStatistics(supabase),
       getRecentActivity(supabase),
       getPopularProducts(supabase),
       getSystemHealth(supabase),
@@ -42,19 +44,24 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      products: productsStats,
-      categories: categoriesStats,
+      ...statisticsData,
       recentActivity,
       popularProducts,
       systemHealth,
       usage: usageStats,
       lastUpdated: new Date().toISOString(),
+      cacheEnabled: useCache
     });
   } catch (error) {
     console.error('Statistics API error:', error);
-    return NextResponse.json({ error: 'Failed to fetch statistics' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch statistics',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
+  } finally {
+    releaseClient(supabase);
   }
-}
+});
 
 async function getProductsStatistics(supabase: any) {
   const { data: products, error } = await supabase

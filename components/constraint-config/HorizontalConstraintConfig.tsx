@@ -7,6 +7,9 @@ import { Input } from '../ui/Input';
 import { Alert } from '../ui/Alert';
 import { FileUploadManager } from '../ui/FileUploadManager';
 import { ConstraintPreview } from '../constraint-detection/ConstraintPreview';
+import { VisualConstraintEditor } from './VisualConstraintEditor';
+import { ConstraintToolbar } from './ConstraintToolbar';
+import { RealTimePreview } from './RealTimePreview';
 import { cn } from '@/lib/utils';
 
 interface ConstraintDimensions {
@@ -74,6 +77,24 @@ export function HorizontalConstraintConfig({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Enhanced visual editor state
+  const [showGrid, setShowGrid] = useState(true);
+  const [showMeasurement, setShowMeasurement] = useState(true);
+  const [showGuidelines, setShowGuidelines] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [gridSize, setGridSize] = useState(20);
+  const [constraintRegions, setConstraintRegions] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [logoPlacement, setLogoPlacement] = useState({
+    x: 100,
+    y: 100,
+    width: 120,
+    height: 80,
+    rotation: 0,
+    opacity: 1,
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -348,7 +369,79 @@ export function HorizontalConstraintConfig({
             <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
           </div>
 
-          {/* Enhanced Constraint Detection Preview */}
+          {/* Enhanced Visual Constraint Editor */}
+          {constraintImage?.url && (
+            <div className="mt-6">
+              <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">
+                Visual Constraint Editor
+              </h4>
+              
+              {/* Toolbar */}
+              <ConstraintToolbar
+                showGrid={showGrid}
+                onToggleGrid={() => setShowGrid(!showGrid)}
+                showMeasurement={showMeasurement}
+                onToggleMeasurement={() => setShowMeasurement(!showMeasurement)}
+                showGuidelines={showGuidelines}
+                onToggleGuidelines={() => setShowGuidelines(!showGuidelines)}
+                snapToGrid={snapToGrid}
+                onToggleSnapToGrid={() => setSnapToGrid(!snapToGrid)}
+                gridSize={gridSize}
+                onGridSizeChange={setGridSize}
+                onClearAll={() => setConstraintRegions([])}
+                onUndo={() => {
+                  if (historyIndex > 0) {
+                    setHistoryIndex(historyIndex - 1);
+                    setConstraintRegions(history[historyIndex - 1] || []);
+                  }
+                }}
+                onRedo={() => {
+                  if (historyIndex < history.length - 1) {
+                    setHistoryIndex(historyIndex + 1);
+                    setConstraintRegions(history[historyIndex + 1] || []);
+                  }
+                }}
+                canUndo={historyIndex > 0}
+                canRedo={historyIndex < history.length - 1}
+              />
+
+              {/* Visual Editor */}
+              <VisualConstraintEditor
+                imageUrl={constraintImage.url}
+                existingConstraints={constraintRegions}
+                onConstraintsChange={(constraints) => {
+                  setConstraintRegions(constraints);
+                  // Add to history for undo/redo
+                  const newHistory = history.slice(0, historyIndex + 1);
+                  newHistory.push(constraints);
+                  setHistory(newHistory);
+                  setHistoryIndex(newHistory.length - 1);
+                }}
+                dimensions={{ width: 800, height: 600 }}
+                showGrid={showGrid}
+                showMeasurement={showMeasurement}
+                gridSize={gridSize}
+                snapToGrid={snapToGrid}
+              />
+            </div>
+          )}
+
+          {/* Real-Time Preview */}
+          {constraintImage?.url && (
+            <div className="mt-6">
+              <RealTimePreview
+                productImageUrl={constraintImage.url}
+                logoUrl="/api/placeholder/logo" // Placeholder logo for demo
+                constraints={constraintRegions}
+                placement={logoPlacement}
+                onPlacementChange={setLogoPlacement}
+                showConstraints={showGuidelines}
+                previewMode="normal"
+              />
+            </div>
+          )}
+
+          {/* Legacy Advanced Detection Analysis */}
           {constraintImage?.url && (
             <div className="mt-6">
               <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">

@@ -1,7 +1,6 @@
 /**
- * Server-side image processing utilities using node-canvas
+ * Server-side image processing utilities using Jimp
  */
-import { createCanvas, loadImage, Canvas, CanvasRenderingContext2D } from 'canvas';
 
 export interface ImageCombineOptions {
   productImageUrl: string;
@@ -23,31 +22,33 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
   const { productImageUrl, logoImageUrl, logoPlacement, outputWidth, outputHeight } = options;
 
   try {
+    // Import Jimp dynamically to avoid any potential SSR issues
+    const Jimp = (await import('jimp')).default;
+    
     console.log('Loading product image from:', productImageUrl);
-    // Load product image first to get its dimensions
-    const productImg = await loadImage(productImageUrl);
+    // Load product image
+    const productImg = await Jimp.read(productImageUrl);
     console.log(
       'Product image loaded successfully, dimensions:',
-      productImg.width,
+      productImg.getWidth(),
       'x',
-      productImg.height
+      productImg.getHeight()
     );
 
     // Use original product image dimensions if not specified
-    const canvasWidth = outputWidth || productImg.width;
-    const canvasHeight = outputHeight || productImg.height;
+    const canvasWidth = outputWidth || productImg.getWidth();
+    const canvasHeight = outputHeight || productImg.getHeight();
 
-    // Create canvas with product image dimensions
-    const canvas = createCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext('2d');
-
-    // Draw product image at original size (no scaling)
-    ctx.drawImage(productImg, 0, 0, canvasWidth, canvasHeight);
+    // Resize product image if needed
+    if (outputWidth || outputHeight) {
+      productImg.resize(canvasWidth, canvasHeight);
+    }
 
     console.log(
       'Loading logo image from:',
       logoImageUrl.startsWith('data:') ? `data URL (${logoImageUrl.length} chars)` : logoImageUrl
     );
+    
     // Load logo image - handle data URLs properly
     let logoImg;
     if (logoImageUrl.startsWith('data:')) {
@@ -68,36 +69,28 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
         const buffer = Buffer.from(base64Data, 'base64');
         console.log('Created buffer from base64 data, size:', buffer.length, 'bytes');
 
-        // Load image from buffer
-        logoImg = await loadImage(buffer);
+        // Load image from buffer using Jimp
+        logoImg = await Jimp.read(buffer);
         console.log('Successfully loaded logo from buffer');
       } catch (error) {
         console.error('Failed to process data URL:', error);
-        // Create fallback transparent image if data URL processing fails
-        const fallbackCanvas = createCanvas(100, 100);
-        const fallbackCtx = fallbackCanvas.getContext('2d');
-        fallbackCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        fallbackCtx.fillRect(0, 0, 100, 100);
-        fallbackCtx.fillStyle = 'black';
-        fallbackCtx.font = '12px Arial';
-        fallbackCtx.fillText('Logo', 35, 55);
-
-        const fallbackBuffer = fallbackCanvas.toBuffer('image/png');
-        logoImg = await loadImage(fallbackBuffer);
+        // Create fallback logo image if data URL processing fails
+        logoImg = new Jimp(100, 100, 0x00000080); // Semi-transparent black
+        logoImg.print(await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE), 10, 35, 'Logo');
         console.log('Using fallback logo image');
       }
     } else {
       // Handle regular URLs
-      logoImg = await loadImage(logoImageUrl);
+      logoImg = await Jimp.read(logoImageUrl);
     }
-    console.log('Logo image loaded successfully, dimensions:', logoImg.width, 'x', logoImg.height);
+    console.log('Logo image loaded successfully, dimensions:', logoImg.getWidth(), 'x', logoImg.getHeight());
 
     // Calculate logo placement with proper scaling to fit within constraints
     const maxLogoWidth = Math.min(logoPlacement.width, canvasWidth * 0.4); // Don't exceed 40% of canvas width
     const maxLogoHeight = Math.min(logoPlacement.height, canvasHeight * 0.4); // Don't exceed 40% of canvas height
 
     // Maintain aspect ratio while fitting within max dimensions
-    const logoAspectRatio = logoImg.width / logoImg.height;
+    const logoAspectRatio = logoImg.getWidth() / logoImg.getHeight();
     let finalLogoWidth = maxLogoWidth;
     let finalLogoHeight = maxLogoHeight;
 
@@ -116,16 +109,20 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
     console.log('Drawing logo at calculated position:', {
       originalPlacement: logoPlacement,
       finalPosition: { x: logoX, y: logoY, width: finalLogoWidth, height: finalLogoHeight },
-      logoOriginalSize: { width: logoImg.width, height: logoImg.height },
+      logoOriginalSize: { width: logoImg.getWidth(), height: logoImg.getHeight() },
       canvasSize: { width: canvasWidth, height: canvasHeight },
     });
 
-    // Draw logo overlay on product image
-    ctx.drawImage(logoImg, logoX, logoY, finalLogoWidth, finalLogoHeight);
+    // Resize logo to fit calculated dimensions
+    logoImg.resize(finalLogoWidth, finalLogoHeight);
 
-    // Convert to data URL
-    console.log('Converting canvas to data URL...');
-    const dataUrl = canvas.toDataURL('image/png');
+    // Composite logo onto product image
+    productImg.composite(logoImg, logoX, logoY);
+
+    // Convert to data URL (base64)
+    console.log('Converting image to data URL...');
+    const buffer = await productImg.getBufferAsync(Jimp.MIME_PNG);
+    const dataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
     console.log('Successfully generated combined image, data URL length:', dataUrl.length);
     return dataUrl;
   } catch (error) {
@@ -143,10 +140,13 @@ export async function getImageDimensions(
   imageUrl: string
 ): Promise<{ width: number; height: number }> {
   try {
-    const img = await loadImage(imageUrl);
+    // Import Jimp dynamically
+    const Jimp = (await import('jimp')).default;
+    
+    const img = await Jimp.read(imageUrl);
     return {
-      width: img.width,
-      height: img.height,
+      width: img.getWidth(),
+      height: img.getHeight(),
     };
   } catch (error) {
     console.error('Error loading image dimensions:', error);
