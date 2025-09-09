@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // Redirects
   async redirects() {
     return [
@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
+
   // Rewrites (for API proxying if needed)
   async rewrites() {
     return [
@@ -55,7 +55,7 @@ const nextConfig: NextConfig = {
       // },
     ];
   },
-  
+
   // Headers
   async headers() {
     return [

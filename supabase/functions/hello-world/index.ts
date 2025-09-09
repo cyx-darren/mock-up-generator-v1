@@ -2,7 +2,7 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 
 Deno.serve(async (req: Request) => {
   const { method } = req;
-  
+
   if (method === 'OPTIONS') {
     return new Response(null, {
       status: 200,

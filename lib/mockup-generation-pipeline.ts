@@ -121,19 +121,26 @@ export class MockupGenerationPipeline {
       // Step 2: Process logo image
       const processedLogo = await this.processLogoImage(request.logo);
 
-      // Step 3: Apply constraints
+      // Step 3: Get actual product image dimensions
+      const actualDimensions = await this.getProductImageDimensions(request.product.imageUrl);
+      console.log('Using actual product dimensions:', actualDimensions);
+
+      // Step 4: Apply constraints using actual dimensions
       const appliedConstraints = await this.applyConstraints(
         processedLogo,
         request.product,
-        request.placementType
+        request.placementType,
+        actualDimensions
       );
 
-      // Step 4: Generate mockup directly with Gemini - simple and effective
+      // Step 5: Generate mockup directly with Gemini - simple and effective
       console.log('Generating mockup with simplified approach...');
       const mockupImageUrl = await this.combineImages(
         request.product.imageUrl,
         processedLogo.processedImageUrl || (processedLogo.file as string),
-        appliedConstraints
+        appliedConstraints,
+        undefined,
+        actualDimensions
       );
       console.log('Mockup generation result:', mockupImageUrl ? 'Success' : 'Failed');
 
@@ -150,7 +157,7 @@ export class MockupGenerationPipeline {
           originalLogo: request.logo,
           product: request.product,
           constraints: appliedConstraints,
-          dimensions: { width: 800, height: 1200 },
+          dimensions: actualDimensions,
           compression: 1.0, // No compression - let Gemini handle quality
           watermarked: false,
           preparationTime,
@@ -236,7 +243,8 @@ export class MockupGenerationPipeline {
   private async applyConstraints(
     logo: LogoInput,
     product: ProductInput,
-    placementType: string
+    placementType: string,
+    productDimensions?: { width: number; height: number }
   ): Promise<AppliedConstraints> {
     try {
       // Import constraint application service
@@ -265,16 +273,22 @@ export class MockupGenerationPipeline {
         product
       );
 
+      // Use product dimensions for normalization, with fallback to standard values
+      const imageWidth = productDimensions?.width || 800;
+      const imageHeight = productDimensions?.height || 1200;
+
+      console.log('Using dimensions for constraint normalization:', { imageWidth, imageHeight });
+
       // Convert to pipeline format using actual detected green pixel area
       const appliedConstraints: AppliedConstraints = {
         isValid: true,
         position: {
-          x: requestedPlacement.x / 800, // Normalize to 0-1 (assuming 800px image width)
-          y: requestedPlacement.y / 1200, // Normalize to 0-1 (assuming 1200px image height)
+          x: requestedPlacement.x / imageWidth, // Normalize to 0-1 using actual image width
+          y: requestedPlacement.y / imageHeight, // Normalize to 0-1 using actual image height
         },
         scale: Math.min(
-          requestedPlacement.width / 200, // Normalize scale based on expected logo size
-          requestedPlacement.height / 100
+          requestedPlacement.width / (imageWidth * 0.25), // Normalize scale to 25% of image width
+          requestedPlacement.height / (imageHeight * 0.125) // Normalize scale to 12.5% of image height
         ),
         constraintArea: {
           x: requestedPlacement.x,
@@ -288,7 +302,10 @@ export class MockupGenerationPipeline {
         ],
         metadata: {
           placementType: placementType as any,
-          originalPosition: { x: constraint.default_x / 800, y: constraint.default_y / 1200 },
+          originalPosition: {
+            x: constraint.default_x / imageWidth,
+            y: constraint.default_y / imageHeight,
+          },
           appliedAt: new Date(),
         },
       };
@@ -431,7 +448,8 @@ export class MockupGenerationPipeline {
     productImageUrl: string,
     logoImageUrl: string,
     constraints: AppliedConstraints,
-    productType?: string
+    productType?: string,
+    targetDimensions?: { width: number; height: number }
   ): Promise<string> {
     console.log('[combineImages] Starting image combination');
     console.log('[combineImages] Product type:', productType);
@@ -439,7 +457,13 @@ export class MockupGenerationPipeline {
 
     // Use simplified Gemini approach for mockup generation
     if (typeof window === 'undefined') {
-      return await this.generateAIMockup(productImageUrl, logoImageUrl, constraints, productType);
+      return await this.generateAIMockup(
+        productImageUrl,
+        logoImageUrl,
+        constraints,
+        productType,
+        targetDimensions
+      );
     }
 
     // Proxy external URLs through our API to avoid CORS (client-side fallback)
@@ -671,8 +695,28 @@ export class MockupGenerationPipeline {
   }
 
   private getAspectRatio(qualityLevel: string): '1:1' | '4:3' | '16:9' | '21:9' | '2:3' {
-    // Always use 2:3 aspect ratio for 800x1200 portrait orientation
+    // This method is deprecated - use calculateAspectRatio instead
     return '2:3';
+  }
+
+  private calculateAspectRatio(dimensions: { width: number; height: number }): string {
+    const ratio = dimensions.width / dimensions.height;
+
+    // Round to common aspect ratios for better compatibility
+    if (Math.abs(ratio - 1) < 0.1) return '1:1'; // Square
+    if (Math.abs(ratio - 4 / 3) < 0.1) return '4:3'; // Classic
+    if (Math.abs(ratio - 16 / 9) < 0.1) return '16:9'; // Widescreen
+    if (Math.abs(ratio - 21 / 9) < 0.1) return '21:9'; // Ultra-wide
+    if (Math.abs(ratio - 2 / 3) < 0.1) return '2:3'; // Portrait
+    if (Math.abs(ratio - 3 / 2) < 0.1) return '3:2'; // Photo standard
+
+    // For non-standard ratios, return the calculated ratio as string
+    const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+    const divisor = gcd(dimensions.width, dimensions.height);
+    const simplifiedWidth = dimensions.width / divisor;
+    const simplifiedHeight = dimensions.height / divisor;
+
+    return `${simplifiedWidth}:${simplifiedHeight}`;
   }
 
   private generateNegativePrompt(): string {
@@ -706,24 +750,31 @@ export class MockupGenerationPipeline {
     productImageUrl: string,
     logoImageUrl: string,
     constraints: AppliedConstraints,
-    productType?: string
+    productType?: string,
+    targetDimensions?: { width: number; height: number }
   ): Promise<string> {
     try {
       console.log('[generateAIMockup] Starting Canvas Compositing + AI Enhancement approach');
       console.log('[generateAIMockup] Product type:', productType || 'product');
       console.log('[generateAIMockup] Product URL:', productImageUrl?.substring(0, 100));
       console.log('[generateAIMockup] Logo URL:', logoImageUrl?.substring(0, 100));
+      console.log('[generateAIMockup] Target dimensions:', targetDimensions);
 
       // Step 1: Create canvas composite with original product + logo
       const canvasComposite = await this.createCanvasComposite(
         productImageUrl,
         logoImageUrl,
-        constraints
+        constraints,
+        targetDimensions
       );
       console.log('[generateAIMockup] Canvas composite created, length:', canvasComposite?.length);
 
       // Step 2: Send composite to Gemini for ENHANCEMENT only (not generation)
-      const enhancedImage = await this.enhanceCompositeWithAI(canvasComposite, productType);
+      const enhancedImage = await this.enhanceCompositeWithAI(
+        canvasComposite,
+        productType,
+        targetDimensions
+      );
       console.log('[generateAIMockup] Enhanced image received, length:', enhancedImage?.length);
 
       if (!enhancedImage) {
@@ -745,7 +796,8 @@ export class MockupGenerationPipeline {
   private async createCanvasComposite(
     productImageUrl: string,
     logoImageUrl: string,
-    constraints: AppliedConstraints
+    constraints: AppliedConstraints,
+    targetDimensions?: { width: number; height: number }
   ): Promise<string> {
     const { createCanvas, loadImage } = await import('canvas');
 
@@ -815,8 +867,17 @@ export class MockupGenerationPipeline {
         throw new Error(`Failed to load logo image: ${logoImageError.message}`);
       }
 
-      // Create canvas with original product dimensions (800x1200)
-      const canvas = createCanvas(800, 1200);
+      // Use target dimensions if provided, otherwise use actual product image dimensions
+      const canvasWidth = targetDimensions?.width || productImg.width;
+      const canvasHeight = targetDimensions?.height || productImg.height;
+
+      console.log('[createCanvasComposite] Using canvas dimensions:', {
+        width: canvasWidth,
+        height: canvasHeight,
+      });
+
+      // Create canvas with actual product dimensions
+      const canvas = createCanvas(canvasWidth, canvasHeight);
       const ctx = canvas.getContext('2d');
 
       // Set high-quality rendering
@@ -824,13 +885,13 @@ export class MockupGenerationPipeline {
       ctx.imageSmoothingQuality = 'high';
 
       // Draw original product image (preserve exactly)
-      ctx.drawImage(productImg as any, 0, 0, 800, 1200);
+      ctx.drawImage(productImg as any, 0, 0, canvasWidth, canvasHeight);
 
-      // Calculate logo placement (center of bottle)
-      const logoWidth = 200; // Appropriate size for bottle
+      // Calculate logo placement (center of product with responsive sizing)
+      const logoWidth = Math.min(canvasWidth * 0.25, 200); // 25% of width or max 200px
       const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
-      const logoX = (800 - logoWidth) / 2; // Center horizontally
-      const logoY = 500; // Center on bottle (adjust as needed)
+      const logoX = (canvasWidth - logoWidth) / 2; // Center horizontally
+      const logoY = canvasHeight * 0.4; // 40% down the product (responsive positioning)
 
       // Draw logo as FLAT overlay - no effects, no shadows
       ctx.globalCompositeOperation = 'source-over'; // Simple overlay
@@ -861,7 +922,8 @@ export class MockupGenerationPipeline {
    */
   private async enhanceCompositeWithAI(
     compositeImageUrl: string,
-    productType?: string
+    productType?: string,
+    targetDimensions?: { width: number; height: number }
   ): Promise<string> {
     try {
       console.log('[enhanceCompositeWithAI] Starting AI enhancement');
@@ -874,10 +936,15 @@ export class MockupGenerationPipeline {
         compositeData?.data?.length
       );
 
-      // Get proper product description
+      // Get proper product description and dimensions
       const productDescription = productType || 'product';
+      const dimensionsText = targetDimensions
+        ? `${targetDimensions.width}x${targetDimensions.height}`
+        : 'original dimensions';
 
-      // Enhancement prompt - NO SHADOWS, keep logo FLAT
+      console.log('[enhanceCompositeWithAI] Target dimensions:', targetDimensions);
+
+      // Enhancement prompt - NO SHADOWS, keep logo FLAT, preserve original dimensions
       const enhancementPrompt = `Enhance this ${productDescription} mockup with the logo as a FLAT print:
 
 IMPORTANT: This is an ENHANCEMENT task, NOT generation.
@@ -890,13 +957,14 @@ CRITICAL REQUIREMENTS:
 - Keep logo FLAT on the surface
 - Simple surface print like screen printing or a decal
 - Maintain original logo colors exactly (no darkening)
-- Logo should appear as a flat print directly on the bottle
-- Adjust perspective to follow bottle curvature ONLY
+- Logo should appear as a flat print directly on the product
+- Adjust perspective to follow product curvature ONLY
 - NO artistic embellishments or effects
-- Maintain the exact product image and dimensions (800x1200)
+- Maintain the exact product image and dimensions (${dimensionsText})
 - Keep all other elements unchanged
+- DO NOT resize, crop, or change aspect ratio
 
-Output: The same image with logo as a clean, flat surface print.`;
+Output: The same image with logo as a clean, flat surface print, maintaining exact original dimensions.`;
 
       // Create Gemini client
       const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
@@ -1003,8 +1071,10 @@ Output: The same image with logo as a clean, flat surface print.`;
       });
     } catch (error) {
       console.error('Error getting image dimensions:', error);
-      // Fallback to standard product image dimensions
-      return { width: 800, height: 1200 };
+      console.warn('Using fallback dimensions - image may be distorted');
+      // Use reasonable fallback dimensions based on common product image sizes
+      // This prevents complete failure but logs a warning
+      return { width: 600, height: 800 }; // 3:4 aspect ratio (common for product photos)
     }
   }
 

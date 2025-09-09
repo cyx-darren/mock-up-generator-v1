@@ -160,7 +160,7 @@ export function VerticalConstraintConfig({
       minY = height,
       maxX = 0,
       maxY = 0;
-    let verticalSegments = new Map<number, number>(); // Track vertical distribution
+    const verticalSegments = new Map<number, number>(); // Track vertical distribution
 
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];

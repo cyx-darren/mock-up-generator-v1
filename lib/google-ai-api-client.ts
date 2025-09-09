@@ -88,7 +88,9 @@ export class GoogleAIApiClient {
   /**
    * Generate content with streaming
    */
-  async *generateContentStream(options: GenerateContentOptions): AsyncGenerator<string, void, unknown> {
+  async *generateContentStream(
+    options: GenerateContentOptions
+  ): AsyncGenerator<string, void, unknown> {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
@@ -117,19 +119,19 @@ export class GoogleAIApiClient {
 
     while (true) {
       const { done, value } = await reader.read();
-      
+
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      
+
       // Keep the last incomplete line in the buffer
       buffer = lines.pop() || '';
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
-          
+
           if (data === '[DONE]') {
             return;
           }

@@ -18,12 +18,9 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -37,33 +34,24 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to manage products
     if (user.role !== 'super_admin' && user.role !== 'product_manager') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     const { rollbackId }: RollbackRequest = await request.json();
 
     if (!rollbackId) {
-      return NextResponse.json(
-        { error: 'Rollback ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Rollback ID is required' }, { status: 400 });
     }
 
     const result: RollbackResult = {
       success: true,
       deleted: 0,
-      errors: []
+      errors: [],
     };
 
     // Find products created in this import batch
@@ -73,10 +61,7 @@ export async function POST(request: NextRequest) {
       .eq('import_batch_id', rollbackId);
 
     if (findError) {
-      return NextResponse.json(
-        { error: 'Failed to find imported products' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to find imported products' }, { status: 500 });
     }
 
     if (!importedProducts || importedProducts.length === 0) {
@@ -86,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const productIds = importedProducts.map(p => p.id);
+    const productIds = importedProducts.map((p) => p.id);
 
     // Delete products in batch
     const { error: deleteError, count } = await supabase
@@ -112,22 +97,18 @@ export async function POST(request: NextRequest) {
       details: {
         rollback_id: rollbackId,
         deleted_count: result.deleted,
-        deleted_products: importedProducts.map(p => ({
+        deleted_products: importedProducts.map((p) => ({
           id: p.id,
           name: p.name,
-          sku: p.sku
-        }))
+          sku: p.sku,
+        })),
       },
-      ...clientInfo
+      ...clientInfo,
     });
 
     return NextResponse.json(result);
-
   } catch (error) {
     console.error('Rollback error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

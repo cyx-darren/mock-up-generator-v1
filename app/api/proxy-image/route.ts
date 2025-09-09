@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const imageUrl = searchParams.get('url');
-  
+
   if (!imageUrl) {
     return new NextResponse('Missing URL parameter', { status: 400 });
   }
@@ -14,15 +14,13 @@ export async function GET(request: NextRequest) {
     'unsplash.com',
     'cdn.jsdelivr.net',
     'i.imgur.com',
-    'example.com'
+    'example.com',
   ];
-  
+
   try {
     const url = new URL(imageUrl);
-    const isAllowed = allowedDomains.some(domain => 
-      url.hostname.includes(domain)
-    );
-    
+    const isAllowed = allowedDomains.some((domain) => url.hostname.includes(domain));
+
     if (!isAllowed) {
       return new NextResponse('Domain not allowed', { status: 403 });
     }
@@ -37,10 +35,10 @@ export async function GET(request: NextRequest) {
         'User-Agent': 'MockupGen/1.0',
       },
     });
-    
+
     if (!response.ok) {
-      return new NextResponse(`Image fetch failed: ${response.statusText}`, { 
-        status: response.status 
+      return new NextResponse(`Image fetch failed: ${response.statusText}`, {
+        status: response.status,
       });
     }
 

@@ -37,7 +37,12 @@ export interface RateLimitInfo {
   total: number;
 }
 
-import { removeBgRateLimiter, removeBgUsageTracker, createRateLimitMiddleware, isRateLimitError } from './rate-limiter';
+import {
+  removeBgRateLimiter,
+  removeBgUsageTracker,
+  createRateLimitMiddleware,
+  isRateLimitError,
+} from './rate-limiter';
 
 export class RemoveBgClient {
   private apiKey: string;
@@ -47,8 +52,9 @@ export class RemoveBgClient {
 
   constructor(apiKey?: string) {
     // Get API key with proper client-side handling
-    this.apiKey = apiKey || (typeof window === 'undefined' ? process.env.REMOVE_BG_API_KEY : '') || '';
-    
+    this.apiKey =
+      apiKey || (typeof window === 'undefined' ? process.env.REMOVE_BG_API_KEY : '') || '';
+
     // For client-side, we'll handle the key requirement when actually making API calls
     // This prevents initialization errors when the component is just being imported
     // Note: We no longer throw an error here to allow fallback handling at the API level
@@ -71,10 +77,10 @@ export class RemoveBgClient {
     if (!this.apiKey) {
       throw new Error('Remove.bg API key is required for background removal');
     }
-    
+
     const startTime = Date.now();
     const rateLimitKey = userId || 'global';
-    
+
     try {
       this.rateLimitMiddleware(rateLimitKey);
     } catch (rateLimitError) {
@@ -82,7 +88,7 @@ export class RemoveBgClient {
         success: false,
         rateLimited: true,
         responseTime: Date.now() - startTime,
-        error: 'Rate limit exceeded'
+        error: 'Rate limit exceeded',
       });
       throw rateLimitError;
     }
@@ -126,7 +132,7 @@ export class RemoveBgClient {
           success: false,
           rateLimited: false,
           responseTime,
-          error: error.detail
+          error: error.detail,
         });
 
         throw error;
@@ -135,7 +141,7 @@ export class RemoveBgClient {
       const blob = await response.blob();
       const detectedType = response.headers.get('X-Type') || undefined;
       const creditsCharged = parseInt(response.headers.get('X-Credits-Charged') || '0');
-      
+
       const result = {
         width: parseInt(response.headers.get('X-Width') || '0'),
         height: parseInt(response.headers.get('X-Height') || '0'),
@@ -146,7 +152,7 @@ export class RemoveBgClient {
         success: true,
         rateLimited: false,
         responseTime,
-        creditsUsed: creditsCharged
+        creditsUsed: creditsCharged,
       });
 
       return {
@@ -156,21 +162,21 @@ export class RemoveBgClient {
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
+
       if (isRateLimitError(error)) {
         throw error;
       }
-      
+
       if (error && typeof error === 'object' && 'status' in error) {
         removeBgUsageTracker.recordRequest({
           success: false,
           rateLimited: false,
           responseTime,
-          error: (error as RemoveBgError).detail
+          error: (error as RemoveBgError).detail,
         });
         throw error;
       }
-      
+
       const networkError: RemoveBgError = {
         title: 'Network Error',
         detail: error instanceof Error ? error.message : 'Unknown network error',
@@ -182,7 +188,7 @@ export class RemoveBgClient {
         success: false,
         rateLimited: false,
         responseTime,
-        error: networkError.detail
+        error: networkError.detail,
       });
 
       throw networkError;
@@ -226,7 +232,7 @@ export class RemoveBgClient {
       if (error && typeof error === 'object' && 'status' in error) {
         throw error;
       }
-      
+
       const networkError: RemoveBgError = {
         title: 'Network Error',
         detail: error instanceof Error ? error.message : 'Unknown network error',

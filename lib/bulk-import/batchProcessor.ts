@@ -38,7 +38,7 @@ export class BatchProcessor {
   }
 
   addJobs(jobs: BatchJob[]): void {
-    jobs.forEach(job => {
+    jobs.forEach((job) => {
       this.jobs.set(job.id, job);
     });
   }
@@ -62,11 +62,11 @@ export class BatchProcessor {
   }
 
   private async processJobs(): Promise<void> {
-    const pendingJobs = Array.from(this.jobs.values()).filter(job => job.status === 'pending');
-    
+    const pendingJobs = Array.from(this.jobs.values()).filter((job) => job.status === 'pending');
+
     // Process jobs with concurrency limit
     const promises: Promise<void>[] = [];
-    
+
     for (let i = 0; i < Math.min(pendingJobs.length, this.concurrentLimit); i++) {
       promises.push(this.processNextJob());
     }
@@ -85,7 +85,7 @@ export class BatchProcessor {
       job.status = 'processing';
       job.startTime = new Date();
       job.progress = 0;
-      
+
       this.updateProgress();
 
       try {
@@ -116,7 +116,7 @@ export class BatchProcessor {
   private async processJob(job: BatchJob): Promise<void> {
     const results = {
       uploaded: [],
-      failed: []
+      failed: [],
     };
 
     job.results = results;
@@ -128,7 +128,7 @@ export class BatchProcessor {
       const file = job.files[i];
       let retryCount = 0;
       let success = false;
-      
+
       while (retryCount < maxRetries && !success) {
         try {
           // Update progress
@@ -137,27 +137,35 @@ export class BatchProcessor {
 
           // Upload file to Supabase Storage with retry logic
           const uploadResult = await this.uploadFileWithRetry(job.productSku, file, retryCount);
-          
+
           if (uploadResult.success) {
             results.uploaded.push(uploadResult.url);
-            
+
             // Update product with new image URL
-            await this.updateProductImagesWithRetry(job.productSku, uploadResult.url, file.type, retryCount);
+            await this.updateProductImagesWithRetry(
+              job.productSku,
+              uploadResult.url,
+              file.type,
+              retryCount
+            );
             success = true;
           } else {
             retryCount++;
             if (retryCount >= maxRetries) {
-              results.failed.push(`${file.name}: ${uploadResult.error} (after ${maxRetries} attempts)`);
+              results.failed.push(
+                `${file.name}: ${uploadResult.error} (after ${maxRetries} attempts)`
+              );
             } else {
               // Wait before retry with exponential backoff
               await this.delay(1000 * Math.pow(2, retryCount - 1));
             }
           }
-
         } catch (error) {
           retryCount++;
           if (retryCount >= maxRetries) {
-            results.failed.push(`${file.name}: ${error instanceof Error ? error.message : 'Unknown error'} (after ${maxRetries} attempts)`);
+            results.failed.push(
+              `${file.name}: ${error instanceof Error ? error.message : 'Unknown error'} (after ${maxRetries} attempts)`
+            );
           } else {
             // Wait before retry with exponential backoff
             await this.delay(1000 * Math.pow(2, retryCount - 1));
@@ -171,34 +179,46 @@ export class BatchProcessor {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private async uploadFileWithRetry(productSku: string, file: { name: string; data: Buffer; type: string }, attempt: number): Promise<{ success: boolean; url?: string; error?: string }> {
+  private async uploadFileWithRetry(
+    productSku: string,
+    file: { name: string; data: Buffer; type: string },
+    attempt: number
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
     return this.uploadFile(productSku, file);
   }
 
-  private async updateProductImagesWithRetry(productSku: string, imageUrl: string, imageType: string, attempt: number): Promise<void> {
+  private async updateProductImagesWithRetry(
+    productSku: string,
+    imageUrl: string,
+    imageType: string,
+    attempt: number
+  ): Promise<void> {
     return this.updateProductImages(productSku, imageUrl, imageType);
   }
 
-  private async uploadFile(productSku: string, file: { name: string; data: Buffer; type: string }): Promise<{ success: boolean; url?: string; error?: string }> {
+  private async uploadFile(
+    productSku: string,
+    file: { name: string; data: Buffer; type: string }
+  ): Promise<{ success: boolean; url?: string; error?: string }> {
     try {
       // Create a unique filename
       const timestamp = Date.now();
       const extension = file.name.split('.').pop();
       const filename = `${productSku}_${timestamp}.${extension}`;
-      
+
       // Upload to Supabase Storage (gift-items bucket)
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = createClient();
-      
+
       const { data, error } = await supabase.storage
         .from('gift-items')
         .upload(`bulk-upload/${filename}`, file.data, {
           contentType: file.type,
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
         });
 
       if (error) {
@@ -211,16 +231,19 @@ export class BatchProcessor {
         .getPublicUrl(`bulk-upload/${filename}`);
 
       return { success: true, url: urlData.publicUrl };
-
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Upload failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Upload failed',
       };
     }
   }
 
-  private async updateProductImages(productSku: string, imageUrl: string, imageType: string): Promise<void> {
+  private async updateProductImages(
+    productSku: string,
+    imageUrl: string,
+    imageType: string
+  ): Promise<void> {
     try {
       const { createClient } = await import('@/lib/supabase/server');
       const supabase = createClient();
@@ -237,7 +260,9 @@ export class BatchProcessor {
       }
 
       // Update additional_images array
-      const currentImages = Array.isArray(product.additional_images) ? product.additional_images : [];
+      const currentImages = Array.isArray(product.additional_images)
+        ? product.additional_images
+        : [];
       const updatedImages = [...currentImages, imageUrl];
 
       // Decide where to place the image based on what's missing
@@ -263,7 +288,6 @@ export class BatchProcessor {
       if (updateError) {
         throw new Error(`Failed to update product: ${updateError.message}`);
       }
-
     } catch (error) {
       console.error(`Failed to update product ${productSku}:`, error);
       throw error;
@@ -280,10 +304,10 @@ export class BatchProcessor {
   getProgress(): BatchProgress {
     const jobs = Array.from(this.jobs.values());
     const total = jobs.length;
-    const completed = jobs.filter(job => job.status === 'completed').length;
-    const failed = jobs.filter(job => job.status === 'failed').length;
-    const processing = jobs.filter(job => job.status === 'processing').length;
-    const pending = jobs.filter(job => job.status === 'pending').length;
+    const completed = jobs.filter((job) => job.status === 'completed').length;
+    const failed = jobs.filter((job) => job.status === 'failed').length;
+    const processing = jobs.filter((job) => job.status === 'processing').length;
+    const pending = jobs.filter((job) => job.status === 'pending').length;
 
     return {
       total,
@@ -291,7 +315,7 @@ export class BatchProcessor {
       failed,
       processing,
       pending,
-      overallProgress: total > 0 ? Math.round(((completed + failed) / total) * 100) : 0
+      overallProgress: total > 0 ? Math.round(((completed + failed) / total) * 100) : 0,
     };
   }
 

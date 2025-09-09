@@ -5,16 +5,16 @@ import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
-import { 
-  Upload, 
-  FileArchive, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  Upload,
+  FileArchive,
+  AlertCircle,
+  CheckCircle,
   X,
   Eye,
   RefreshCw,
   Image,
-  Package
+  Package,
 } from 'lucide-react';
 import { ZipProcessor, ExtractedFile, ProcessingResult } from '@/lib/bulk-import/zipProcessor';
 import { BatchProcessor, BatchJob, BatchProgress } from '@/lib/bulk-import/batchProcessor';
@@ -33,7 +33,11 @@ interface ProcessingStats {
   productsWithFiles: number;
 }
 
-export default function BulkImageProcessor({ onProcessingComplete }: { onProcessingComplete?: () => void }) {
+export default function BulkImageProcessor({
+  onProcessingComplete,
+}: {
+  onProcessingComplete?: () => void;
+}) {
   const [file, setFile] = useState<File | null>(null);
   const [processing, setProcessing] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -84,7 +88,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
       if (result.success && result.extracted.length > 0) {
         // Match files to products
         const matches = ZipProcessor.matchFilesToProducts(result.extracted, fetchedProducts || []);
-        
+
         const matchedList: MatchedFiles[] = [];
         const unmatched: ExtractedFile[] = [];
 
@@ -97,7 +101,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
               matchedList.push({
                 productSku: sku,
                 productName: product.name,
-                files
+                files,
               });
             }
           }
@@ -107,7 +111,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
         setUnmatchedFiles(unmatched);
 
         // Auto-select all products with matched files
-        setSelectedProducts(new Set(matchedList.map(m => m.productSku)));
+        setSelectedProducts(new Set(matchedList.map((m) => m.productSku)));
 
         // Calculate stats
         const stats: ProcessingStats = {
@@ -115,7 +119,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
           matchedFiles: result.extracted.length - unmatched.length,
           unmatchedFiles: unmatched.length,
           totalProducts: fetchedProducts?.length || 0,
-          productsWithFiles: matchedList.length
+          productsWithFiles: matchedList.length,
         };
         setProcessingStats(stats);
       }
@@ -125,7 +129,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
         success: false,
         extracted: [],
         errors: ['Failed to extract ZIP file'],
-        skipped: []
+        skipped: [],
       });
     } finally {
       setExtracting(false);
@@ -139,23 +143,23 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
     }
 
     setProcessing(true);
-    
+
     try {
       // Create batch jobs for selected products
       const jobs: BatchJob[] = [];
-      
-      matchedFiles.forEach(matched => {
+
+      matchedFiles.forEach((matched) => {
         if (selectedProducts.has(matched.productSku)) {
           jobs.push({
             id: `job_${matched.productSku}_${Date.now()}`,
             productSku: matched.productSku,
-            files: matched.files.map(f => ({
+            files: matched.files.map((f) => ({
               name: f.name,
               data: f.data,
-              type: f.type
+              type: f.type,
             })),
             status: 'pending',
-            progress: 0
+            progress: 0,
           });
         }
       });
@@ -172,7 +176,6 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
       if (onProcessingComplete) {
         onProcessingComplete();
       }
-
     } catch (error) {
       console.error('Processing error:', error);
       alert('Failed to process images. Please try again.');
@@ -192,7 +195,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
   };
 
   const selectAll = () => {
-    setSelectedProducts(new Set(matchedFiles.map(m => m.productSku)));
+    setSelectedProducts(new Set(matchedFiles.map((m) => m.productSku)));
   };
 
   const deselectAll = () => {
@@ -206,9 +209,10 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
         <CardBody>
           <h3 className="text-lg font-semibold mb-4">Step 1: Upload ZIP File</h3>
           <p className="text-gray-600 mb-4">
-            Upload a ZIP file containing product images. Images will be automatically matched to products by filename.
+            Upload a ZIP file containing product images. Images will be automatically matched to
+            products by filename.
           </p>
-          
+
           <div className="space-y-4">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <input
@@ -256,7 +260,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
         <Card>
           <CardBody>
             <h3 className="text-lg font-semibold mb-4">Step 2: Review Extracted Images</h3>
-            
+
             {/* Errors */}
             {extractResult.errors && extractResult.errors.length > 0 && (
               <Alert type="error" className="mb-4">
@@ -286,19 +290,27 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
                 {/* Processing Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="bg-blue-50 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-blue-600">{processingStats.totalFiles}</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {processingStats.totalFiles}
+                    </div>
                     <div className="text-sm text-blue-800">Total Images</div>
                   </div>
                   <div className="bg-green-50 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-green-600">{processingStats.matchedFiles}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {processingStats.matchedFiles}
+                    </div>
                     <div className="text-sm text-green-800">Matched</div>
                   </div>
                   <div className="bg-yellow-50 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-yellow-600">{processingStats.unmatchedFiles}</div>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {processingStats.unmatchedFiles}
+                    </div>
                     <div className="text-sm text-yellow-800">Unmatched</div>
                   </div>
                   <div className="bg-purple-50 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-purple-600">{processingStats.productsWithFiles}</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {processingStats.productsWithFiles}
+                    </div>
                     <div className="text-sm text-purple-800">Products</div>
                   </div>
                 </div>
@@ -374,8 +386,8 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
 
                 {/* Process Button */}
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={handleProcess} 
+                  <Button
+                    onClick={handleProcess}
                     disabled={processing || selectedProducts.size === 0}
                   >
                     {processing ? (
@@ -390,8 +402,8 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
                       </>
                     )}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setFile(null);
                       setExtractResult(null);
@@ -416,7 +428,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
         <Card>
           <CardBody>
             <h3 className="text-lg font-semibold mb-4">Processing Progress</h3>
-            
+
             <div className="space-y-4">
               {/* Overall Progress Bar */}
               <div>
@@ -425,7 +437,7 @@ export default function BulkImageProcessor({ onProcessingComplete }: { onProcess
                   <span>{batchProgress.overallProgress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${batchProgress.overallProgress}%` }}
                   ></div>

@@ -18,19 +18,13 @@ export interface ProcessingResult {
 export class ZipProcessor {
   private static readonly SUPPORTED_IMAGE_TYPES = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
     'image/webp',
-    'image/gif'
+    'image/gif',
   ];
 
-  private static readonly SUPPORTED_EXTENSIONS = [
-    '.jpg',
-    '.jpeg', 
-    '.png',
-    '.webp',
-    '.gif'
-  ];
+  private static readonly SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 
   private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
   private static readonly MAX_FILES = 50; // Maximum files in ZIP
@@ -40,20 +34,20 @@ export class ZipProcessor {
       success: true,
       extracted: [],
       errors: [],
-      skipped: []
+      skipped: [],
     };
 
     try {
       // Load and validate ZIP file
       const zip = await JSZip.loadAsync(zipFile);
-      
+
       const filePromises: Promise<void>[] = [];
       let fileCount = 0;
 
       // Process each file in the ZIP
       zip.forEach((relativePath, file) => {
         fileCount++;
-        
+
         // Skip if too many files
         if (fileCount > this.MAX_FILES) {
           result.skipped.push(`${relativePath}: Too many files in ZIP (max ${this.MAX_FILES})`);
@@ -76,10 +70,12 @@ export class ZipProcessor {
 
             // Get file data
             const data = await file.async('nodebuffer');
-            
+
             // Check file size
             if (data.length > this.MAX_FILE_SIZE) {
-              result.errors.push(`${relativePath}: File too large (max ${this.MAX_FILE_SIZE / 1024 / 1024}MB)`);
+              result.errors.push(
+                `${relativePath}: File too large (max ${this.MAX_FILE_SIZE / 1024 / 1024}MB)`
+              );
               return;
             }
 
@@ -96,11 +92,12 @@ export class ZipProcessor {
               originalName: relativePath,
               data,
               size: data.length,
-              type: mimeType
+              type: mimeType,
             });
-
           } catch (error) {
-            result.errors.push(`${relativePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            result.errors.push(
+              `${relativePath}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
           }
         };
 
@@ -117,10 +114,11 @@ export class ZipProcessor {
         result.errors.push('No valid image files found in ZIP');
         result.success = false;
       }
-
     } catch (error) {
       result.success = false;
-      result.errors.push(`Failed to process ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      result.errors.push(
+        `Failed to process ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
 
     return result;
@@ -134,7 +132,7 @@ export class ZipProcessor {
   private static sanitizeFilename(filename: string): string {
     // Remove directory path and keep only filename
     const name = filename.split('/').pop() || filename;
-    
+
     // Remove special characters but keep alphanumeric, dots, dashes, underscores
     return name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
   }
@@ -146,18 +144,26 @@ export class ZipProcessor {
     const bytes = buffer.subarray(0, 12);
 
     // PNG: 89 50 4E 47 0D 0A 1A 0A
-    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
       return 'image/png';
     }
 
     // JPEG: FF D8 FF
-    if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
       return 'image/jpeg';
     }
 
     // WebP: RIFF .... WEBP
-    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-        bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+    if (
+      bytes[0] === 0x52 &&
+      bytes[1] === 0x49 &&
+      bytes[2] === 0x46 &&
+      bytes[3] === 0x46 &&
+      bytes[8] === 0x57 &&
+      bytes[9] === 0x45 &&
+      bytes[10] === 0x42 &&
+      bytes[11] === 0x50
+    ) {
       return 'image/webp';
     }
 
@@ -169,23 +175,26 @@ export class ZipProcessor {
     return null;
   }
 
-  static matchFilesToProducts(files: ExtractedFile[], products: any[]): Map<string, ExtractedFile[]> {
+  static matchFilesToProducts(
+    files: ExtractedFile[],
+    products: any[]
+  ): Map<string, ExtractedFile[]> {
     const matches = new Map<string, ExtractedFile[]>();
 
     // Initialize map with product SKUs
-    products.forEach(product => {
+    products.forEach((product) => {
       matches.set(product.sku, []);
     });
 
     // Try to match files to products
-    files.forEach(file => {
+    files.forEach((file) => {
       const filename = file.name.toLowerCase();
       let matched = false;
 
       // Try exact SKU match first
       for (const product of products) {
         const sku = product.sku.toLowerCase();
-        
+
         // Check if filename contains SKU
         if (filename.includes(sku)) {
           const existing = matches.get(product.sku) || [];
@@ -201,7 +210,7 @@ export class ZipProcessor {
         for (const product of products) {
           const productName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '');
           const fileNameClean = filename.replace(/[^a-z0-9]/g, '');
-          
+
           // Check if filename contains product name (partial match)
           if (fileNameClean.includes(productName) || productName.includes(fileNameClean)) {
             const existing = matches.get(product.sku) || [];

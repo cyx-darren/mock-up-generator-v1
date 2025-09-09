@@ -147,9 +147,12 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       thumbnail_url,
       primary_image_url,
       additional_images: additional_images || existingProduct.additional_images,
-      horizontal_enabled: horizontal_enabled !== undefined ? horizontal_enabled : existingProduct.horizontal_enabled,
-      vertical_enabled: vertical_enabled !== undefined ? vertical_enabled : existingProduct.vertical_enabled,
-      all_over_enabled: all_over_enabled !== undefined ? all_over_enabled : existingProduct.all_over_enabled,
+      horizontal_enabled:
+        horizontal_enabled !== undefined ? horizontal_enabled : existingProduct.horizontal_enabled,
+      vertical_enabled:
+        vertical_enabled !== undefined ? vertical_enabled : existingProduct.vertical_enabled,
+      all_over_enabled:
+        all_over_enabled !== undefined ? all_over_enabled : existingProduct.all_over_enabled,
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     };

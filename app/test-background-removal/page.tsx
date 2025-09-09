@@ -38,7 +38,7 @@ export default function TestBackgroundRemovalPage() {
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState<string | null>(null);
-  
+
   // Quality settings
   const [qualitySettings, setQualitySettings] = useState<QualitySettings>({
     size: 'preview',
@@ -56,7 +56,7 @@ export default function TestBackgroundRemovalPage() {
       setError(null);
       setResult(null);
       setPreviewUrl(null);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setOriginalPreviewUrl(e.target?.result as string);
@@ -102,11 +102,13 @@ export default function TestBackgroundRemovalPage() {
       const originalSize = parseInt(response.headers.get('X-Original-Size') || '0');
       const processedSize = parseInt(response.headers.get('X-Processed-Size') || '0');
       const hasTransparency = response.headers.get('X-Has-Transparency') === 'true';
-      const edgeQuality = response.headers.get('X-Edge-Quality') as 'poor' | 'fair' | 'good' | 'excellent' || 'good';
+      const edgeQuality =
+        (response.headers.get('X-Edge-Quality') as 'poor' | 'fair' | 'good' | 'excellent') ||
+        'good';
 
       // Get image data
       const blob = await response.blob();
-      
+
       const processedResult: ProcessedResult = {
         data: blob,
         detectedType,
@@ -127,14 +129,13 @@ export default function TestBackgroundRemovalPage() {
       };
 
       setResult(processedResult);
-      
+
       // Create blob URL for display
       const blobUrl = URL.createObjectURL(blob);
       setPreviewUrl(blobUrl);
-      
     } catch (err) {
       console.error('Remove background error:', err);
-      
+
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -146,9 +147,9 @@ export default function TestBackgroundRemovalPage() {
   };
 
   const handleQualityChange = (key: keyof QualitySettings, value: any) => {
-    setQualitySettings(prev => ({
+    setQualitySettings((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -169,7 +170,8 @@ export default function TestBackgroundRemovalPage() {
               Enhanced Background Removal Test
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Test the enhanced background removal system with quality settings, caching, and edge refinement
+              Test the enhanced background removal system with quality settings, caching, and edge
+              refinement
             </p>
           </div>
 
@@ -180,7 +182,7 @@ export default function TestBackgroundRemovalPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Upload Image
                 </h2>
-                
+
                 <div className="space-y-4">
                   <input
                     type="file"
@@ -188,7 +190,7 @@ export default function TestBackgroundRemovalPage() {
                     onChange={handleFileSelect}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
-                  
+
                   {selectedFile && (
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
@@ -202,7 +204,7 @@ export default function TestBackgroundRemovalPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Quality Settings
                 </h2>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -243,7 +245,10 @@ export default function TestBackgroundRemovalPage() {
                       onChange={(e) => handleQualityChange('enableCache', e.target.checked)}
                       className="mr-2"
                     />
-                    <label htmlFor="enableCache" className="text-sm text-gray-700 dark:text-gray-300">
+                    <label
+                      htmlFor="enableCache"
+                      className="text-sm text-gray-700 dark:text-gray-300"
+                    >
                       Enable result caching
                     </label>
                   </div>
@@ -256,7 +261,10 @@ export default function TestBackgroundRemovalPage() {
                       onChange={(e) => handleQualityChange('edgeRefinement', e.target.checked)}
                       className="mr-2"
                     />
-                    <label htmlFor="edgeRefinement" className="text-sm text-gray-700 dark:text-gray-300">
+                    <label
+                      htmlFor="edgeRefinement"
+                      className="text-sm text-gray-700 dark:text-gray-300"
+                    >
                       Enable edge refinement
                     </label>
                   </div>
@@ -272,7 +280,9 @@ export default function TestBackgroundRemovalPage() {
                           min="0"
                           max="10"
                           value={qualitySettings.smoothing}
-                          onChange={(e) => handleQualityChange('smoothing', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleQualityChange('smoothing', parseInt(e.target.value))
+                          }
                           className="w-full"
                         />
                       </div>
@@ -285,7 +295,9 @@ export default function TestBackgroundRemovalPage() {
                           min="0"
                           max="5"
                           value={qualitySettings.feathering}
-                          onChange={(e) => handleQualityChange('feathering', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleQualityChange('feathering', parseInt(e.target.value))
+                          }
                           className="w-full"
                         />
                       </div>
@@ -309,7 +321,7 @@ export default function TestBackgroundRemovalPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Original
                 </h2>
-                
+
                 <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                   {originalPreviewUrl ? (
                     <img
@@ -318,9 +330,7 @@ export default function TestBackgroundRemovalPage() {
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
-                    <div className="text-gray-400 dark:text-gray-500">
-                      No image selected
-                    </div>
+                    <div className="text-gray-400 dark:text-gray-500">No image selected</div>
                   )}
                 </div>
               </div>
@@ -329,7 +339,7 @@ export default function TestBackgroundRemovalPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Processed
                 </h2>
-                
+
                 <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                   {previewUrl ? (
                     <img
@@ -372,11 +382,21 @@ export default function TestBackgroundRemovalPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Size Reduction:</span>
-                      <span>{result.originalSize > 0 ? ((result.originalSize - result.processedSize) / result.originalSize * 100).toFixed(1) : '0'}%</span>
+                      <span>
+                        {result.originalSize > 0
+                          ? (
+                              ((result.originalSize - result.processedSize) / result.originalSize) *
+                              100
+                            ).toFixed(1)
+                          : '0'}
+                        %
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Dimensions:</span>
-                      <span>{result.result?.width} × {result.result?.height}</span>
+                      <span>
+                        {result.result?.width} × {result.result?.height}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Credits Used:</span>
@@ -388,11 +408,17 @@ export default function TestBackgroundRemovalPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Edge Quality:</span>
-                      <span className={`capitalize ${
-                        result.metadata.edgeQuality === 'excellent' ? 'text-green-600' :
-                        result.metadata.edgeQuality === 'good' ? 'text-blue-600' :
-                        result.metadata.edgeQuality === 'fair' ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
+                      <span
+                        className={`capitalize ${
+                          result.metadata.edgeQuality === 'excellent'
+                            ? 'text-green-600'
+                            : result.metadata.edgeQuality === 'good'
+                              ? 'text-blue-600'
+                              : result.metadata.edgeQuality === 'fair'
+                                ? 'text-yellow-600'
+                                : 'text-red-600'
+                        }`}
+                      >
                         {result.metadata.edgeQuality}
                       </span>
                     </div>
@@ -405,17 +431,13 @@ export default function TestBackgroundRemovalPage() {
                   <h2 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-4">
                     Error
                   </h2>
-                  <p className="text-sm text-red-800 dark:text-red-200">
-                    {error}
-                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
                 </div>
               )}
 
               {/* Test Instructions */}
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                  Test Features
-                </h3>
+                <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Test Features</h3>
                 <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                   <p>✓ Quality settings (size, format)</p>
                   <p>✓ Result caching for faster repeat requests</p>

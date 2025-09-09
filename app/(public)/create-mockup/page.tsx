@@ -57,8 +57,8 @@ function Step({ number, title, active, completed }: StepProps) {
           completed
             ? 'bg-green-600 text-white'
             : active
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
         }`}
       >
         {completed ? '✓' : number}
@@ -75,7 +75,10 @@ function Step({ number, title, active, completed }: StepProps) {
 }
 
 // Helper function to create default constraints when missing
-function createDefaultConstraint(productId: string, placementType: 'horizontal' | 'vertical' | 'all_over'): Constraint {
+function createDefaultConstraint(
+  productId: string,
+  placementType: 'horizontal' | 'vertical' | 'all_over'
+): Constraint {
   return {
     id: `default-${placementType}-${Date.now()}`,
     gift_item_id: productId,
@@ -88,7 +91,7 @@ function createDefaultConstraint(productId: string, placementType: 'horizontal' 
     min_logo_height: 50,
     max_logo_height: 300,
     guidelines: `Default ${placementType} placement with centered positioning`,
-    is_active: true
+    is_active: true,
   };
 }
 
@@ -102,12 +105,14 @@ function CreateMockupContent() {
   const [currentStep, setCurrentStep] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [constraints, setConstraints] = useState<Constraint[]>([]);
-  const [selectedPlacement, setSelectedPlacement] = useState<'horizontal' | 'vertical' | 'all_over'>('horizontal');
+  const [selectedPlacement, setSelectedPlacement] = useState<
+    'horizontal' | 'vertical' | 'all_over'
+  >('horizontal');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [processedLogo, setProcessedLogo] = useState<string | null>(null);
   const [generatedMockup, setGeneratedMockup] = useState<string | null>(null);
   const [downloadFormats, setDownloadFormats] = useState<{ [key: string]: string }>({});
-  
+
   // Loading and error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -137,10 +142,10 @@ function CreateMockupContent() {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch product via API route
         const response = await fetch(`/api/products/${productId}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('Product not found');
@@ -150,14 +155,14 @@ function CreateMockupContent() {
         }
 
         const data = await response.json();
-        
+
         if (!data.product) {
           throw new Error('Product data not found');
         }
 
         setProduct(data.product);
         setConstraints(data.constraints || []);
-        
+
         // Set default placement based on what's available
         if (data.product.horizontal_enabled) {
           setSelectedPlacement('horizontal');
@@ -222,7 +227,7 @@ function CreateMockupContent() {
       }
 
       const result = await response.json();
-      
+
       if (!result.success || !result.processedImage) {
         throw new Error('Invalid response from background removal service');
       }
@@ -245,9 +250,9 @@ function CreateMockupContent() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Find selected constraint or create a default one
-      let constraint = constraints.find(c => c.placement_type === selectedPlacement);
+      let constraint = constraints.find((c) => c.placement_type === selectedPlacement);
       if (!constraint) {
         // Create default constraint for missing placement type
         constraint = createDefaultConstraint(product.id, selectedPlacement);
@@ -259,7 +264,7 @@ function CreateMockupContent() {
         productId: product.id,
         logoHash: processedLogo,
         placementType: selectedPlacement,
-        constraintVersion: constraint.id
+        constraintVersion: constraint.id,
       });
 
       const cachedResult = await cache.get(cacheKey);
@@ -272,7 +277,7 @@ function CreateMockupContent() {
 
       // Generate mockup via API
       setProgress('Preparing your mockup...');
-      
+
       const apiResponse = await fetch('/api/generate-mockup', {
         method: 'POST',
         headers: {
@@ -284,16 +289,16 @@ function CreateMockupContent() {
             processedImageUrl: processedLogo,
             originalDimensions: { width: 200, height: 100 },
             format: 'png',
-            hasTransparency: true
+            hasTransparency: true,
           },
           product: {
             id: product.id,
             name: product.name,
             imageUrl: product.primary_image_url || '',
-            category: product.category
+            category: product.category,
           },
-          placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement
-        })
+          placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
+        }),
       });
 
       if (!apiResponse.ok) {
@@ -314,16 +319,15 @@ function CreateMockupContent() {
         metadata: {
           productId: product.id,
           placement: selectedPlacement,
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
 
       setGeneratedMockup(result.generatedImageUrl);
       setCurrentStep(4);
-      
+
       // Generate download formats
       await generateDownloadFormats(result.generatedImageUrl);
-      
     } catch (err) {
       console.error('Error generating mockup:', err);
       setError('Failed to generate mockup. Please try again.');
@@ -339,7 +343,7 @@ function CreateMockupContent() {
 
     try {
       setProgress('Preparing download formats...');
-      
+
       // Load image
       const img = new Image();
       await new Promise((resolve, reject) => {
@@ -354,31 +358,31 @@ function CreateMockupContent() {
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Failed to get canvas context');
-      
+
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
       // Generate formats
       const formats: { [key: string]: string } = {};
-      
+
       // PNG
       const pngResult = await converter.convertFormat(imageData, {
         format: 'png',
-        quality: 100
+        quality: 100,
       });
       formats.png = pngResult.dataUrl;
 
       // JPEG
       const jpegResult = await converter.convertFormat(imageData, {
         format: 'jpeg',
-        quality: 90
+        quality: 90,
       });
       formats.jpeg = jpegResult.dataUrl;
 
       // WebP
       const webpResult = await converter.convertFormat(imageData, {
         format: 'webp',
-        quality: 90
+        quality: 90,
       });
       formats.webp = webpResult.dataUrl;
 
@@ -416,9 +420,7 @@ function CreateMockupContent() {
   if (!product && !loading) {
     return (
       <Container className="py-12">
-        <Alert variant="error">
-          Product not found. Redirecting to catalog...
-        </Alert>
+        <Alert variant="error">Product not found. Redirecting to catalog...</Alert>
       </Container>
     );
   }
@@ -432,13 +434,39 @@ function CreateMockupContent() {
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-12 max-w-3xl mx-auto">
-          <Step number={1} title="Product Selected" active={currentStep >= 1} completed={currentStep > 1} />
-          <div className={`flex-1 h-1 mx-2 ${currentStep > 1 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`} />
-          <Step number={2} title="Upload Logo" active={currentStep >= 2} completed={currentStep > 2} />
-          <div className={`flex-1 h-1 mx-2 ${currentStep > 2 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`} />
-          <Step number={3} title="Select Placement" active={currentStep >= 3} completed={currentStep > 3} />
-          <div className={`flex-1 h-1 mx-2 ${currentStep > 3 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`} />
-          <Step number={4} title="Download Mockup" active={currentStep >= 4} completed={currentStep > 4} />
+          <Step
+            number={1}
+            title="Product Selected"
+            active={currentStep >= 1}
+            completed={currentStep > 1}
+          />
+          <div
+            className={`flex-1 h-1 mx-2 ${currentStep > 1 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+          />
+          <Step
+            number={2}
+            title="Upload Logo"
+            active={currentStep >= 2}
+            completed={currentStep > 2}
+          />
+          <div
+            className={`flex-1 h-1 mx-2 ${currentStep > 2 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+          />
+          <Step
+            number={3}
+            title="Select Placement"
+            active={currentStep >= 3}
+            completed={currentStep > 3}
+          />
+          <div
+            className={`flex-1 h-1 mx-2 ${currentStep > 3 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+          />
+          <Step
+            number={4}
+            title="Download Mockup"
+            active={currentStep >= 4}
+            completed={currentStep > 4}
+          />
         </div>
 
         {error && (
@@ -482,9 +510,7 @@ function CreateMockupContent() {
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       {product.name}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {product.description}
-                    </p>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">{product.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">SKU: {product.sku}</span>
                       <span className="text-lg font-semibold text-blue-600">${product.price}</span>
@@ -531,19 +557,12 @@ function CreateMockupContent() {
                         className="hidden"
                         id="logo-upload"
                       />
-                      <label
-                        htmlFor="logo-upload"
-                        className="cursor-pointer block"
-                      >
+                      <label htmlFor="logo-upload" className="cursor-pointer block">
                         {uploadedFile ? (
                           <div>
                             <div className="text-green-600 mb-2">✓</div>
-                            <p className="text-gray-900 dark:text-gray-100">
-                              {uploadedFile.name}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Click to change file
-                            </p>
+                            <p className="text-gray-900 dark:text-gray-100">{uploadedFile.name}</p>
+                            <p className="text-sm text-gray-500 mt-2">Click to change file</p>
                           </div>
                         ) : (
                           <div>
@@ -560,11 +579,7 @@ function CreateMockupContent() {
                     </div>
 
                     {uploadedFile && (
-                      <Button
-                        onClick={processLogo}
-                        disabled={loading}
-                        className="w-full"
-                      >
+                      <Button onClick={processLogo} disabled={loading} className="w-full">
                         {loading ? 'Processing...' : 'Process Logo'}
                       </Button>
                     )}
@@ -600,7 +615,7 @@ function CreateMockupContent() {
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Choose Logo Placement:
                       </p>
-                      
+
                       {product?.horizontal_enabled && (
                         <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
                           <input
@@ -613,7 +628,9 @@ function CreateMockupContent() {
                           />
                           <div>
                             <span className="font-medium">Horizontal Placement</span>
-                            <p className="text-sm text-gray-500">Logo placed horizontally on the product</p>
+                            <p className="text-sm text-gray-500">
+                              Logo placed horizontally on the product
+                            </p>
                           </div>
                         </label>
                       )}
@@ -630,7 +647,9 @@ function CreateMockupContent() {
                           />
                           <div>
                             <span className="font-medium">Vertical Placement</span>
-                            <p className="text-sm text-gray-500">Logo placed vertically on the product</p>
+                            <p className="text-sm text-gray-500">
+                              Logo placed vertically on the product
+                            </p>
                           </div>
                         </label>
                       )}
@@ -653,11 +672,7 @@ function CreateMockupContent() {
                       )}
                     </div>
 
-                    <Button
-                      onClick={generateMockup}
-                      disabled={loading}
-                      className="w-full"
-                    >
+                    <Button onClick={generateMockup} disabled={loading} className="w-full">
                       {loading ? 'Generating...' : 'Generate Mockup'}
                     </Button>
                   </div>
@@ -716,11 +731,7 @@ function CreateMockupContent() {
                     </div>
 
                     <div className="pt-4 border-t">
-                      <Button
-                        onClick={startOver}
-                        variant="secondary"
-                        className="w-full"
-                      >
+                      <Button onClick={startOver} variant="secondary" className="w-full">
                         Create Another Mockup
                       </Button>
                     </div>

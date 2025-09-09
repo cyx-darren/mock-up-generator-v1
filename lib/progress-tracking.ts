@@ -3,13 +3,13 @@
  * Real-time progress tracking with WebSocket updates and ETA calculation
  */
 
-export type ProgressState = 
-  | 'initializing' 
-  | 'preparing' 
-  | 'processing' 
-  | 'finalizing' 
-  | 'completed' 
-  | 'failed' 
+export type ProgressState =
+  | 'initializing'
+  | 'preparing'
+  | 'processing'
+  | 'finalizing'
+  | 'completed'
+  | 'failed'
   | 'cancelled';
 
 export interface ProgressUpdate {
@@ -71,7 +71,7 @@ export class ProgressTracker {
   constructor(options: { persistenceEnabled?: boolean } = {}) {
     this.persistenceEnabled = options.persistenceEnabled ?? true;
     this.etaCalculator = new ETACalculator();
-    
+
     if (this.persistenceEnabled) {
       this.loadPersistedSessions();
     }
@@ -90,18 +90,18 @@ export class ProgressTracker {
       isPaused: false,
       pausedDuration: 0,
       resumeCapability,
-      checkpoints: new Map()
+      checkpoints: new Map(),
     };
 
     this.sessions.set(jobId, session);
-    
+
     // Send initial update
     this.updateProgress(jobId, {
       state: 'initializing',
       currentStep: 0,
       totalSteps,
       percentage: 0,
-      message: 'Progress tracking initialized'
+      message: 'Progress tracking initialized',
     });
 
     if (this.persistenceEnabled) {
@@ -147,7 +147,7 @@ export class ProgressTracker {
       details: update.details,
       eta,
       performance: this.calculatePerformance(session),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     // Update session
@@ -156,7 +156,7 @@ export class ProgressTracker {
       session.currentState = update.state;
       this.notifyStateChange(jobId, oldState, update.state);
     }
-    
+
     session.history.push(fullUpdate);
 
     // Notify callbacks
@@ -196,10 +196,12 @@ export class ProgressTracker {
     const session = this.sessions.get(jobId);
     if (session && session.history.length > 0) {
       const latestUpdate = session.history[session.history.length - 1];
-      ws.send(JSON.stringify({
-        type: 'progress',
-        data: latestUpdate
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'progress',
+          data: latestUpdate,
+        })
+      );
     }
   }
 
@@ -228,20 +230,19 @@ export class ProgressTracker {
 
     // Store checkpoint if resume capability is enabled
     if (session.resumeCapability) {
-      const currentStep = session.history.length > 0 
-        ? session.history[session.history.length - 1].currentStep 
-        : 0;
-      
+      const currentStep =
+        session.history.length > 0 ? session.history[session.history.length - 1].currentStep : 0;
+
       session.checkpoints.set(currentStep, {
         timestamp: pauseStart,
         state: session.currentState,
-        history: [...session.history]
+        history: [...session.history],
       });
     }
 
     this.updateProgress(jobId, {
       state: session.currentState,
-      message: 'Progress paused'
+      message: 'Progress paused',
     });
 
     return true;
@@ -255,16 +256,17 @@ export class ProgressTracker {
     if (!session || !session.isPaused) return false;
 
     const pauseEnd = Date.now();
-    const lastPauseStart = session.history.length > 0
-      ? session.history[session.history.length - 1].timestamp.getTime()
-      : session.startTime.getTime();
+    const lastPauseStart =
+      session.history.length > 0
+        ? session.history[session.history.length - 1].timestamp.getTime()
+        : session.startTime.getTime();
 
     session.pausedDuration += pauseEnd - lastPauseStart;
     session.isPaused = false;
 
     this.updateProgress(jobId, {
       state: session.currentState,
-      message: 'Progress resumed'
+      message: 'Progress resumed',
     });
 
     return true;
@@ -282,7 +284,7 @@ export class ProgressTracker {
    */
   getActiveSessions(): ProgressSession[] {
     return Array.from(this.sessions.values()).filter(
-      session => !['completed', 'failed', 'cancelled'].includes(session.currentState)
+      (session) => !['completed', 'failed', 'cancelled'].includes(session.currentState)
     );
   }
 
@@ -311,7 +313,7 @@ export class ProgressTracker {
     this.sessions.delete(jobId);
     this.callbacks.delete(jobId);
     this.websocketConnections.delete(jobId);
-    
+
     if (this.persistenceEnabled) {
       this.removePersistedSession(jobId);
     }
@@ -340,10 +342,10 @@ export class ProgressTracker {
 
     const message = JSON.stringify({
       type: 'progress',
-      data: update
+      data: update,
     });
 
-    connections.forEach(ws => {
+    connections.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(message);
       }
@@ -356,7 +358,7 @@ export class ProgressTracker {
       return {
         stepDuration: 0,
         averageStepTime: 0,
-        throughput: 0
+        throughput: 0,
       };
     }
 
@@ -368,7 +370,7 @@ export class ProgressTracker {
     return {
       stepDuration: latestStepDuration,
       averageStepTime,
-      throughput
+      throughput,
     };
   }
 
@@ -378,7 +380,7 @@ export class ProgressTracker {
       const data = {
         ...session,
         stepTimings: Array.from(session.stepTimings.entries()),
-        checkpoints: Array.from(session.checkpoints.entries())
+        checkpoints: Array.from(session.checkpoints.entries()),
       };
       localStorage.setItem(key, JSON.stringify(data));
     }
@@ -386,8 +388,8 @@ export class ProgressTracker {
 
   private loadPersistedSessions(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const keys = Object.keys(localStorage).filter(k => k.startsWith('progress_'));
-      keys.forEach(key => {
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith('progress_'));
+      keys.forEach((key) => {
         try {
           const data = JSON.parse(localStorage.getItem(key) || '{}');
           if (data.jobId) {
@@ -399,8 +401,8 @@ export class ProgressTracker {
               checkpoints: new Map(data.checkpoints || []),
               history: data.history.map((h: any) => ({
                 ...h,
-                timestamp: new Date(h.timestamp)
-              }))
+                timestamp: new Date(h.timestamp),
+              })),
             };
             this.sessions.set(data.jobId, session);
           }
@@ -423,8 +425,8 @@ export class ProgressTracker {
  */
 class ETACalculator {
   calculate(
-    session: ProgressSession, 
-    currentStep: number, 
+    session: ProgressSession,
+    currentStep: number,
     totalSteps: number
   ): ProgressUpdate['eta'] | undefined {
     if (currentStep === 0 || totalSteps === 0) {
@@ -443,20 +445,20 @@ class ETACalculator {
 
     // Calculate confidence based on variance
     const variance = this.calculateVariance(timings);
-    const confidence = Math.max(0, Math.min(1, 1 - (variance / averageStepTime)));
+    const confidence = Math.max(0, Math.min(1, 1 - variance / averageStepTime));
 
     return {
       estimatedTimeRemaining,
       estimatedCompletionTime: new Date(Date.now() + estimatedTimeRemaining),
-      confidence
+      confidence,
     };
   }
 
   private calculateVariance(values: number[]): number {
     if (values.length === 0) return 0;
-    
+
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const squaredDifferences = values.map(v => Math.pow(v - mean, 2));
+    const squaredDifferences = values.map((v) => Math.pow(v - mean, 2));
     return Math.sqrt(squaredDifferences.reduce((a, b) => a + b, 0) / values.length);
   }
 }

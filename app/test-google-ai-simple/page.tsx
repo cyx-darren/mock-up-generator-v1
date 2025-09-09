@@ -9,7 +9,7 @@ export default function TestGoogleAISimplePage() {
   const [isChecking, setIsChecking] = useState(false);
   const [connectionMessage, setConnectionMessage] = useState('');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
-  
+
   // Generation states
   const [prompt, setPrompt] = useState('Explain how AI works in simple terms');
   const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
@@ -28,7 +28,7 @@ export default function TestGoogleAISimplePage() {
   const checkConnection = useCallback(async () => {
     setIsChecking(true);
     setError(null);
-    
+
     try {
       const result = await client.checkConnection();
       setIsConnected(result.connected);
@@ -50,13 +50,13 @@ export default function TestGoogleAISimplePage() {
     setError(null);
     setResponse('');
     setTokensUsed(null);
-    
+
     try {
       const result = await client.generateContent({
         prompt,
         model: selectedModel,
       });
-      
+
       setResponse(result.text);
       setTokensUsed(result.tokensUsed || null);
     } catch (err: any) {
@@ -70,15 +70,15 @@ export default function TestGoogleAISimplePage() {
     setIsStreaming(true);
     setError(null);
     setStreamResponse('');
-    
+
     try {
       const stream = client.generateContentStream({
         prompt,
         model: selectedModel,
       });
-      
+
       for await (const chunk of stream) {
-        setStreamResponse(prev => prev + chunk);
+        setStreamResponse((prev) => prev + chunk);
       }
     } catch (err: any) {
       setError(err.message);
@@ -100,18 +100,20 @@ export default function TestGoogleAISimplePage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Google AI API Test (Simple)</h1>
-        
+
         {/* Connection Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
           <h2 className="text-xl font-semibold mb-4">API Connection Status</h2>
-          
+
           <div className="flex items-center gap-4 mb-4">
-            <div className={`w-4 h-4 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+            <div
+              className={`w-4 h-4 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}
+            />
             <span className="font-medium">
               {isChecking ? 'Checking...' : connectionMessage || 'Not checked'}
             </span>
           </div>
-          
+
           <button
             onClick={checkConnection}
             disabled={isChecking}
@@ -119,12 +121,12 @@ export default function TestGoogleAISimplePage() {
           >
             {isChecking ? 'Checking...' : 'Check Connection'}
           </button>
-          
+
           {availableModels.length > 0 && (
             <div className="mt-4">
               <label className="block text-sm font-medium mb-2">Available Models:</label>
               <div className="flex flex-wrap gap-2">
-                {availableModels.map(model => (
+                {availableModels.map((model) => (
                   <span key={model} className="px-2 py-1 bg-gray-100 rounded text-sm">
                     {model}
                   </span>
@@ -137,7 +139,7 @@ export default function TestGoogleAISimplePage() {
         {/* Content Generation */}
         <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
           <h2 className="text-xl font-semibold mb-4">Generate Content</h2>
-          
+
           {/* Model Selection */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Model</label>
@@ -151,7 +153,7 @@ export default function TestGoogleAISimplePage() {
               <option value="gemini-1.0-pro">Gemini 1.0 Pro</option>
             </select>
           </div>
-          
+
           {/* Prompt Input */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Prompt</label>
@@ -162,7 +164,7 @@ export default function TestGoogleAISimplePage() {
               placeholder="Enter your prompt here..."
             />
           </div>
-          
+
           {/* Quick Prompts */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Quick Prompts:</label>
@@ -178,7 +180,7 @@ export default function TestGoogleAISimplePage() {
               ))}
             </div>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex gap-2 mb-4">
             <button
@@ -188,7 +190,7 @@ export default function TestGoogleAISimplePage() {
             >
               {isGenerating ? 'Generating...' : 'Generate'}
             </button>
-            
+
             <button
               onClick={generateContentStream}
               disabled={!isConnected || isStreaming || !prompt}
@@ -196,7 +198,7 @@ export default function TestGoogleAISimplePage() {
             >
               {isStreaming ? 'Streaming...' : 'Stream Generate'}
             </button>
-            
+
             <button
               onClick={() => {
                 setResponse('');
@@ -209,29 +211,25 @@ export default function TestGoogleAISimplePage() {
               Clear
             </button>
           </div>
-          
+
           {/* Error Display */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 text-red-700 rounded">
               <strong>Error:</strong> {error}
             </div>
           )}
-          
+
           {/* Regular Response */}
           {response && (
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-medium">Response:</h3>
-                {tokensUsed && (
-                  <span className="text-sm text-gray-600">Tokens: {tokensUsed}</span>
-                )}
+                {tokensUsed && <span className="text-sm text-gray-600">Tokens: {tokensUsed}</span>}
               </div>
-              <div className="p-4 bg-green-50 rounded whitespace-pre-wrap">
-                {response}
-              </div>
+              <div className="p-4 bg-green-50 rounded whitespace-pre-wrap">{response}</div>
             </div>
           )}
-          
+
           {/* Streaming Response */}
           {streamResponse && (
             <div className="mb-4">
@@ -247,7 +245,7 @@ export default function TestGoogleAISimplePage() {
         {/* Task 5.1.1 Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold mb-4">Task 5.1.1 Implementation Status</h2>
-          
+
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
@@ -255,67 +253,84 @@ export default function TestGoogleAISimplePage() {
               </div>
               <span>Google AI Studio API key configured</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>API credentials set in environment variables</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>@google/generative-ai SDK installed</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Server-side API route created for secure access</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Client library with authentication implemented</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Rate limiting configured in client wrapper</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Usage monitoring and metrics tracking added</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'} flex items-center justify-center`}>
+              <div
+                className={`w-5 h-5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'} flex items-center justify-center`}
+              >
                 <span className="text-white text-xs">{isConnected ? '✓' : '?'}</span>
               </div>
               <span>API connection verified and working</span>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-blue-50 rounded">
             <h3 className="font-semibold mb-2">Implementation Details:</h3>
             <ul className="text-sm space-y-1">
-              <li>• <strong>API Key:</strong> AIzaSyBt_OVSeCBmnDbW0eJKpW9t5R4cD3NPDwA (configured)</li>
-              <li>• <strong>Default Model:</strong> gemini-1.5-flash (fast, efficient)</li>
-              <li>• <strong>Server Route:</strong> /api/google-ai (POST for generation, GET for status)</li>
-              <li>• <strong>Client Library:</strong> /lib/google-ai-client.ts (full featured)</li>
-              <li>• <strong>API Client:</strong> /lib/google-ai-api-client.ts (simple wrapper)</li>
-              <li>• <strong>Rate Limits:</strong> 60 req/min, 1000 req/hour, 10000 req/day</li>
-              <li>• <strong>Safety:</strong> Content filtering enabled for all harmful categories</li>
+              <li>
+                • <strong>API Key:</strong> AIzaSyBt_OVSeCBmnDbW0eJKpW9t5R4cD3NPDwA (configured)
+              </li>
+              <li>
+                • <strong>Default Model:</strong> gemini-1.5-flash (fast, efficient)
+              </li>
+              <li>
+                • <strong>Server Route:</strong> /api/google-ai (POST for generation, GET for
+                status)
+              </li>
+              <li>
+                • <strong>Client Library:</strong> /lib/google-ai-client.ts (full featured)
+              </li>
+              <li>
+                • <strong>API Client:</strong> /lib/google-ai-api-client.ts (simple wrapper)
+              </li>
+              <li>
+                • <strong>Rate Limits:</strong> 60 req/min, 1000 req/hour, 10000 req/day
+              </li>
+              <li>
+                • <strong>Safety:</strong> Content filtering enabled for all harmful categories
+              </li>
             </ul>
           </div>
         </div>

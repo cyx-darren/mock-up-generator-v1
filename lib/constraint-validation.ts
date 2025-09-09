@@ -89,25 +89,25 @@ export const DEFAULT_CONSTRAINT_REQUIREMENTS: ConstraintRequirements = {
   position: {
     allowedRegions: 'anywhere',
     marginFromEdges: 20,
-    centerBias: 0.3
+    centerBias: 0.3,
   },
   contiguity: {
     requireSingleRegion: false,
     maxDisconnectedRegions: 3,
-    minMainRegionRatio: 0.7
+    minMainRegionRatio: 0.7,
   },
   geometry: {
     minWidth: 20,
     minHeight: 20,
     maxEccentricity: 0.95,
-    minConvexity: 0.4
+    minConvexity: 0.4,
   },
   logoPlacement: {
     minLogoSize: 50,
     maxLogoSize: 1000,
     allowedScaling: { min: 0.1, max: 2.0 },
-    paddingFromEdges: 10
-  }
+    paddingFromEdges: 10,
+  },
 };
 
 /**
@@ -136,7 +136,7 @@ export class ConstraintValidationService {
     }
 
     // Find main contour (largest area)
-    const mainContour = mask.contours.reduce((largest, current) => 
+    const mainContour = mask.contours.reduce((largest, current) =>
       current.area > largest.area ? current : largest
     );
 
@@ -156,8 +156,8 @@ export class ConstraintValidationService {
 
     // Calculate overall confidence
     const confidence = this.calculateConfidence(issues, metrics);
-    const isValid = !issues.some(issue => issue.severity.blocking);
-    const isUsable = issues.filter(issue => issue.severity.level === 'error').length === 0;
+    const isValid = !issues.some((issue) => issue.severity.blocking);
+    const isUsable = issues.filter((issue) => issue.severity.level === 'error').length === 0;
 
     return {
       isValid,
@@ -166,7 +166,7 @@ export class ConstraintValidationService {
       issues,
       recommendations,
       metrics,
-      placementZones
+      placementZones,
     };
   }
 
@@ -174,9 +174,9 @@ export class ConstraintValidationService {
    * Calculates comprehensive metrics for the constraint
    */
   private calculateMetrics(
-    mask: GeneratedMask, 
-    mainContour: Contour, 
-    imageWidth: number, 
+    mask: GeneratedMask,
+    mainContour: Contour,
+    imageWidth: number,
     imageHeight: number
   ): ConstraintValidationResult['metrics'] {
     const { boundingRect } = mainContour;
@@ -193,7 +193,7 @@ export class ConstraintValidationService {
     const imageCenter = { x: imageWidth / 2, y: imageHeight / 2 };
     const centerDistance = Math.sqrt(
       Math.pow(mainContour.centroid.x - imageCenter.x, 2) +
-      Math.pow(mainContour.centroid.y - imageCenter.y, 2)
+        Math.pow(mainContour.centroid.y - imageCenter.y, 2)
     );
 
     // Calculate minimum distance to image edges
@@ -205,11 +205,19 @@ export class ConstraintValidationService {
     );
 
     // Estimate logo capacity
-    const availableWidth = boundingRect.width - (this.requirements.logoPlacement.paddingFromEdges * 2);
-    const availableHeight = boundingRect.height - (this.requirements.logoPlacement.paddingFromEdges * 2);
+    const availableWidth =
+      boundingRect.width - this.requirements.logoPlacement.paddingFromEdges * 2;
+    const availableHeight =
+      boundingRect.height - this.requirements.logoPlacement.paddingFromEdges * 2;
     const logoCapacity = {
-      min: Math.max(this.requirements.logoPlacement.minLogoSize, Math.min(availableWidth, availableHeight) * 0.3),
-      max: Math.min(this.requirements.logoPlacement.maxLogoSize, Math.max(availableWidth, availableHeight) * 0.8)
+      min: Math.max(
+        this.requirements.logoPlacement.minLogoSize,
+        Math.min(availableWidth, availableHeight) * 0.3
+      ),
+      max: Math.min(
+        this.requirements.logoPlacement.maxLogoSize,
+        Math.max(availableWidth, availableHeight) * 0.8
+      ),
     };
 
     return {
@@ -219,7 +227,7 @@ export class ConstraintValidationService {
       convexity,
       centerDistance,
       edgeDistance,
-      logoCapacity
+      logoCapacity,
     };
   }
 
@@ -239,7 +247,7 @@ export class ConstraintValidationService {
         measuredValue: contour.area,
         requiredValue: minArea,
         category: 'area',
-        affectedArea: contour.boundingRect
+        affectedArea: contour.boundingRect,
       });
     } else if (contour.area > maxArea) {
       issues.push({
@@ -251,7 +259,7 @@ export class ConstraintValidationService {
         measuredValue: contour.area,
         requiredValue: maxArea,
         category: 'area',
-        affectedArea: contour.boundingRect
+        affectedArea: contour.boundingRect,
       });
     }
   }
@@ -260,9 +268,10 @@ export class ConstraintValidationService {
    * Validates aspect ratio requirements
    */
   private checkAspectRatio(contour: Contour, issues: ValidationIssue[]): void {
-    const aspectRatio = contour.boundingRect.height > 0 
-      ? contour.boundingRect.width / contour.boundingRect.height 
-      : 0;
+    const aspectRatio =
+      contour.boundingRect.height > 0
+        ? contour.boundingRect.width / contour.boundingRect.height
+        : 0;
 
     const { min, max } = this.requirements.aspectRatio;
 
@@ -276,7 +285,7 @@ export class ConstraintValidationService {
         measuredValue: aspectRatio,
         requiredValue: min,
         category: 'aspect',
-        affectedArea: contour.boundingRect
+        affectedArea: contour.boundingRect,
       });
     } else if (aspectRatio > max) {
       issues.push({
@@ -288,7 +297,7 @@ export class ConstraintValidationService {
         measuredValue: aspectRatio,
         requiredValue: max,
         category: 'aspect',
-        affectedArea: contour.boundingRect
+        affectedArea: contour.boundingRect,
       });
     }
   }
@@ -297,11 +306,12 @@ export class ConstraintValidationService {
    * Validates contiguity requirements (single vs multiple regions)
    */
   private checkContiguity(
-    contours: Contour[], 
-    issues: ValidationIssue[], 
+    contours: Contour[],
+    issues: ValidationIssue[],
     recommendations: string[]
   ): void {
-    const { requireSingleRegion, maxDisconnectedRegions, minMainRegionRatio } = this.requirements.contiguity;
+    const { requireSingleRegion, maxDisconnectedRegions, minMainRegionRatio } =
+      this.requirements.contiguity;
 
     if (contours.length === 0) return;
 
@@ -312,7 +322,7 @@ export class ConstraintValidationService {
         title: 'Multiple disconnected regions detected',
         description: `Found ${contours.length} separate regions, but only single region is allowed`,
         suggestion: 'Use hole filling or increase color tolerance to connect regions',
-        category: 'contiguity'
+        category: 'contiguity',
       });
     } else if (contours.length > maxDisconnectedRegions) {
       issues.push({
@@ -321,7 +331,7 @@ export class ConstraintValidationService {
         title: 'Too many disconnected regions',
         description: `Found ${contours.length} regions, maximum recommended is ${maxDisconnectedRegions}`,
         suggestion: 'Consider region merging or use the largest region only',
-        category: 'contiguity'
+        category: 'contiguity',
       });
     }
 
@@ -339,7 +349,7 @@ export class ConstraintValidationService {
           suggestion: 'Consider using only the largest region or improve region connectivity',
           measuredValue: mainRatio,
           requiredValue: minMainRegionRatio,
-          category: 'contiguity'
+          category: 'contiguity',
         });
 
         recommendations.push('Consider enabling hole filling to connect nearby regions');
@@ -352,8 +362,8 @@ export class ConstraintValidationService {
    * Checks distance from image edges
    */
   private checkEdgeDistances(
-    contour: Contour, 
-    imageWidth: number, 
+    contour: Contour,
+    imageWidth: number,
     imageHeight: number,
     issues: ValidationIssue[],
     recommendations: string[]
@@ -365,14 +375,14 @@ export class ConstraintValidationService {
       left: boundingRect.x,
       top: boundingRect.y,
       right: imageWidth - (boundingRect.x + boundingRect.width),
-      bottom: imageHeight - (boundingRect.y + boundingRect.height)
+      bottom: imageHeight - (boundingRect.y + boundingRect.height),
     };
 
     const minDistance = Math.min(...Object.values(distances));
 
     if (minDistance < marginFromEdges) {
       const closestEdge = Object.keys(distances).find(
-        edge => distances[edge as keyof typeof distances] === minDistance
+        (edge) => distances[edge as keyof typeof distances] === minDistance
       );
 
       issues.push({
@@ -384,10 +394,12 @@ export class ConstraintValidationService {
         measuredValue: minDistance,
         requiredValue: marginFromEdges,
         category: 'position',
-        affectedArea: boundingRect
+        affectedArea: boundingRect,
       });
 
-      recommendations.push(`Add more padding around the constraint area (especially on ${closestEdge} side)`);
+      recommendations.push(
+        `Add more padding around the constraint area (especially on ${closestEdge} side)`
+      );
     }
 
     // Check for edge-hugging (constraint extends to very edge)
@@ -400,7 +412,7 @@ export class ConstraintValidationService {
           title: `Constraint extends to ${edge} edge`,
           description: `Very close to ${edge} edge (${distance}px), may limit logo placement options`,
           suggestion: 'Consider leaving more space for visual breathing room',
-          category: 'position'
+          category: 'position',
         });
       }
     });
@@ -421,12 +433,9 @@ export class ConstraintValidationService {
 
     const imageCenter = { x: imageWidth / 2, y: imageHeight / 2 };
     const centerDistance = Math.sqrt(
-      Math.pow(centroid.x - imageCenter.x, 2) +
-      Math.pow(centroid.y - imageCenter.y, 2)
+      Math.pow(centroid.x - imageCenter.x, 2) + Math.pow(centroid.y - imageCenter.y, 2)
     );
-    const maxCenterDistance = Math.sqrt(
-      Math.pow(imageWidth / 2, 2) + Math.pow(imageHeight / 2, 2)
-    );
+    const maxCenterDistance = Math.sqrt(Math.pow(imageWidth / 2, 2) + Math.pow(imageHeight / 2, 2));
     const centerDistanceRatio = centerDistance / maxCenterDistance;
 
     // Check position preferences
@@ -438,16 +447,20 @@ export class ConstraintValidationService {
         description: `Constraint center is ${Math.round(centerDistance)}px from image center`,
         suggestion: 'Move constraint closer to image center for better visual balance',
         category: 'position',
-        affectedArea: boundingRect
+        affectedArea: boundingRect,
       });
     }
 
     // Check if constraint allows reasonable logo sizes
-    const availableWidth = boundingRect.width - (this.requirements.logoPlacement.paddingFromEdges * 2);
-    const availableHeight = boundingRect.height - (this.requirements.logoPlacement.paddingFromEdges * 2);
+    const availableWidth =
+      boundingRect.width - this.requirements.logoPlacement.paddingFromEdges * 2;
+    const availableHeight =
+      boundingRect.height - this.requirements.logoPlacement.paddingFromEdges * 2;
 
-    if (availableWidth < this.requirements.logoPlacement.minLogoSize || 
-        availableHeight < this.requirements.logoPlacement.minLogoSize) {
+    if (
+      availableWidth < this.requirements.logoPlacement.minLogoSize ||
+      availableHeight < this.requirements.logoPlacement.minLogoSize
+    ) {
       issues.push({
         id: 'insufficient_logo_space',
         severity: { level: 'error', blocking: true, priority: 9 },
@@ -455,15 +468,19 @@ export class ConstraintValidationService {
         description: `Available space is ${availableWidth}×${availableHeight}px, minimum logo needs ${this.requirements.logoPlacement.minLogoSize}×${this.requirements.logoPlacement.minLogoSize}px`,
         suggestion: 'Increase constraint area or reduce padding requirements',
         category: 'placement',
-        affectedArea: boundingRect
+        affectedArea: boundingRect,
       });
     }
 
     // Provide positioning recommendations based on center bias
     if (centerBias > 0.5 && centerDistanceRatio > 0.4) {
-      recommendations.push('Consider repositioning constraint closer to center for better visual impact');
+      recommendations.push(
+        'Consider repositioning constraint closer to center for better visual impact'
+      );
     } else if (centerBias < 0.3 && centerDistanceRatio < 0.2) {
-      recommendations.push('Constraint is very centered - consider off-center placement for dynamic composition');
+      recommendations.push(
+        'Constraint is very centered - consider off-center placement for dynamic composition'
+      );
     }
   }
 
@@ -488,7 +505,7 @@ export class ConstraintValidationService {
         suggestion: 'Increase constraint width for better logo placement',
         measuredValue: boundingRect.width,
         requiredValue: minWidth,
-        category: 'geometry'
+        category: 'geometry',
       });
     }
 
@@ -501,7 +518,7 @@ export class ConstraintValidationService {
         suggestion: 'Increase constraint height for better logo placement',
         measuredValue: boundingRect.height,
         requiredValue: minHeight,
-        category: 'geometry'
+        category: 'geometry',
       });
     }
 
@@ -516,13 +533,13 @@ export class ConstraintValidationService {
         suggestion: 'Consider using a more balanced shape for versatile logo placement',
         measuredValue: eccentricity,
         requiredValue: maxEccentricity,
-        category: 'geometry'
+        category: 'geometry',
       });
     }
 
     const convexHullArea = this.calculateConvexHullArea(contour.points);
     const convexity = convexHullArea > 0 ? contour.area / convexHullArea : 0;
-    
+
     if (convexity < minConvexity) {
       issues.push({
         id: 'irregular_shape',
@@ -532,7 +549,7 @@ export class ConstraintValidationService {
         suggestion: 'Consider shape smoothing or using a more regular constraint area',
         measuredValue: convexity,
         requiredValue: minConvexity,
-        category: 'geometry'
+        category: 'geometry',
       });
 
       recommendations.push('Enable morphological smoothing to regularize shape');
@@ -554,8 +571,8 @@ export class ConstraintValidationService {
     const centralZone = {
       x: boundingRect.x + centralPadding,
       y: boundingRect.y + centralPadding,
-      width: Math.max(0, boundingRect.width - (centralPadding * 2)),
-      height: Math.max(0, boundingRect.height - (centralPadding * 2))
+      width: Math.max(0, boundingRect.width - centralPadding * 2),
+      height: Math.max(0, boundingRect.height - centralPadding * 2),
     };
 
     if (centralZone.width > 0 && centralZone.height > 0) {
@@ -566,12 +583,12 @@ export class ConstraintValidationService {
         restrictions: [],
         suggestedLogoSize: {
           width: Math.round(centralZone.width * 0.8),
-          height: Math.round(centralZone.height * 0.8)
+          height: Math.round(centralZone.height * 0.8),
         },
         centerPoint: {
           x: centralZone.x + centralZone.width / 2,
-          y: centralZone.y + centralZone.height / 2
-        }
+          y: centralZone.y + centralZone.height / 2,
+        },
       });
     }
 
@@ -579,8 +596,8 @@ export class ConstraintValidationService {
     const edgeZone = {
       x: boundingRect.x + paddingFromEdges,
       y: boundingRect.y + paddingFromEdges,
-      width: Math.max(0, boundingRect.width - (paddingFromEdges * 2)),
-      height: Math.max(0, boundingRect.height - (paddingFromEdges * 2))
+      width: Math.max(0, boundingRect.width - paddingFromEdges * 2),
+      height: Math.max(0, boundingRect.height - paddingFromEdges * 2),
     };
 
     if (edgeZone.width > centralZone.width || edgeZone.height > centralZone.height) {
@@ -591,12 +608,12 @@ export class ConstraintValidationService {
         restrictions: ['May be close to constraint boundaries'],
         suggestedLogoSize: {
           width: Math.round(edgeZone.width * 0.9),
-          height: Math.round(edgeZone.height * 0.9)
+          height: Math.round(edgeZone.height * 0.9),
         },
         centerPoint: {
           x: edgeZone.x + edgeZone.width / 2,
-          y: edgeZone.y + edgeZone.height / 2
-        }
+          y: edgeZone.y + edgeZone.height / 2,
+        },
       });
     }
 
@@ -606,13 +623,16 @@ export class ConstraintValidationService {
   /**
    * Calculates overall confidence score
    */
-  private calculateConfidence(issues: ValidationIssue[], metrics: ConstraintValidationResult['metrics']): number {
+  private calculateConfidence(
+    issues: ValidationIssue[],
+    metrics: ConstraintValidationResult['metrics']
+  ): number {
     let confidence = 1.0;
 
     // Penalize for issues based on severity
-    issues.forEach(issue => {
-      const penalty = issue.severity.level === 'error' ? 0.3 :
-                     issue.severity.level === 'warning' ? 0.15 : 0.05;
+    issues.forEach((issue) => {
+      const penalty =
+        issue.severity.level === 'error' ? 0.3 : issue.severity.level === 'warning' ? 0.15 : 0.05;
       confidence -= penalty * (issue.severity.priority / 10);
     });
 
@@ -631,15 +651,15 @@ export class ConstraintValidationService {
     const { width, height } = contour.boundingRect;
     const maxDim = Math.max(width, height);
     const minDim = Math.min(width, height);
-    return minDim > 0 ? 1 - (minDim / maxDim) : 1;
+    return minDim > 0 ? 1 - minDim / maxDim : 1;
   }
 
-  private calculateConvexHullArea(points: Array<{x: number; y: number}>): number {
+  private calculateConvexHullArea(points: Array<{ x: number; y: number }>): number {
     if (points.length < 3) return 0;
 
     // Use Graham scan to find convex hull
     const hull = this.grahamScan([...points]);
-    
+
     // Calculate area using shoelace formula
     let area = 0;
     for (let i = 0; i < hull.length; i++) {
@@ -650,7 +670,7 @@ export class ConstraintValidationService {
     return Math.abs(area) / 2;
   }
 
-  private grahamScan(points: Array<{x: number; y: number}>): Array<{x: number; y: number}> {
+  private grahamScan(points: Array<{ x: number; y: number }>): Array<{ x: number; y: number }> {
     if (points.length < 3) return points;
 
     // Find bottom-most point
@@ -663,7 +683,7 @@ export class ConstraintValidationService {
 
     // Sort by polar angle
     const sorted = points
-      .filter(p => p !== start)
+      .filter((p) => p !== start)
       .sort((a, b) => {
         const angleA = Math.atan2(a.y - start.y, a.x - start.x);
         const angleB = Math.atan2(b.y - start.y, b.x - start.x);
@@ -693,18 +713,20 @@ export class ConstraintValidationService {
       isValid: false,
       isUsable: false,
       confidence: 0,
-      issues: [{
-        id: 'no_constraint',
-        severity: { level: 'error', blocking: true, priority: 10 },
-        title: 'No constraint detected',
-        description: reason,
-        suggestion: 'Ensure green constraint areas are present and detectable',
-        category: 'area'
-      }],
+      issues: [
+        {
+          id: 'no_constraint',
+          severity: { level: 'error', blocking: true, priority: 10 },
+          title: 'No constraint detected',
+          description: reason,
+          suggestion: 'Ensure green constraint areas are present and detectable',
+          category: 'area',
+        },
+      ],
       recommendations: [
         'Check color detection settings',
         'Verify green areas are present in the template',
-        'Adjust color tolerance if needed'
+        'Adjust color tolerance if needed',
       ],
       metrics: {
         area: 0,
@@ -713,9 +735,9 @@ export class ConstraintValidationService {
         convexity: 0,
         centerDistance: 0,
         edgeDistance: 0,
-        logoCapacity: { min: 0, max: 0 }
+        logoCapacity: { min: 0, max: 0 },
       },
-      placementZones: []
+      placementZones: [],
     };
   }
 
@@ -749,14 +771,18 @@ export class ConstraintValidationService {
       `Convexity: ${result.metrics.convexity.toFixed(2)}`,
       `Edge Distance: ${Math.round(result.metrics.edgeDistance)}px`,
       `Logo Capacity: ${Math.round(result.metrics.logoCapacity.min)}-${Math.round(result.metrics.logoCapacity.max)}px`,
-      ''
+      '',
     ];
 
     if (result.issues.length > 0) {
       lines.push('--- ISSUES ---');
-      result.issues.forEach(issue => {
-        const icon = issue.severity.level === 'error' ? '❌' :
-                    issue.severity.level === 'warning' ? '⚠️' : 'ℹ️';
+      result.issues.forEach((issue) => {
+        const icon =
+          issue.severity.level === 'error'
+            ? '❌'
+            : issue.severity.level === 'warning'
+              ? '⚠️'
+              : 'ℹ️';
         lines.push(`${icon} ${issue.title}: ${issue.description}`);
       });
       lines.push('');
@@ -764,7 +790,7 @@ export class ConstraintValidationService {
 
     if (result.recommendations.length > 0) {
       lines.push('--- RECOMMENDATIONS ---');
-      result.recommendations.forEach(rec => {
+      result.recommendations.forEach((rec) => {
         lines.push(`💡 ${rec}`);
       });
       lines.push('');
@@ -772,8 +798,10 @@ export class ConstraintValidationService {
 
     if (result.placementZones.length > 0) {
       lines.push('--- PLACEMENT ZONES ---');
-      result.placementZones.forEach(zone => {
-        lines.push(`📍 ${zone.id}: ${Math.round(zone.quality * 100)}% quality, ${zone.region.width}×${zone.region.height}px`);
+      result.placementZones.forEach((zone) => {
+        lines.push(
+          `📍 ${zone.id}: ${Math.round(zone.quality * 100)}% quality, ${zone.region.width}×${zone.region.height}px`
+        );
       });
     }
 

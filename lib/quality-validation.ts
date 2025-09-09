@@ -200,7 +200,8 @@ export class QualityValidator {
       const recommendations = this.generateRecommendations(metrics, failures);
 
       // Determine overall result
-      const passed = failures.filter(f => f.severity === 'critical' || f.severity === 'error').length === 0;
+      const passed =
+        failures.filter((f) => f.severity === 'critical' || f.severity === 'error').length === 0;
       const shouldRegenerate = this.shouldTriggerRegeneration(metrics, failures, rules, options);
 
       const result: ValidationResult = {
@@ -210,7 +211,7 @@ export class QualityValidator {
         recommendations,
         shouldRegenerate,
         confidence: this.calculateConfidence(metrics),
-        processingTime: performance.now() - startTime
+        processingTime: performance.now() - startTime,
       };
 
       // Store in history
@@ -218,7 +219,6 @@ export class QualityValidator {
       this.validationHistory.set(imageKey, result);
 
       return result;
-
     } catch (error) {
       console.error('Quality validation failed:', error);
       throw new Error(`Quality validation failed: ${error}`);
@@ -235,91 +235,91 @@ export class QualityValidator {
         sharpness: {
           minimumScore: 80,
           rejectBlurred: true,
-          allowedBlurTypes: []
+          allowedBlurTypes: [],
         },
         artifacts: {
           maximumNoise: 0.15,
           maximumCompression: 0.2,
-          allowableTypes: []
+          allowableTypes: [],
         },
         colorAccuracy: {
           minimumScore: 85,
           allowColorCast: false,
           maxCastStrength: 0.1,
-          contrastRange: { min: 0.8, max: 1.4 }
+          contrastRange: { min: 0.8, max: 1.4 },
         },
         placement: {
           minimumScore: 80,
           requireMainSubject: true,
           minimumSubjectSize: 0.2,
-          minimumEdgeDistance: 20
+          minimumEdgeDistance: 20,
         },
         technical: {
           minimumResolution: { width: 1200, height: 800 },
           maximumFileSize: 2 * 1024 * 1024, // 2MB
-          requireColorProfile: true
-        }
+          requireColorProfile: true,
+        },
       },
       standard: {
         minimumScore: 70,
         sharpness: {
           minimumScore: 60,
           rejectBlurred: true,
-          allowedBlurTypes: ['gaussian']
+          allowedBlurTypes: ['gaussian'],
         },
         artifacts: {
           maximumNoise: 0.25,
           maximumCompression: 0.3,
-          allowableTypes: ['mild_compression']
+          allowableTypes: ['mild_compression'],
         },
         colorAccuracy: {
           minimumScore: 70,
           allowColorCast: true,
           maxCastStrength: 0.2,
-          contrastRange: { min: 0.6, max: 1.6 }
+          contrastRange: { min: 0.6, max: 1.6 },
         },
         placement: {
           minimumScore: 60,
           requireMainSubject: true,
           minimumSubjectSize: 0.15,
-          minimumEdgeDistance: 10
+          minimumEdgeDistance: 10,
         },
         technical: {
           minimumResolution: { width: 800, height: 600 },
           maximumFileSize: 5 * 1024 * 1024, // 5MB
-          requireColorProfile: false
-        }
+          requireColorProfile: false,
+        },
       },
       lenient: {
         minimumScore: 50,
         sharpness: {
           minimumScore: 40,
           rejectBlurred: false,
-          allowedBlurTypes: ['motion', 'gaussian', 'defocus']
+          allowedBlurTypes: ['motion', 'gaussian', 'defocus'],
         },
         artifacts: {
           maximumNoise: 0.4,
           maximumCompression: 0.5,
-          allowableTypes: ['compression', 'noise', 'blocking']
+          allowableTypes: ['compression', 'noise', 'blocking'],
         },
         colorAccuracy: {
           minimumScore: 50,
           allowColorCast: true,
           maxCastStrength: 0.4,
-          contrastRange: { min: 0.4, max: 2.0 }
+          contrastRange: { min: 0.4, max: 2.0 },
         },
         placement: {
           minimumScore: 40,
           requireMainSubject: false,
           minimumSubjectSize: 0.1,
-          minimumEdgeDistance: 5
+          minimumEdgeDistance: 5,
         },
         technical: {
           minimumResolution: { width: 400, height: 300 },
           maximumFileSize: 10 * 1024 * 1024, // 10MB
-          requireColorProfile: false
-        }
-      }
+          requireColorProfile: false,
+        },
+      },
     };
   }
 
@@ -335,7 +335,7 @@ export class QualityValidator {
 
     for (let i = 0; i < images.length; i++) {
       const { data, id } = images[i];
-      
+
       try {
         if (onProgress) {
           onProgress(i, images.length, id);
@@ -343,7 +343,6 @@ export class QualityValidator {
 
         const result = await this.validateQuality(data, rules);
         results.push({ ...result, id });
-
       } catch (error) {
         console.error(`Validation failed for image ${id}:`, error);
         // Continue with other images
@@ -371,9 +370,11 @@ export class QualityValidator {
   ): Promise<{ success: boolean; attempts: number; finalResult?: ValidationResult }> {
     const maxAttempts = options.maxAttempts || 3;
     const targetScore = options.targetScore || 75;
-    let attempts = 0;
+    const attempts = 0;
 
-    console.log(`Auto-regeneration triggered. Target score: ${targetScore}, Max attempts: ${maxAttempts}`);
+    console.log(
+      `Auto-regeneration triggered. Target score: ${targetScore}, Max attempts: ${maxAttempts}`
+    );
 
     // For now, this is a placeholder for integration with the AI generation pipeline
     // In a real implementation, this would:
@@ -381,44 +382,44 @@ export class QualityValidator {
     // 2. Adjust generation parameters
     // 3. Re-run the AI generation with improved settings
     // 4. Validate the new result
-    
+
     return {
       success: false,
       attempts: maxAttempts,
-      finalResult: validationResult
+      finalResult: validationResult,
     };
   }
 
   /**
    * Private helper methods
    */
-  private async calculateAllMetrics(imageData: ImageData, sourceImage: HTMLImageElement): Promise<QualityMetrics> {
-    const [
-      sharpnessMetrics,
-      artifactMetrics,
-      colorMetrics,
-      placementMetrics,
-      technicalMetrics
-    ] = await Promise.all([
-      this.calculateSharpnessMetrics(imageData),
-      this.calculateArtifactMetrics(imageData),
-      this.calculateColorAccuracyMetrics(imageData),
-      this.calculatePlacementMetrics(imageData),
-      this.calculateTechnicalMetrics(imageData, sourceImage)
-    ]);
+  private async calculateAllMetrics(
+    imageData: ImageData,
+    sourceImage: HTMLImageElement
+  ): Promise<QualityMetrics> {
+    const [sharpnessMetrics, artifactMetrics, colorMetrics, placementMetrics, technicalMetrics] =
+      await Promise.all([
+        this.calculateSharpnessMetrics(imageData),
+        this.calculateArtifactMetrics(imageData),
+        this.calculateColorAccuracyMetrics(imageData),
+        this.calculatePlacementMetrics(imageData),
+        this.calculateTechnicalMetrics(imageData, sourceImage),
+      ]);
 
     // Calculate overall score
-    const overallScore = (
+    const overallScore =
       sharpnessMetrics.score * 0.25 +
       artifactMetrics.score * 0.25 +
       colorMetrics.score * 0.25 +
       placementMetrics.score * 0.15 +
-      (technicalMetrics.resolution.adequate ? 100 : 50) * 0.1
-    );
+      (technicalMetrics.resolution.adequate ? 100 : 50) * 0.1;
 
     const grade = this.scoreToGrade(overallScore);
     const confidence = this.calculateOverallConfidence([
-      sharpnessMetrics, artifactMetrics, colorMetrics, placementMetrics
+      sharpnessMetrics,
+      artifactMetrics,
+      colorMetrics,
+      placementMetrics,
     ]);
 
     return {
@@ -426,42 +427,53 @@ export class QualityValidator {
         score: overallScore,
         grade,
         passed: overallScore >= 70,
-        confidence
+        confidence,
       },
       sharpness: sharpnessMetrics,
       artifacts: artifactMetrics,
       colorAccuracy: colorMetrics,
       placement: placementMetrics,
-      technical: technicalMetrics
+      technical: technicalMetrics,
     };
   }
 
-  private async calculateSharpnessMetrics(imageData: ImageData): Promise<QualityMetrics['sharpness']> {
+  private async calculateSharpnessMetrics(
+    imageData: ImageData
+  ): Promise<QualityMetrics['sharpness']> {
     // Laplacian variance for blur detection
     const laplacianVariance = this.calculateLaplacianVariance(imageData);
-    
+
     // Sobel edge magnitude
     const sobelMagnitude = this.calculateSobelMagnitude(imageData);
-    
+
     // Combined sharpness score
-    const sharpnessScore = Math.min(100, (laplacianVariance / 100) * 30 + (sobelMagnitude / 255) * 70);
-    
+    const sharpnessScore = Math.min(
+      100,
+      (laplacianVariance / 100) * 30 + (sobelMagnitude / 255) * 70
+    );
+
     // Blur detection
     const blurThreshold = 15;
     const blurDetected = laplacianVariance < blurThreshold;
-    
+
     let blurType: 'motion' | 'gaussian' | 'defocus' | 'none' = 'none';
     let blurSeverity = 0;
-    
+
     if (blurDetected) {
       blurSeverity = Math.max(0, (blurThreshold - laplacianVariance) / blurThreshold);
       blurType = this.detectBlurType(imageData, laplacianVariance, sobelMagnitude);
     }
 
-    const focusQuality = sharpnessScore > 80 ? 'excellent' :
-                        sharpnessScore > 60 ? 'good' :
-                        sharpnessScore > 40 ? 'fair' :
-                        sharpnessScore > 20 ? 'poor' : 'unacceptable';
+    const focusQuality =
+      sharpnessScore > 80
+        ? 'excellent'
+        : sharpnessScore > 60
+          ? 'good'
+          : sharpnessScore > 40
+            ? 'fair'
+            : sharpnessScore > 20
+              ? 'poor'
+              : 'unacceptable';
 
     return {
       score: sharpnessScore,
@@ -470,11 +482,13 @@ export class QualityValidator {
       focusQuality,
       blurDetected,
       blurType,
-      blurSeverity
+      blurSeverity,
     };
   }
 
-  private async calculateArtifactMetrics(imageData: ImageData): Promise<QualityMetrics['artifacts']> {
+  private async calculateArtifactMetrics(
+    imageData: ImageData
+  ): Promise<QualityMetrics['artifacts']> {
     const compressionArtifacts = this.detectCompressionArtifacts(imageData);
     const blockingArtifacts = this.detectBlockingArtifacts(imageData);
     const ringingArtifacts = this.detectRingingArtifacts(imageData);
@@ -486,13 +500,20 @@ export class QualityValidator {
     if (ringingArtifacts > 0.3) artifactTypes.push('ringing');
     if (noiseLevel > 0.3) artifactTypes.push('noise');
 
-    const averageArtifactLevel = (compressionArtifacts + blockingArtifacts + ringingArtifacts + noiseLevel) / 4;
+    const averageArtifactLevel =
+      (compressionArtifacts + blockingArtifacts + ringingArtifacts + noiseLevel) / 4;
     const artifactScore = Math.max(0, (1 - averageArtifactLevel) * 100);
 
-    const severityLevel = averageArtifactLevel < 0.1 ? 'none' :
-                         averageArtifactLevel < 0.3 ? 'minimal' :
-                         averageArtifactLevel < 0.5 ? 'noticeable' :
-                         averageArtifactLevel < 0.7 ? 'severe' : 'unacceptable';
+    const severityLevel =
+      averageArtifactLevel < 0.1
+        ? 'none'
+        : averageArtifactLevel < 0.3
+          ? 'minimal'
+          : averageArtifactLevel < 0.5
+            ? 'noticeable'
+            : averageArtifactLevel < 0.7
+              ? 'severe'
+              : 'unacceptable';
 
     return {
       score: artifactScore,
@@ -501,65 +522,73 @@ export class QualityValidator {
       ringingArtifacts,
       noiseLevel,
       artifactTypes,
-      severityLevel
+      severityLevel,
     };
   }
 
-  private async calculateColorAccuracyMetrics(imageData: ImageData): Promise<QualityMetrics['colorAccuracy']> {
+  private async calculateColorAccuracyMetrics(
+    imageData: ImageData
+  ): Promise<QualityMetrics['colorAccuracy']> {
     // Color cast detection
     const colorCastData = this.detectColorCast(imageData);
-    
+
     // Saturation analysis
     const saturationData = this.analyzeSaturation(imageData);
-    
+
     // Contrast analysis
     const contrastData = this.analyzeContrast(imageData);
-    
+
     // White balance estimation
     const whiteBalanceData = this.estimateWhiteBalance(imageData);
 
-    const colorScore = (
+    const colorScore =
       (colorCastData.detected ? Math.max(0, 100 - colorCastData.strength * 100) : 100) * 0.3 +
       (saturationData.evaluation === 'normal' ? 100 : 70) * 0.3 +
       (contrastData.evaluation === 'normal' ? 100 : 80) * 0.3 +
-      (whiteBalanceData.accuracy === 'excellent' ? 100 :
-       whiteBalanceData.accuracy === 'good' ? 85 :
-       whiteBalanceData.accuracy === 'fair' ? 70 : 50) * 0.1
-    );
+      (whiteBalanceData.accuracy === 'excellent'
+        ? 100
+        : whiteBalanceData.accuracy === 'good'
+          ? 85
+          : whiteBalanceData.accuracy === 'fair'
+            ? 70
+            : 50) *
+        0.1;
 
     return {
       score: colorScore,
       colorCast: colorCastData,
       saturation: saturationData,
       contrast: contrastData,
-      whiteBalance: whiteBalanceData
+      whiteBalance: whiteBalanceData,
     };
   }
 
-  private async calculatePlacementMetrics(imageData: ImageData): Promise<QualityMetrics['placement']> {
+  private async calculatePlacementMetrics(
+    imageData: ImageData
+  ): Promise<QualityMetrics['placement']> {
     // Simple object detection (center-weighted)
     const centerRegion = this.extractCenterRegion(imageData);
     const edgeActivity = this.calculateEdgeActivity(centerRegion);
-    
+
     // Estimate main subject presence
     const subjectConfidence = Math.min(1, edgeActivity / 50);
     const subjectDetected = subjectConfidence > 0.3;
-    
+
     // Calculate centeredness (assuming subject is in center for now)
     const centeredness = subjectDetected ? 0.8 : 0.5;
     const subjectSize = subjectDetected ? 0.4 : 0.2;
-    
+
     // Alignment scoring
     const alignmentScore = centeredness * 100;
     const horizontal = centeredness > 0.7 ? 'center' : 'off-center';
     const vertical = centeredness > 0.7 ? 'center' : 'off-center';
-    
+
     // Composition analysis
     const ruleOfThirds = this.checkRuleOfThirds(imageData);
     const symmetry = this.checkSymmetry(imageData);
     const balance = this.calculateBalance(imageData);
     const leadingLines = this.detectLeadingLines(imageData);
-    
+
     // Edge distance calculation
     const minEdgeDistance = Math.min(imageData.width, imageData.height) * 0.05; // 5% margin
     const edgeDistanceWarnings: string[] = [];
@@ -567,13 +596,12 @@ export class QualityValidator {
       edgeDistanceWarnings.push('Subject too close to edges');
     }
 
-    const placementScore = (
+    const placementScore =
       alignmentScore * 0.4 +
       (ruleOfThirds ? 100 : 70) * 0.2 +
       balance * 100 * 0.2 +
       (symmetry ? 100 : 80) * 0.1 +
-      (leadingLines ? 100 : 90) * 0.1
-    );
+      (leadingLines ? 100 : 90) * 0.1;
 
     return {
       score: placementScore,
@@ -582,56 +610,56 @@ export class QualityValidator {
           detected: subjectDetected,
           confidence: subjectConfidence,
           centeredness,
-          size: subjectSize
+          size: subjectSize,
         },
         alignment: {
           horizontal,
           vertical,
-          score: alignmentScore
+          score: alignmentScore,
         },
         composition: {
           ruleOfThirds,
           symmetry,
           balance,
-          leadingLines
-        }
+          leadingLines,
+        },
       },
       edgeDistance: {
         minimum: minEdgeDistance,
         safe: minEdgeDistance >= 10,
-        warnings: edgeDistanceWarnings
-      }
+        warnings: edgeDistanceWarnings,
+      },
     };
   }
 
   private async calculateTechnicalMetrics(
-    imageData: ImageData, 
+    imageData: ImageData,
     sourceImage: HTMLImageElement
   ): Promise<QualityMetrics['technical']> {
     const width = imageData.width;
     const height = imageData.height;
     const megapixels = (width * height) / 1000000;
-    
+
     // Resolution adequacy
     const adequate = width >= 800 && height >= 600;
     const recommendedMinimum = { width: 1200, height: 800 };
-    
+
     // Aspect ratio
     const aspectRatio = width / height;
     const commonRatios = [
-      { ratio: 16/9, name: '16:9' },
-      { ratio: 4/3, name: '4:3' },
+      { ratio: 16 / 9, name: '16:9' },
+      { ratio: 4 / 3, name: '4:3' },
       { ratio: 1, name: 'square' },
-      { ratio: 3/2, name: '3:2' },
-      { ratio: 5/4, name: '5:4' }
+      { ratio: 3 / 2, name: '3:2' },
+      { ratio: 5 / 4, name: '5:4' },
     ];
-    
-    const closestRatio = commonRatios.reduce((prev, curr) => 
+
+    const closestRatio = commonRatios.reduce((prev, curr) =>
       Math.abs(curr.ratio - aspectRatio) < Math.abs(prev.ratio - aspectRatio) ? curr : prev
     );
-    
+
     const isStandardRatio = Math.abs(closestRatio.ratio - aspectRatio) < 0.05;
-    
+
     // File size estimation (rough)
     const estimatedBytes = imageData.data.length; // Raw data size
     const reasonable = estimatedBytes < 5 * 1024 * 1024; // < 5MB
@@ -643,24 +671,24 @@ export class QualityValidator {
         height,
         megapixels,
         adequate,
-        recommendedMinimum
+        recommendedMinimum,
       },
       aspectRatio: {
         detected: aspectRatio,
         standard: isStandardRatio,
-        name: isStandardRatio ? closestRatio.name : undefined
+        name: isStandardRatio ? closestRatio.name : undefined,
       },
       fileSize: {
         bytes: estimatedBytes,
         reasonable,
-        efficiency
+        efficiency,
       },
       metadata: {
         hasColorProfile: false, // Would need to check actual file metadata
         bitDepth: 8, // Standard for canvas
         hasAlpha: this.hasAlphaChannel(imageData),
-        compressed: false // Raw ImageData is uncompressed
-      }
+        compressed: false, // Raw ImageData is uncompressed
+      },
     };
   }
 
@@ -668,18 +696,18 @@ export class QualityValidator {
   private calculateLaplacianVariance(imageData: ImageData): number {
     const { width, height, data } = imageData;
     const laplacian = [];
-    
+
     // Laplacian kernel
     const kernel = [
       [0, -1, 0],
       [-1, 4, -1],
-      [0, -1, 0]
+      [0, -1, 0],
     ];
-    
+
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
         let sum = 0;
-        
+
         for (let ky = -1; ky <= 1; ky++) {
           for (let kx = -1; kx <= 1; kx++) {
             const idx = ((y + ky) * width + (x + kx)) * 4;
@@ -687,15 +715,16 @@ export class QualityValidator {
             sum += gray * kernel[ky + 1][kx + 1];
           }
         }
-        
+
         laplacian.push(sum);
       }
     }
-    
+
     // Calculate variance
     const mean = laplacian.reduce((a, b) => a + b, 0) / laplacian.length;
-    const variance = laplacian.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / laplacian.length;
-    
+    const variance =
+      laplacian.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / laplacian.length;
+
     return Math.sqrt(variance);
   }
 
@@ -703,36 +732,49 @@ export class QualityValidator {
     const { width, height, data } = imageData;
     let totalMagnitude = 0;
     let pixelCount = 0;
-    
-    const sobelX = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
-    const sobelY = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
-    
+
+    const sobelX = [
+      [-1, 0, 1],
+      [-2, 0, 2],
+      [-1, 0, 1],
+    ];
+    const sobelY = [
+      [-1, -2, -1],
+      [0, 0, 0],
+      [1, 2, 1],
+    ];
+
     for (let y = 1; y < height - 1; y++) {
       for (let x = 1; x < width - 1; x++) {
-        let gx = 0, gy = 0;
-        
+        let gx = 0,
+          gy = 0;
+
         for (let ky = -1; ky <= 1; ky++) {
           for (let kx = -1; kx <= 1; kx++) {
             const idx = ((y + ky) * width + (x + kx)) * 4;
             const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-            
+
             gx += gray * sobelX[ky + 1][kx + 1];
             gy += gray * sobelY[ky + 1][kx + 1];
           }
         }
-        
+
         totalMagnitude += Math.sqrt(gx * gx + gy * gy);
         pixelCount++;
       }
     }
-    
+
     return totalMagnitude / pixelCount;
   }
 
-  private detectBlurType(imageData: ImageData, laplacian: number, sobel: number): 'motion' | 'gaussian' | 'defocus' {
+  private detectBlurType(
+    imageData: ImageData,
+    laplacian: number,
+    sobel: number
+  ): 'motion' | 'gaussian' | 'defocus' {
     // Simple heuristic classification
     const ratio = sobel / (laplacian + 1);
-    
+
     if (ratio > 2) return 'motion';
     if (ratio < 0.5) return 'defocus';
     return 'gaussian';
@@ -743,19 +785,19 @@ export class QualityValidator {
     const blockSize = 8;
     let artifactScore = 0;
     let blockCount = 0;
-    
+
     for (let y = 0; y < imageData.height - blockSize; y += blockSize) {
       for (let x = 0; x < imageData.width - blockSize; x += blockSize) {
         const blockVariance = this.calculateBlockVariance(imageData, x, y, blockSize);
         const edgeVariance = this.calculateBlockEdgeVariance(imageData, x, y, blockSize);
-        
+
         if (blockVariance < edgeVariance * 0.5) {
           artifactScore += 1;
         }
         blockCount++;
       }
     }
-    
+
     return blockCount > 0 ? artifactScore / blockCount : 0;
   }
 
@@ -763,16 +805,22 @@ export class QualityValidator {
     // Detect discontinuities at 8x8 block boundaries
     let blockingScore = 0;
     let edgeCount = 0;
-    
+
     // Check vertical block boundaries
     for (let x = 8; x < imageData.width; x += 8) {
       for (let y = 0; y < imageData.height; y++) {
         const leftIdx = (y * imageData.width + x - 1) * 4;
         const rightIdx = (y * imageData.width + x) * 4;
-        
-        const leftGray = 0.299 * imageData.data[leftIdx] + 0.587 * imageData.data[leftIdx + 1] + 0.114 * imageData.data[leftIdx + 2];
-        const rightGray = 0.299 * imageData.data[rightIdx] + 0.587 * imageData.data[rightIdx + 1] + 0.114 * imageData.data[rightIdx + 2];
-        
+
+        const leftGray =
+          0.299 * imageData.data[leftIdx] +
+          0.587 * imageData.data[leftIdx + 1] +
+          0.114 * imageData.data[leftIdx + 2];
+        const rightGray =
+          0.299 * imageData.data[rightIdx] +
+          0.587 * imageData.data[rightIdx + 1] +
+          0.114 * imageData.data[rightIdx + 2];
+
         const discontinuity = Math.abs(leftGray - rightGray);
         if (discontinuity > 20) {
           blockingScore += discontinuity / 255;
@@ -780,7 +828,7 @@ export class QualityValidator {
         edgeCount++;
       }
     }
-    
+
     return edgeCount > 0 ? Math.min(1, blockingScore / edgeCount) : 0;
   }
 
@@ -789,11 +837,12 @@ export class QualityValidator {
     const edges = this.detectEdges(imageData);
     let ringingScore = 0;
     let edgePixels = 0;
-    
+
     for (let y = 2; y < imageData.height - 2; y++) {
       for (let x = 2; x < imageData.width - 2; x++) {
         const edgeIdx = y * imageData.width + x;
-        if (edges[edgeIdx] > 100) { // Strong edge
+        if (edges[edgeIdx] > 100) {
+          // Strong edge
           // Check for oscillations around this edge
           const oscillation = this.detectOscillation(imageData, x, y, 3);
           ringingScore += oscillation;
@@ -801,7 +850,7 @@ export class QualityValidator {
         }
       }
     }
-    
+
     return edgePixels > 0 ? Math.min(1, ringingScore / edgePixels) : 0;
   }
 
@@ -810,7 +859,7 @@ export class QualityValidator {
     let totalVariance = 0;
     let sampleCount = 0;
     const windowSize = 5;
-    
+
     for (let y = windowSize; y < imageData.height - windowSize; y += 10) {
       for (let x = windowSize; x < imageData.width - windowSize; x += 10) {
         const localVariance = this.calculateLocalVariance(imageData, x, y, windowSize);
@@ -818,7 +867,7 @@ export class QualityValidator {
         sampleCount++;
       }
     }
-    
+
     const averageVariance = totalVariance / sampleCount;
     return Math.min(1, averageVariance / 1000); // Normalize
   }
@@ -829,14 +878,14 @@ export class QualityValidator {
   private detectColorCast(imageData: ImageData): QualityMetrics['colorAccuracy']['colorCast'] {
     const averageColors = this.calculateAverageColors(imageData);
     const grayPoint = (averageColors.r + averageColors.g + averageColors.b) / 3;
-    
+
     const rDiff = averageColors.r - grayPoint;
     const gDiff = averageColors.g - grayPoint;
     const bDiff = averageColors.b - grayPoint;
-    
+
     const maxDiff = Math.max(Math.abs(rDiff), Math.abs(gDiff), Math.abs(bDiff));
     const detected = maxDiff > 15;
-    
+
     let type: 'warm' | 'cool' | 'magenta' | 'green' | 'neutral' = 'neutral';
     if (detected) {
       if (rDiff > Math.abs(gDiff) && rDiff > Math.abs(bDiff)) type = 'warm';
@@ -844,58 +893,56 @@ export class QualityValidator {
       else if (gDiff > 0) type = 'green';
       else if (gDiff < 0) type = 'magenta';
     }
-    
+
     return {
       detected,
       type: detected ? type : undefined,
-      strength: maxDiff / 255
+      strength: maxDiff / 255,
     };
   }
 
   private analyzeSaturation(imageData: ImageData): QualityMetrics['colorAccuracy']['saturation'] {
     let totalSaturation = 0;
     let pixelCount = 0;
-    
+
     for (let i = 0; i < imageData.data.length; i += 4) {
       const r = imageData.data[i] / 255;
       const g = imageData.data[i + 1] / 255;
       const b = imageData.data[i + 2] / 255;
-      
+
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
       const saturation = max === 0 ? 0 : (max - min) / max;
-      
+
       totalSaturation += saturation;
       pixelCount++;
     }
-    
+
     const averageSaturation = totalSaturation / pixelCount;
     const level = averageSaturation;
-    
-    const evaluation = level < 0.3 ? 'undersaturated' :
-                      level > 0.8 ? 'oversaturated' : 'normal';
-    
+
+    const evaluation = level < 0.3 ? 'undersaturated' : level > 0.8 ? 'oversaturated' : 'normal';
+
     return { level, evaluation };
   }
 
   private analyzeContrast(imageData: ImageData): QualityMetrics['colorAccuracy']['contrast'] {
     const histogram = new Array(256).fill(0);
-    
+
     // Build luminance histogram
     for (let i = 0; i < imageData.data.length; i += 4) {
       const luminance = Math.round(
-        0.299 * imageData.data[i] +
-        0.587 * imageData.data[i + 1] +
-        0.114 * imageData.data[i + 2]
+        0.299 * imageData.data[i] + 0.587 * imageData.data[i + 1] + 0.114 * imageData.data[i + 2]
       );
       histogram[luminance]++;
     }
-    
+
     // Find 1st and 99th percentiles
     const totalPixels = imageData.width * imageData.height;
-    let darkPoint = 0, brightPoint = 255;
+    let darkPoint = 0,
+      brightPoint = 255;
     let cumulative = 0;
-    
+
     for (let i = 0; i < 256; i++) {
       cumulative += histogram[i];
       if (cumulative > totalPixels * 0.01 && darkPoint === 0) {
@@ -906,106 +953,116 @@ export class QualityValidator {
         break;
       }
     }
-    
+
     const contrastRange = brightPoint - darkPoint;
     const level = contrastRange / 255;
     const evaluation = level < 0.3 ? 'low' : level > 0.8 ? 'high' : 'normal';
-    
+
     // Calculate histogram distribution
     const shadows = histogram.slice(0, 85).reduce((a, b) => a + b, 0) / totalPixels;
     const midtones = histogram.slice(85, 170).reduce((a, b) => a + b, 0) / totalPixels;
     const highlights = histogram.slice(170, 256).reduce((a, b) => a + b, 0) / totalPixels;
-    
+
     return {
       level,
       evaluation,
-      histogram: { shadows, midtones, highlights }
+      histogram: { shadows, midtones, highlights },
     };
   }
 
-  private estimateWhiteBalance(imageData: ImageData): QualityMetrics['colorAccuracy']['whiteBalance'] {
+  private estimateWhiteBalance(
+    imageData: ImageData
+  ): QualityMetrics['colorAccuracy']['whiteBalance'] {
     const averageColors = this.calculateAverageColors(imageData);
-    
+
     // Simple white balance estimation
     const temperature = 6500 - (averageColors.r - averageColors.b) * 50;
     const tint = (averageColors.g - (averageColors.r + averageColors.b) / 2) / 128;
-    
+
     const temperatureDeviation = Math.abs(temperature - 6500);
     const tintDeviation = Math.abs(tint);
-    
-    const accuracy = temperatureDeviation < 300 && tintDeviation < 0.1 ? 'excellent' :
-                    temperatureDeviation < 800 && tintDeviation < 0.2 ? 'good' :
-                    temperatureDeviation < 1500 && tintDeviation < 0.4 ? 'fair' : 'poor';
-    
+
+    const accuracy =
+      temperatureDeviation < 300 && tintDeviation < 0.1
+        ? 'excellent'
+        : temperatureDeviation < 800 && tintDeviation < 0.2
+          ? 'good'
+          : temperatureDeviation < 1500 && tintDeviation < 0.4
+            ? 'fair'
+            : 'poor';
+
     return { temperature, tint, accuracy };
   }
 
   // ... (Additional helper methods would be implemented similarly)
 
-  private evaluateRules(metrics: QualityMetrics, rules: ValidationRules): ValidationResult['failures'] {
+  private evaluateRules(
+    metrics: QualityMetrics,
+    rules: ValidationRules
+  ): ValidationResult['failures'] {
     const failures: ValidationResult['failures'] = [];
-    
+
     // Overall score check
     if (metrics.overall.score < rules.minimumScore) {
       failures.push({
         category: 'overall',
         issue: `Overall quality score (${metrics.overall.score.toFixed(1)}) below minimum (${rules.minimumScore})`,
         severity: 'critical',
-        suggestion: 'Consider regenerating with improved parameters'
+        suggestion: 'Consider regenerating with improved parameters',
       });
     }
-    
+
     // Sharpness validation
     if (metrics.sharpness.score < rules.sharpness.minimumScore) {
       failures.push({
         category: 'sharpness',
         issue: `Image sharpness (${metrics.sharpness.score.toFixed(1)}) below minimum (${rules.sharpness.minimumScore})`,
         severity: 'error',
-        suggestion: 'Apply sharpening filter or improve focus during generation'
+        suggestion: 'Apply sharpening filter or improve focus during generation',
       });
     }
-    
+
     if (rules.sharpness.rejectBlurred && metrics.sharpness.blurDetected) {
       failures.push({
         category: 'sharpness',
         issue: `Blur detected (${metrics.sharpness.blurType}) - rejected by strict rules`,
         severity: 'critical',
-        suggestion: 'Regenerate with better focus or disable blur rejection'
+        suggestion: 'Regenerate with better focus or disable blur rejection',
       });
     }
-    
+
     // More rule evaluations...
-    
+
     return failures;
   }
 
   private generateRecommendations(
-    metrics: QualityMetrics, 
+    metrics: QualityMetrics,
     failures: ValidationResult['failures']
   ): ValidationResult['recommendations'] {
     const recommendations: ValidationResult['recommendations'] = [];
-    
+
     // Generate recommendations based on failures and metrics
     if (metrics.sharpness.blurDetected) {
       recommendations.push({
         type: 'enhancement',
         action: 'Apply unsharp mask or edge enhancement filter',
         priority: 'high',
-        automated: true
+        automated: true,
       });
     }
-    
+
     if (metrics.colorAccuracy.colorCast.detected) {
       recommendations.push({
         type: 'correction',
         action: 'Apply color cast correction based on detected cast type',
         priority: 'medium',
-        automated: true
+        automated: true,
       });
     }
-    
+
     // More recommendations...
-    
+
     return recommendations;
   }
 
@@ -1016,10 +1073,10 @@ export class QualityValidator {
     options: any
   ): boolean {
     if (!options.enableAutoRegenerate) return false;
-    
-    const criticalFailures = failures.filter(f => f.severity === 'critical').length;
-    const errorFailures = failures.filter(f => f.severity === 'error').length;
-    
+
+    const criticalFailures = failures.filter((f) => f.severity === 'critical').length;
+    const errorFailures = failures.filter((f) => f.severity === 'error').length;
+
     return criticalFailures > 0 || errorFailures > 2 || metrics.overall.score < 50;
   }
 
@@ -1044,7 +1101,9 @@ export class QualityValidator {
   }
 
   // Additional utility methods
-  private async loadImage(source: string | ImageData | HTMLImageElement): Promise<HTMLImageElement> {
+  private async loadImage(
+    source: string | ImageData | HTMLImageElement
+  ): Promise<HTMLImageElement> {
     if (source instanceof HTMLImageElement) return source;
     if (source instanceof ImageData) {
       const canvas = document.createElement('canvas');
@@ -1052,7 +1111,7 @@ export class QualityValidator {
       canvas.width = source.width;
       canvas.height = source.height;
       ctx.putImageData(source, 0, 0);
-      
+
       const img = new Image();
       return new Promise((resolve, reject) => {
         img.onload = () => resolve(img);
@@ -1060,7 +1119,7 @@ export class QualityValidator {
         img.src = canvas.toDataURL();
       });
     }
-    
+
     const img = new Image();
     return new Promise((resolve, reject) => {
       img.onload = () => resolve(img);
@@ -1073,7 +1132,7 @@ export class QualityValidator {
     if (!this.canvas || !this.ctx) {
       throw new Error('Canvas not initialized');
     }
-    
+
     this.canvas.width = img.width;
     this.canvas.height = img.height;
     this.ctx.clearRect(0, 0, img.width, img.height);
@@ -1089,18 +1148,52 @@ export class QualityValidator {
   }
 
   // Placeholder implementations for complex calculations
-  private calculateBlockVariance(imageData: ImageData, x: number, y: number, size: number): number { return Math.random() * 100; }
-  private calculateBlockEdgeVariance(imageData: ImageData, x: number, y: number, size: number): number { return Math.random() * 100; }
-  private detectEdges(imageData: ImageData): number[] { return new Array(imageData.width * imageData.height).fill(0); }
-  private detectOscillation(imageData: ImageData, x: number, y: number, radius: number): number { return Math.random() * 0.1; }
-  private calculateLocalVariance(imageData: ImageData, x: number, y: number, windowSize: number): number { return Math.random() * 1000; }
-  private calculateAverageColors(imageData: ImageData): { r: number; g: number; b: number } { return { r: 128, g: 128, b: 128 }; }
-  private extractCenterRegion(imageData: ImageData): ImageData { return imageData; }
-  private calculateEdgeActivity(imageData: ImageData): number { return Math.random() * 100; }
-  private checkRuleOfThirds(imageData: ImageData): boolean { return Math.random() > 0.5; }
-  private checkSymmetry(imageData: ImageData): boolean { return Math.random() > 0.5; }
-  private calculateBalance(imageData: ImageData): number { return Math.random(); }
-  private detectLeadingLines(imageData: ImageData): boolean { return Math.random() > 0.5; }
+  private calculateBlockVariance(imageData: ImageData, x: number, y: number, size: number): number {
+    return Math.random() * 100;
+  }
+  private calculateBlockEdgeVariance(
+    imageData: ImageData,
+    x: number,
+    y: number,
+    size: number
+  ): number {
+    return Math.random() * 100;
+  }
+  private detectEdges(imageData: ImageData): number[] {
+    return new Array(imageData.width * imageData.height).fill(0);
+  }
+  private detectOscillation(imageData: ImageData, x: number, y: number, radius: number): number {
+    return Math.random() * 0.1;
+  }
+  private calculateLocalVariance(
+    imageData: ImageData,
+    x: number,
+    y: number,
+    windowSize: number
+  ): number {
+    return Math.random() * 1000;
+  }
+  private calculateAverageColors(imageData: ImageData): { r: number; g: number; b: number } {
+    return { r: 128, g: 128, b: 128 };
+  }
+  private extractCenterRegion(imageData: ImageData): ImageData {
+    return imageData;
+  }
+  private calculateEdgeActivity(imageData: ImageData): number {
+    return Math.random() * 100;
+  }
+  private checkRuleOfThirds(imageData: ImageData): boolean {
+    return Math.random() > 0.5;
+  }
+  private checkSymmetry(imageData: ImageData): boolean {
+    return Math.random() > 0.5;
+  }
+  private calculateBalance(imageData: ImageData): number {
+    return Math.random();
+  }
+  private detectLeadingLines(imageData: ImageData): boolean {
+    return Math.random() > 0.5;
+  }
   private hasAlphaChannel(imageData: ImageData): boolean {
     for (let i = 3; i < imageData.data.length; i += 4) {
       if (imageData.data[i] < 255) return true;

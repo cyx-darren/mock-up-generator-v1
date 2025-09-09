@@ -57,12 +57,12 @@ export class LogoAdjustmentService {
     allowedArea?: { x: number; y: number; width: number; height: number }
   ) {
     this.logoImage = logoImage;
-    
+
     const defaultArea = allowedArea || {
       x: 0,
       y: 0,
       width: canvasWidth,
-      height: canvasHeight
+      height: canvasHeight,
     };
 
     const initialTransform: LogoTransform = {
@@ -74,7 +74,7 @@ export class LogoAdjustmentService {
       scaleX: 1,
       scaleY: 1,
       flipHorizontal: false,
-      flipVertical: false
+      flipVertical: false,
     };
 
     this.state = {
@@ -83,15 +83,15 @@ export class LogoAdjustmentService {
       historyIndex: 0,
       originalDimensions: {
         width: logoImage.width,
-        height: logoImage.height
+        height: logoImage.height,
       },
       constraints: {
         minWidth: 20,
         maxWidth: defaultArea.width,
         minHeight: 20,
         maxHeight: defaultArea.height,
-        allowedArea: defaultArea
-      }
+        allowedArea: defaultArea,
+      },
     };
 
     this.setupCanvas(canvasWidth, canvasHeight);
@@ -107,7 +107,7 @@ export class LogoAdjustmentService {
   private saveState(): void {
     // Remove any redo history
     this.state.history = this.state.history.slice(0, this.state.historyIndex + 1);
-    
+
     // Add new state
     this.state.history.push({ ...this.state.current });
     this.state.historyIndex++;
@@ -124,19 +124,22 @@ export class LogoAdjustmentService {
     const { constraints } = this.state;
 
     // Apply size constraints
-    constrained.width = Math.max(constraints.minWidth, Math.min(constraints.maxWidth, constrained.width));
-    constrained.height = Math.max(constraints.minHeight, Math.min(constraints.maxHeight, constrained.height));
+    constrained.width = Math.max(
+      constraints.minWidth,
+      Math.min(constraints.maxWidth, constrained.width)
+    );
+    constrained.height = Math.max(
+      constraints.minHeight,
+      Math.min(constraints.maxHeight, constrained.height)
+    );
 
     // Apply position constraints
     const halfWidth = constrained.width / 2;
     const halfHeight = constrained.height / 2;
-    
+
     constrained.x = Math.max(
       constraints.allowedArea.x + halfWidth,
-      Math.min(
-        constraints.allowedArea.x + constraints.allowedArea.width - halfWidth,
-        constrained.x
-      )
+      Math.min(constraints.allowedArea.x + constraints.allowedArea.width - halfWidth, constrained.x)
     );
 
     constrained.y = Math.max(
@@ -159,7 +162,8 @@ export class LogoAdjustmentService {
     const newTransform = { ...this.state.current };
 
     if (options.maintainAspectRatio) {
-      const aspectRatio = this.state.originalDimensions.width / this.state.originalDimensions.height;
+      const aspectRatio =
+        this.state.originalDimensions.width / this.state.originalDimensions.height;
       if (width / height > aspectRatio) {
         width = height * aspectRatio;
       } else {
@@ -210,11 +214,7 @@ export class LogoAdjustmentService {
   }
 
   moveBy(deltaX: number, deltaY: number, options: AdjustmentOptions = {}): void {
-    this.setPosition(
-      this.state.current.x + deltaX,
-      this.state.current.y + deltaY,
-      options
-    );
+    this.setPosition(this.state.current.x + deltaX, this.state.current.y + deltaY, options);
   }
 
   centerLogo(): void {
@@ -279,7 +279,7 @@ export class LogoAdjustmentService {
       scaleX: 1,
       scaleY: 1,
       flipHorizontal: false,
-      flipVertical: false
+      flipVertical: false,
     };
     this.state.current = defaultTransform;
     this.saveState();
@@ -360,11 +360,11 @@ export class LogoAdjustmentService {
   fitToArea(): void {
     const { allowedArea } = this.state.constraints;
     const { originalDimensions } = this.state;
-    
+
     const scaleX = allowedArea.width / originalDimensions.width;
     const scaleY = allowedArea.height / originalDimensions.height;
     const scale = Math.min(scaleX, scaleY) * 0.9; // 90% of available space
-    
+
     this.resizeByPercentage(scale * 100, { maintainAspectRatio: true });
     this.centerLogo();
   }
@@ -376,7 +376,7 @@ export class LogoAdjustmentService {
     }
 
     const { current } = this.state;
-    
+
     // Clear canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -457,7 +457,7 @@ export class LogoAdjustmentService {
     return {
       ...this.state,
       current: { ...this.state.current },
-      history: this.state.history.map(t => ({ ...t }))
+      history: this.state.history.map((t) => ({ ...t })),
     };
   }
 
@@ -471,12 +471,12 @@ export class LogoAdjustmentService {
   isWithinBounds(): boolean {
     const { current, constraints } = this.state;
     const { allowedArea } = constraints;
-    
+
     const logoLeft = current.x - current.width / 2;
     const logoRight = current.x + current.width / 2;
     const logoTop = current.y - current.height / 2;
     const logoBottom = current.y + current.height / 2;
-    
+
     return (
       logoLeft >= allowedArea.x &&
       logoRight <= allowedArea.x + allowedArea.width &&
@@ -488,7 +488,7 @@ export class LogoAdjustmentService {
   getTransformCSS(): string {
     const { current } = this.state;
     const transforms = [];
-    
+
     transforms.push(`translate(${current.x}px, ${current.y}px)`);
     if (current.rotation !== 0) {
       transforms.push(`rotate(${current.rotation}deg)`);
@@ -496,7 +496,7 @@ export class LogoAdjustmentService {
     if (current.scaleX !== 1 || current.scaleY !== 1) {
       transforms.push(`scale(${current.scaleX}, ${current.scaleY})`);
     }
-    
+
     return transforms.join(' ');
   }
 
@@ -510,7 +510,7 @@ export class LogoAdjustmentService {
       transform: this.getCurrentTransform(),
       cssTransform: this.getTransformCSS(),
       isValid: this.isWithinBounds(),
-      canvas: this.render()
+      canvas: this.render(),
     };
   }
 }
@@ -523,27 +523,32 @@ export function createLogoAdjustmentService(
   constraintMask?: ImageData
 ): LogoAdjustmentService {
   let allowedArea;
-  
+
   if (constraintMask) {
     // Calculate bounding box from constraint mask
     const bounds = calculateMaskBounds(constraintMask);
     allowedArea = bounds;
   }
-  
+
   return new LogoAdjustmentService(logoImage, canvasWidth, canvasHeight, allowedArea);
 }
 
-function calculateMaskBounds(mask: ImageData): { x: number; y: number; width: number; height: number } {
+function calculateMaskBounds(mask: ImageData): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
   let minX = mask.width;
   let minY = mask.height;
   let maxX = 0;
   let maxY = 0;
-  
+
   for (let y = 0; y < mask.height; y++) {
     for (let x = 0; x < mask.width; x++) {
       const index = (y * mask.width + x) * 4;
       const alpha = mask.data[index + 3];
-      
+
       if (alpha > 0) {
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
@@ -552,12 +557,12 @@ function calculateMaskBounds(mask: ImageData): { x: number; y: number; width: nu
       }
     }
   }
-  
+
   return {
     x: minX,
     y: minY,
     width: maxX - minX + 1,
-    height: maxY - minY + 1
+    height: maxY - minY + 1,
   };
 }
 

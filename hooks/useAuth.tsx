@@ -49,17 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check authentication status on mount and periodically
   useEffect(() => {
     checkAuthStatus();
-    
+
     // Check auth status every 5 minutes
     const interval = setInterval(checkAuthStatus, 5 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   const checkAuthStatus = async () => {
     try {
       const response = await fetch('/api/admin/auth/me');
-      
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string, rememberMe = false) => {
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
@@ -143,29 +143,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasAnyRole,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // Additional hooks for specific use cases
 export function useRequireAuth() {
   const { user, isLoading } = useAuth();
-  
+
   useEffect(() => {
     if (!isLoading && !user) {
       window.location.href = '/admin/login';
     }
   }, [user, isLoading]);
-  
+
   return { user, isLoading };
 }
 
 export function useRequireRole(requiredRole: UserRole) {
   const { user, isLoading } = useAuth();
-  
+
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
@@ -175,13 +171,13 @@ export function useRequireRole(requiredRole: UserRole) {
       }
     }
   }, [user, isLoading, requiredRole]);
-  
+
   return { user, isLoading };
 }
 
 export function useRequirePermission(permission: keyof RolePermissions) {
   const { user, isLoading, can } = useAuth();
-  
+
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
@@ -191,6 +187,6 @@ export function useRequirePermission(permission: keyof RolePermissions) {
       }
     }
   }, [user, isLoading, can, permission]);
-  
+
   return { user, isLoading };
 }

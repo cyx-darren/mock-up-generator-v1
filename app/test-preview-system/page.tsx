@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import PreviewSystem, { PreviewOptions, GradientOptions, PatternOptions, ZoomState } from '../../lib/preview-system';
+import PreviewSystem, {
+  PreviewOptions,
+  GradientOptions,
+  PatternOptions,
+  ZoomState,
+} from '../../lib/preview-system';
 
 interface ColorPickerProps {
   value: string;
@@ -10,15 +15,55 @@ interface ColorPickerProps {
 
 function ColorPicker({ value, onChange }: ColorPickerProps) {
   const presetColors = [
-    '#FFFFFF', '#F3F4F6', '#E5E7EB', '#D1D5DB', '#9CA3AF', '#6B7280', '#374151', '#1F2937', '#111827',
-    '#FEF2F2', '#FCA5A5', '#EF4444', '#DC2626', '#B91C1C',
-    '#FFF7ED', '#FED7AA', '#FB923C', '#EA580C', '#C2410C',
-    '#FFFBEB', '#FDE68A', '#F59E0B', '#D97706', '#92400E',
-    '#F7FEE7', '#BEF264', '#65A30D', '#4D7C0F', '#365314',
-    '#ECFDF5', '#86EFAC', '#10B981', '#059669', '#047857',
-    '#F0F9FF', '#7DD3FC', '#0EA5E9', '#0284C7', '#0369A1',
-    '#EEF2FF', '#A5B4FC', '#6366F1', '#4F46E5', '#4338CA',
-    '#FAF5FF', '#C4B5FD', '#8B5CF6', '#7C3AED', '#6D28D9'
+    '#FFFFFF',
+    '#F3F4F6',
+    '#E5E7EB',
+    '#D1D5DB',
+    '#9CA3AF',
+    '#6B7280',
+    '#374151',
+    '#1F2937',
+    '#111827',
+    '#FEF2F2',
+    '#FCA5A5',
+    '#EF4444',
+    '#DC2626',
+    '#B91C1C',
+    '#FFF7ED',
+    '#FED7AA',
+    '#FB923C',
+    '#EA580C',
+    '#C2410C',
+    '#FFFBEB',
+    '#FDE68A',
+    '#F59E0B',
+    '#D97706',
+    '#92400E',
+    '#F7FEE7',
+    '#BEF264',
+    '#65A30D',
+    '#4D7C0F',
+    '#365314',
+    '#ECFDF5',
+    '#86EFAC',
+    '#10B981',
+    '#059669',
+    '#047857',
+    '#F0F9FF',
+    '#7DD3FC',
+    '#0EA5E9',
+    '#0284C7',
+    '#0369A1',
+    '#EEF2FF',
+    '#A5B4FC',
+    '#6366F1',
+    '#4F46E5',
+    '#4338CA',
+    '#FAF5FF',
+    '#C4B5FD',
+    '#8B5CF6',
+    '#7C3AED',
+    '#6D28D9',
   ];
 
   return (
@@ -58,35 +103,39 @@ export default function TestPreviewSystemPage() {
   const [previewSystem, setPreviewSystem] = useState<PreviewSystem | null>(null);
   const [logoImage, setLogoImage] = useState<HTMLImageElement | null>(null);
   const [logoCanvas, setLogoCanvas] = useState<HTMLCanvasElement | null>(null);
-  
+
   // Preview options state
   const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
-  const [previewType, setPreviewType] = useState<'solid' | 'gradient' | 'pattern' | 'transparent' | 'environment'>('solid');
-  const [environmentType, setEnvironmentType] = useState<'mug' | 'tshirt' | 'business-card' | 'signage' | 'web'>('mug');
-  
+  const [previewType, setPreviewType] = useState<
+    'solid' | 'gradient' | 'pattern' | 'transparent' | 'environment'
+  >('solid');
+  const [environmentType, setEnvironmentType] = useState<
+    'mug' | 'tshirt' | 'business-card' | 'signage' | 'web'
+  >('mug');
+
   // Gradient options
   const [gradientType, setGradientType] = useState<'linear' | 'radial'>('linear');
   const [gradientColors, setGradientColors] = useState([
     { color: '#3B82F6', stop: 0 },
-    { color: '#8B5CF6', stop: 1 }
+    { color: '#8B5CF6', stop: 1 },
   ]);
   const [gradientAngle, setGradientAngle] = useState(45);
-  
+
   // Pattern options
   const [patternType, setPatternType] = useState<'dots' | 'stripes' | 'grid' | 'diagonal'>('dots');
   const [patternColor, setPatternColor] = useState('#E5E7EB');
   const [patternSpacing, setPatternSpacing] = useState(30);
   const [patternSize, setPatternSize] = useState(4);
-  
+
   // Zoom state
   const [zoomState, setZoomState] = useState<ZoomState>({
     scale: 1,
     offsetX: 0,
     offsetY: 0,
     minScale: 0.1,
-    maxScale: 5
+    maxScale: 5,
   });
-  
+
   const [showBeforeAfter, setShowBeforeAfter] = useState(false);
   const [originalLogoCanvas, setOriginalLogoCanvas] = useState<HTMLCanvasElement | null>(null);
 
@@ -97,35 +146,35 @@ export default function TestPreviewSystemPage() {
       canvas.width = 300;
       canvas.height = 150;
       const ctx = canvas.getContext('2d')!;
-      
+
       // Create a gradient background
       const gradient = ctx.createLinearGradient(0, 0, 300, 0);
       gradient.addColorStop(0, '#6366F1');
       gradient.addColorStop(1, '#8B5CF6');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 300, 150);
-      
+
       // Add company name
       ctx.fillStyle = 'white';
       ctx.font = 'bold 36px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('ACME', 150, 60);
-      
+
       // Add tagline
       ctx.font = '18px Arial';
       ctx.fillText('Quality Solutions', 150, 100);
-      
+
       // Add decorative elements
       ctx.fillStyle = '#FBBF24';
       ctx.beginPath();
       ctx.arc(50, 40, 12, 0, 2 * Math.PI);
       ctx.fill();
-      
+
       ctx.beginPath();
       ctx.arc(250, 110, 8, 0, 2 * Math.PI);
       ctx.fill();
-      
+
       // Convert to image
       const img = new Image();
       img.onload = () => resolve(img);
@@ -147,7 +196,7 @@ export default function TestPreviewSystemPage() {
   useEffect(() => {
     const system = new PreviewSystem();
     setPreviewSystem(system);
-    
+
     createSampleLogo().then((img) => {
       setLogoImage(img);
       const logoCanvas = createLogoCanvas(img);
@@ -164,38 +213,38 @@ export default function TestPreviewSystemPage() {
     if (!ctx) return;
 
     let result;
-    
+
     try {
       switch (previewType) {
         case 'solid':
           result = previewSystem.generateSolidColorPreview(logoCanvas, backgroundColor);
           break;
-          
+
         case 'gradient':
           const gradientOptions: GradientOptions = {
             type: gradientType,
             colors: gradientColors,
-            angle: gradientAngle
+            angle: gradientAngle,
           };
           result = previewSystem.generateGradientPreview(logoCanvas, gradientOptions);
           break;
-          
+
         case 'pattern':
           const patternOptions: PatternOptions = {
             type: patternType,
             color: patternColor,
             spacing: patternSpacing,
-            size: patternSize
+            size: patternSize,
           };
           result = previewSystem.generatePatternPreview(logoCanvas, patternOptions);
           break;
-          
+
         case 'transparent':
           result = previewSystem.generateTransparentPreview(logoCanvas, {
-            includeTransparencyChecker: true
+            includeTransparencyChecker: true,
           });
           break;
-          
+
         case 'environment':
           result = previewSystem.generateEnvironmentPreview(logoCanvas, environmentType);
           break;
@@ -208,7 +257,20 @@ export default function TestPreviewSystemPage() {
     } catch (error) {
       console.error('Preview generation error:', error);
     }
-  }, [previewSystem, logoCanvas, previewType, backgroundColor, gradientType, gradientColors, gradientAngle, patternType, patternColor, patternSpacing, patternSize, environmentType]);
+  }, [
+    previewSystem,
+    logoCanvas,
+    previewType,
+    backgroundColor,
+    gradientType,
+    gradientColors,
+    gradientAngle,
+    patternType,
+    patternColor,
+    patternSpacing,
+    patternSize,
+    environmentType,
+  ]);
 
   // Generate before/after preview
   const generateBeforeAfterPreview = useCallback(async () => {
@@ -295,7 +357,7 @@ export default function TestPreviewSystemPage() {
   // Export preview
   const exportPreview = () => {
     if (!canvasRef.current) return;
-    
+
     const link = document.createElement('a');
     link.download = `preview-${previewType}-${Date.now()}.png`;
     link.href = canvasRef.current.toDataURL();
@@ -306,7 +368,7 @@ export default function TestPreviewSystemPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Preview System Test</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Preview Canvas */}
           <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
@@ -345,7 +407,7 @@ export default function TestPreviewSystemPage() {
                 </button>
               </div>
             </div>
-            
+
             <div className="border-2 border-dashed border-gray-300 p-4 rounded">
               <canvas
                 ref={canvasRef}
@@ -354,26 +416,23 @@ export default function TestPreviewSystemPage() {
                 className="border border-gray-400 bg-white max-w-full h-auto"
               />
             </div>
-            
+
             <div className="mt-4 text-sm text-gray-600">
               <div>Zoom: {Math.round(zoomState.scale * 100)}%</div>
-              <div>Offset: ({Math.round(zoomState.offsetX)}, {Math.round(zoomState.offsetY)})</div>
+              <div>
+                Offset: ({Math.round(zoomState.offsetX)}, {Math.round(zoomState.offsetY)})
+              </div>
             </div>
-            
+
             <div className="mt-4">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="text-sm"
-              />
+              <input type="file" accept="image/*" onChange={handleFileUpload} className="text-sm" />
             </div>
           </div>
 
           {/* Controls */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4">Preview Controls</h3>
-            
+
             {/* Preview Type */}
             <div className="mb-6">
               <label className="block text-sm font-medium mb-2">Preview Type</label>
@@ -423,7 +482,7 @@ export default function TestPreviewSystemPage() {
                   <option value="linear">Linear</option>
                   <option value="radial">Radial</option>
                 </select>
-                
+
                 {gradientType === 'linear' && (
                   <div className="mb-3">
                     <label className="block text-sm mb-1">Angle: {gradientAngle}°</label>
@@ -437,11 +496,13 @@ export default function TestPreviewSystemPage() {
                     />
                   </div>
                 )}
-                
+
                 <div className="space-y-3">
                   {gradientColors.map((colorStop, index) => (
                     <div key={index}>
-                      <label className="block text-sm mb-1">Color {index + 1} (Stop: {colorStop.stop})</label>
+                      <label className="block text-sm mb-1">
+                        Color {index + 1} (Stop: {colorStop.stop})
+                      </label>
                       <ColorPicker
                         value={colorStop.color}
                         onChange={(color) => {
@@ -470,12 +531,12 @@ export default function TestPreviewSystemPage() {
                   <option value="grid">Grid</option>
                   <option value="diagonal">Diagonal</option>
                 </select>
-                
+
                 <div className="mb-3">
                   <label className="block text-sm mb-1">Pattern Color</label>
                   <ColorPicker value={patternColor} onChange={setPatternColor} />
                 </div>
-                
+
                 <div className="mb-3">
                   <label className="block text-sm mb-1">Spacing: {patternSpacing}px</label>
                   <input
@@ -487,7 +548,7 @@ export default function TestPreviewSystemPage() {
                     className="w-full"
                   />
                 </div>
-                
+
                 <div className="mb-3">
                   <label className="block text-sm mb-1">Size: {patternSize}px</label>
                   <input
@@ -525,7 +586,7 @@ export default function TestPreviewSystemPage() {
         {/* Feature Documentation */}
         <div className="mt-12 bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold mb-4">Feature Documentation</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <h3 className="font-semibold text-green-600 mb-2">✓ White Background Preview</h3>
@@ -537,7 +598,7 @@ export default function TestPreviewSystemPage() {
                 <li>• Quality settings</li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold text-blue-600 mb-2">✓ Colored Background Preview</h3>
               <ul className="text-sm space-y-1">
@@ -548,7 +609,7 @@ export default function TestPreviewSystemPage() {
                 <li>• Consistent logo positioning</li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold text-purple-600 mb-2">✓ Custom Color Picker</h3>
               <ul className="text-sm space-y-1">
@@ -559,7 +620,7 @@ export default function TestPreviewSystemPage() {
                 <li>• Active color highlighting</li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold text-orange-600 mb-2">✓ Transparency Checker</h3>
               <ul className="text-sm space-y-1">
@@ -570,7 +631,7 @@ export default function TestPreviewSystemPage() {
                 <li>• Visual transparency feedback</li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold text-red-600 mb-2">✓ Before/After View</h3>
               <ul className="text-sm space-y-1">
@@ -581,7 +642,7 @@ export default function TestPreviewSystemPage() {
                 <li>• Same background for both</li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-semibold text-indigo-600 mb-2">✓ Zoom Functionality</h3>
               <ul className="text-sm space-y-1">
@@ -593,16 +654,33 @@ export default function TestPreviewSystemPage() {
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-blue-50 rounded">
             <h3 className="font-semibold text-blue-800 mb-2">Advanced Features</h3>
             <ul className="text-sm space-y-1 text-blue-700">
-              <li>• <strong>Gradient Backgrounds:</strong> Linear and radial gradients with customizable colors and angles</li>
-              <li>• <strong>Pattern Backgrounds:</strong> Dots, stripes, grid, and diagonal patterns with size/spacing controls</li>
-              <li>• <strong>Environment Mockups:</strong> Realistic contexts (mug, t-shirt, business card, signage, web)</li>
-              <li>• <strong>Export System:</strong> Download previews in multiple formats with quality settings</li>
-              <li>• <strong>History Management:</strong> Preview history tracking and management</li>
-              <li>• <strong>Bulk Generation:</strong> Generate multiple previews with different backgrounds</li>
+              <li>
+                • <strong>Gradient Backgrounds:</strong> Linear and radial gradients with
+                customizable colors and angles
+              </li>
+              <li>
+                • <strong>Pattern Backgrounds:</strong> Dots, stripes, grid, and diagonal patterns
+                with size/spacing controls
+              </li>
+              <li>
+                • <strong>Environment Mockups:</strong> Realistic contexts (mug, t-shirt, business
+                card, signage, web)
+              </li>
+              <li>
+                • <strong>Export System:</strong> Download previews in multiple formats with quality
+                settings
+              </li>
+              <li>
+                • <strong>History Management:</strong> Preview history tracking and management
+              </li>
+              <li>
+                • <strong>Bulk Generation:</strong> Generate multiple previews with different
+                backgrounds
+              </li>
             </ul>
           </div>
         </div>

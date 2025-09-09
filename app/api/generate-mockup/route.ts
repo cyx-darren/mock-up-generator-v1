@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       logoFile: typeof logo.file,
       productId: product.id,
       productCategory: product.category,
-      placementType
+      placementType,
     });
 
     // Create pipeline instance
@@ -36,11 +36,13 @@ export async function POST(request: NextRequest) {
       success: true,
       result,
     });
-
   } catch (error) {
     console.error('Mockup generation error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate mockup', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to generate mockup',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

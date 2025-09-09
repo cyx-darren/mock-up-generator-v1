@@ -7,7 +7,7 @@ export async function GET() {
     return NextResponse.json(credits);
   } catch (error) {
     console.error('Credits check error:', error);
-    
+
     if (isRemoveBgError(error)) {
       return NextResponse.json(
         {
@@ -19,9 +19,6 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json(
-      { error: 'Failed to check credits' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to check credits' }, { status: 500 });
   }
 }

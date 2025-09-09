@@ -29,11 +29,11 @@ interface ProductDetailModalProps {
   onSelectProduct: (product: Product) => void;
 }
 
-export function ProductDetailModal({ 
-  isOpen, 
-  onClose, 
-  product, 
-  onSelectProduct 
+export function ProductDetailModal({
+  isOpen,
+  onClose,
+  product,
+  onSelectProduct,
 }: ProductDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
@@ -45,28 +45,28 @@ export function ProductDetailModal({
   const allImages = [
     product.primary_image_url,
     product.thumbnail_url,
-    ...(product.additional_images || [])
+    ...(product.additional_images || []),
   ].filter(Boolean) as string[];
 
   // Remove duplicates
   const uniqueImages = Array.from(new Set(allImages));
   const hasMultipleImages = uniqueImages.length > 1;
-  
+
   const currentImage = uniqueImages[selectedImageIndex] || uniqueImages[0] || '';
-  
+
   // Check if the image URL is valid for Next.js Image component
-  const isValidImageUrl = currentImage && (
-    currentImage.startsWith('https://images.unsplash.com/') ||
-    currentImage.includes('supabase.co') ||
-    currentImage.startsWith('/') ||
-    currentImage.startsWith('http://localhost') ||
-    currentImage.startsWith('https://localhost')
-  );
+  const isValidImageUrl =
+    currentImage &&
+    (currentImage.startsWith('https://images.unsplash.com/') ||
+      currentImage.includes('supabase.co') ||
+      currentImage.startsWith('/') ||
+      currentImage.startsWith('http://localhost') ||
+      currentImage.startsWith('https://localhost'));
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(price);
   };
 
@@ -77,7 +77,7 @@ export function ProductDetailModal({
         name: 'Horizontal Placement',
         description: 'Place your logo horizontally across the product',
         icon: '↔️',
-        enabled: true
+        enabled: true,
       });
     }
     if (product.vertical_enabled) {
@@ -85,7 +85,7 @@ export function ProductDetailModal({
         name: 'Vertical Placement',
         description: 'Place your logo vertically on the product',
         icon: '↕️',
-        enabled: true
+        enabled: true,
       });
     }
     if (product.all_over_enabled) {
@@ -93,7 +93,7 @@ export function ProductDetailModal({
         name: 'All-Over Print',
         description: 'Repeat your logo as a pattern across the entire product',
         icon: '🔄',
-        enabled: true
+        enabled: true,
       });
     }
     return options;
@@ -132,7 +132,7 @@ export function ProductDetailModal({
             {imageLoading && !imageError && (
               <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg" />
             )}
-            
+
             {!imageError && currentImage ? (
               isValidImageUrl ? (
                 <Image
@@ -162,7 +162,11 @@ export function ProductDetailModal({
               <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
                 <div className="text-center">
                   <svg className="w-24 h-24 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <p className="text-lg">No Image Available</p>
                 </div>
@@ -190,13 +194,13 @@ export function ProductDetailModal({
           {hasMultipleImages && (
             <div className="flex space-x-2 overflow-x-auto pb-2">
               {uniqueImages.map((image, index) => {
-                const isThumbnailValid = image && (
-                  image.startsWith('https://images.unsplash.com/') ||
-                  image.includes('supabase.co') ||
-                  image.startsWith('/') ||
-                  image.startsWith('http://localhost') ||
-                  image.startsWith('https://localhost')
-                );
+                const isThumbnailValid =
+                  image &&
+                  (image.startsWith('https://images.unsplash.com/') ||
+                    image.includes('supabase.co') ||
+                    image.startsWith('/') ||
+                    image.startsWith('http://localhost') ||
+                    image.startsWith('https://localhost'));
 
                 return (
                   <button
@@ -207,10 +211,10 @@ export function ProductDetailModal({
                       setImageLoading(true);
                     }}
                     className={cn(
-                      "relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 flex-shrink-0",
+                      'relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 flex-shrink-0',
                       selectedImageIndex === index
-                        ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800"
-                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                        ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     )}
                   >
                     {isThumbnailValid ? (
@@ -263,7 +267,7 @@ export function ProductDetailModal({
                 </p>
               </div>
             </div>
-            
+
             <div>
               <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Category</span>
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">
@@ -335,12 +339,7 @@ export function ProductDetailModal({
             >
               {placementOptions.length > 0 ? 'Select This Product' : 'Not Available'}
             </Button>
-            <Button
-              variant="outline"
-              onClick={onClose}
-              size="lg"
-              className="px-8"
-            >
+            <Button variant="outline" onClick={onClose} size="lg" className="px-8">
               Cancel
             </Button>
           </div>

@@ -1,13 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getPromptEngineeringService, PromptGenerationRequest, GeneratedPrompt, PlacementVariation, QualityModifier } from '../../lib/prompt-engineering';
+import {
+  getPromptEngineeringService,
+  PromptGenerationRequest,
+  GeneratedPrompt,
+  PlacementVariation,
+  QualityModifier,
+} from '../../lib/prompt-engineering';
 
 export default function TestPromptEngineeringPage() {
   const [promptService] = useState(() => getPromptEngineeringService());
   const [generatedPrompt, setGeneratedPrompt] = useState<GeneratedPrompt | null>(null);
   const [abTestVariations, setAbTestVariations] = useState<GeneratedPrompt[]>([]);
-  
+
   // Form state
   const [request, setRequest] = useState<PromptGenerationRequest>({
     productType: 'mug',
@@ -18,11 +24,11 @@ export default function TestPromptEngineeringPage() {
       angle: 'three-quarter',
       background: 'white',
       mood: 'professional',
-      aesthetic: 'minimal'
+      aesthetic: 'minimal',
     },
     customText: 'ACME Corp',
     brandColors: ['#2563eb', '#ffffff'],
-    additionalRequirements: []
+    additionalRequirements: [],
   });
 
   // Available options
@@ -35,7 +41,7 @@ export default function TestPromptEngineeringPage() {
     setAvailableProducts(promptService.getAvailableProductTypes());
     setAvailablePlacements(promptService.getAvailablePlacementTypes());
     setAvailableQualities(promptService.getAvailableQualityLevels());
-    
+
     // Generate initial prompt
     generatePrompt();
   }, []);
@@ -61,7 +67,7 @@ export default function TestPromptEngineeringPage() {
   const updateRequest = (updates: Partial<PromptGenerationRequest>) => {
     const newRequest = { ...request, ...updates };
     setRequest(newRequest);
-    
+
     // Auto-generate prompt on change
     try {
       const prompt = promptService.generatePrompt(newRequest);
@@ -74,7 +80,7 @@ export default function TestPromptEngineeringPage() {
   const updateStylePreference = (category: string, value: string) => {
     const newStylePreferences = {
       ...request.stylePreferences,
-      [category]: value
+      [category]: value,
     };
     updateRequest({ stylePreferences: newStylePreferences });
   };
@@ -83,7 +89,7 @@ export default function TestPromptEngineeringPage() {
     const requirement = prompt('Enter additional requirement:');
     if (requirement) {
       updateRequest({
-        additionalRequirements: [...(request.additionalRequirements || []), requirement]
+        additionalRequirements: [...(request.additionalRequirements || []), requirement],
       });
     }
   };
@@ -98,7 +104,7 @@ export default function TestPromptEngineeringPage() {
     const color = prompt('Enter brand color (hex format):');
     if (color) {
       updateRequest({
-        brandColors: [...(request.brandColors || []), color]
+        brandColors: [...(request.brandColors || []), color],
       });
     }
   };
@@ -113,12 +119,12 @@ export default function TestPromptEngineeringPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Prompt Engineering Test Suite</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Configuration Panel */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Prompt Configuration</h2>
-            
+
             <div className="space-y-4">
               {/* Product Type */}
               <div>
@@ -128,7 +134,7 @@ export default function TestPromptEngineeringPage() {
                   onChange={(e) => updateRequest({ productType: e.target.value })}
                   className="w-full p-2 border rounded"
                 >
-                  {availableProducts.map(product => (
+                  {availableProducts.map((product) => (
                     <option key={product} value={product}>
                       {product.replace('_', ' ').toUpperCase()}
                     </option>
@@ -141,10 +147,12 @@ export default function TestPromptEngineeringPage() {
                 <label className="block text-sm font-medium mb-2">Placement Type</label>
                 <select
                   value={request.placementType}
-                  onChange={(e) => updateRequest({ placementType: e.target.value as PlacementVariation['type'] })}
+                  onChange={(e) =>
+                    updateRequest({ placementType: e.target.value as PlacementVariation['type'] })
+                  }
                   className="w-full p-2 border rounded"
                 >
-                  {availablePlacements.map(placement => (
+                  {availablePlacements.map((placement) => (
                     <option key={placement} value={placement}>
                       {placement.replace('_', ' ').toUpperCase()}
                     </option>
@@ -157,10 +165,12 @@ export default function TestPromptEngineeringPage() {
                 <label className="block text-sm font-medium mb-2">Quality Level</label>
                 <select
                   value={request.qualityLevel}
-                  onChange={(e) => updateRequest({ qualityLevel: e.target.value as QualityModifier['level'] })}
+                  onChange={(e) =>
+                    updateRequest({ qualityLevel: e.target.value as QualityModifier['level'] })
+                  }
                   className="w-full p-2 border rounded"
                 >
-                  {availableQualities.map(quality => (
+                  {availableQualities.map((quality) => (
                     <option key={quality} value={quality}>
                       {quality.toUpperCase()}
                     </option>
@@ -193,7 +203,7 @@ export default function TestPromptEngineeringPage() {
                       className="w-full p-1 border rounded text-xs"
                     >
                       <option value="">None</option>
-                      {promptService.getStyleOptions('lighting').map(option => (
+                      {promptService.getStyleOptions('lighting').map((option) => (
                         <option key={option.name} value={option.name}>
                           {option.name}
                         </option>
@@ -210,7 +220,7 @@ export default function TestPromptEngineeringPage() {
                       className="w-full p-1 border rounded text-xs"
                     >
                       <option value="">None</option>
-                      {promptService.getStyleOptions('angle').map(option => (
+                      {promptService.getStyleOptions('angle').map((option) => (
                         <option key={option.name} value={option.name}>
                           {option.name}
                         </option>
@@ -227,7 +237,7 @@ export default function TestPromptEngineeringPage() {
                       className="w-full p-1 border rounded text-xs"
                     >
                       <option value="">None</option>
-                      {promptService.getStyleOptions('background').map(option => (
+                      {promptService.getStyleOptions('background').map((option) => (
                         <option key={option.name} value={option.name}>
                           {option.name}
                         </option>
@@ -244,7 +254,7 @@ export default function TestPromptEngineeringPage() {
                       className="w-full p-1 border rounded text-xs"
                     >
                       <option value="">None</option>
-                      {promptService.getStyleOptions('mood').map(option => (
+                      {promptService.getStyleOptions('mood').map((option) => (
                         <option key={option.name} value={option.name}>
                           {option.name}
                         </option>
@@ -263,10 +273,7 @@ export default function TestPromptEngineeringPage() {
                       key={index}
                       className="px-2 py-1 bg-gray-200 rounded text-xs flex items-center gap-1"
                     >
-                      <div
-                        className="w-3 h-3 rounded"
-                        style={{ backgroundColor: color }}
-                      ></div>
+                      <div className="w-3 h-3 rounded" style={{ backgroundColor: color }}></div>
                       {color}
                       <button
                         onClick={() => removeBrandColor(index)}
@@ -333,7 +340,7 @@ export default function TestPromptEngineeringPage() {
             {generatedPrompt && (
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <h2 className="text-xl font-semibold mb-4">Generated Prompt</h2>
-                
+
                 <div className="space-y-4">
                   <div className="p-4 bg-gray-50 rounded">
                     <h3 className="font-medium mb-2">Final Prompt</h3>
@@ -347,7 +354,9 @@ export default function TestPromptEngineeringPage() {
                       <h4 className="font-medium mb-1">Metadata</h4>
                       <div className="text-xs space-y-1">
                         <div>Variation: {generatedPrompt.metadata.variation}</div>
-                        <div>Confidence: {(generatedPrompt.metadata.confidence * 100).toFixed(1)}%</div>
+                        <div>
+                          Confidence: {(generatedPrompt.metadata.confidence * 100).toFixed(1)}%
+                        </div>
                         <div>Est. Tokens: {generatedPrompt.metadata.estimatedTokens}</div>
                       </div>
                     </div>
@@ -367,7 +376,7 @@ export default function TestPromptEngineeringPage() {
             {abTestVariations.length > 0 && (
               <div className="bg-white p-6 rounded-lg shadow-lg">
                 <h2 className="text-xl font-semibold mb-4">A/B Test Variations</h2>
-                
+
                 <div className="space-y-4">
                   {abTestVariations.map((variation, index) => (
                     <div key={index} className="border rounded p-4">
@@ -377,12 +386,10 @@ export default function TestPromptEngineeringPage() {
                           {variation.metadata.variation}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        {variation.finalPrompt}
-                      </p>
+                      <p className="text-sm text-gray-700 mb-2">{variation.finalPrompt}</p>
                       <div className="text-xs text-gray-500">
-                        Confidence: {(variation.metadata.confidence * 100).toFixed(1)}% | 
-                        Tokens: {variation.metadata.estimatedTokens}
+                        Confidence: {(variation.metadata.confidence * 100).toFixed(1)}% | Tokens:{' '}
+                        {variation.metadata.estimatedTokens}
                       </div>
                     </div>
                   ))}
@@ -395,7 +402,7 @@ export default function TestPromptEngineeringPage() {
         {/* Implementation Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg mt-8">
           <h2 className="text-xl font-semibold mb-4">Task 5.2.2 Implementation Status</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-medium mb-3">Completed Features</h3>
@@ -408,7 +415,7 @@ export default function TestPromptEngineeringPage() {
                   'Style parameters (lighting, angle, background, mood, aesthetic)',
                   'A/B testing system with 3 variations',
                   'Interactive test interface for prompt generation',
-                  'Real-time prompt preview and configuration'
+                  'Real-time prompt preview and configuration',
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
@@ -423,14 +430,30 @@ export default function TestPromptEngineeringPage() {
             <div>
               <h3 className="font-medium mb-3">Key Implementation Details</h3>
               <div className="text-sm space-y-2">
-                <div>• <strong>Template System:</strong> Variable-based prompt construction</div>
-                <div>• <strong>Product Types:</strong> Mug, T-shirt, Pen, Notebook, Tote Bag</div>
-                <div>• <strong>Placement Options:</strong> 5 different logo placement strategies</div>
-                <div>• <strong>Quality Levels:</strong> 4 tiers with increasing sophistication</div>
-                <div>• <strong>Style Categories:</strong> 5 categories with 3 options each</div>
-                <div>• <strong>A/B Testing:</strong> Standard, Modern, Premium variations</div>
-                <div>• <strong>Customization:</strong> Brand colors, custom text, requirements</div>
-                <div>• <strong>Metadata:</strong> Token estimation and confidence scoring</div>
+                <div>
+                  • <strong>Template System:</strong> Variable-based prompt construction
+                </div>
+                <div>
+                  • <strong>Product Types:</strong> Mug, T-shirt, Pen, Notebook, Tote Bag
+                </div>
+                <div>
+                  • <strong>Placement Options:</strong> 5 different logo placement strategies
+                </div>
+                <div>
+                  • <strong>Quality Levels:</strong> 4 tiers with increasing sophistication
+                </div>
+                <div>
+                  • <strong>Style Categories:</strong> 5 categories with 3 options each
+                </div>
+                <div>
+                  • <strong>A/B Testing:</strong> Standard, Modern, Premium variations
+                </div>
+                <div>
+                  • <strong>Customization:</strong> Brand colors, custom text, requirements
+                </div>
+                <div>
+                  • <strong>Metadata:</strong> Token estimation and confidence scoring
+                </div>
               </div>
             </div>
           </div>

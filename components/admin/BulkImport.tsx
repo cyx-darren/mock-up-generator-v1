@@ -5,17 +5,22 @@ import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
-import { 
-  Download, 
-  Upload, 
-  FileText, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  Download,
+  Upload,
+  FileText,
+  AlertCircle,
+  CheckCircle,
   X,
   Eye,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
-import { CSVParser, ParseResult, ValidationError, ValidationWarning } from '@/lib/bulk-import/csvParser';
+import {
+  CSVParser,
+  ParseResult,
+  ValidationError,
+  ValidationWarning,
+} from '@/lib/bulk-import/csvParser';
 import { downloadCSVTemplate, ProductCSVRow } from '@/lib/bulk-import/csvTemplate';
 
 interface ImportResult {
@@ -56,7 +61,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
     try {
       const result = await CSVParser.parseCSV(file);
       setParseResult(result);
-      
+
       // Auto-select all valid rows
       if (result.success && result.data) {
         setSelectedRows(new Set(result.data.map((_, index) => index)));
@@ -65,11 +70,13 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
       console.error('Parse error:', error);
       setParseResult({
         success: false,
-        errors: [{
-          row: 0,
-          field: 'file',
-          message: 'Failed to parse CSV file'
-        }]
+        errors: [
+          {
+            row: 0,
+            field: 'file',
+            message: 'Failed to parse CSV file',
+          },
+        ],
       });
     } finally {
       setParsing(false);
@@ -90,12 +97,12 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
       const response = await fetch('/api/admin/products/bulk-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: rowsToImport })
+        body: JSON.stringify({ products: rowsToImport }),
       });
 
       const result = await response.json();
       setImportResult(result);
-      
+
       if (result.success && onImportComplete) {
         onImportComplete();
       }
@@ -105,7 +112,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
         success: false,
         imported: 0,
         failed: rowsToImport.length,
-        errors: ['Failed to import products. Please try again.']
+        errors: ['Failed to import products. Please try again.'],
       });
     } finally {
       setImporting(false);
@@ -115,7 +122,11 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
   const handleRollback = useCallback(async () => {
     if (!importResult?.rollbackId) return;
 
-    if (!confirm('Are you sure you want to rollback this import? This will delete all products created in this import.')) {
+    if (
+      !confirm(
+        'Are you sure you want to rollback this import? This will delete all products created in this import.'
+      )
+    ) {
       return;
     }
 
@@ -124,7 +135,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
       const response = await fetch('/api/admin/products/bulk-import/rollback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rollbackId: importResult.rollbackId })
+        body: JSON.stringify({ rollbackId: importResult.rollbackId }),
       });
 
       if (response.ok) {
@@ -233,7 +244,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
         <Card>
           <CardBody>
             <h3 className="text-lg font-semibold mb-4">Step 3: Review & Import</h3>
-            
+
             {/* Errors */}
             {parseResult.errors && parseResult.errors.length > 0 && (
               <Alert type="error" className="mb-4">
@@ -263,7 +274,9 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
                     </div>
                   ))}
                   {parseResult.warnings.length > 3 && (
-                    <p className="text-sm">...and {parseResult.warnings.length - 3} more warnings</p>
+                    <p className="text-sm">
+                      ...and {parseResult.warnings.length - 3} more warnings
+                    </p>
                   )}
                 </div>
               </Alert>
@@ -309,7 +322,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
                             <input
                               type="checkbox"
                               checked={selectedRows.size === parseResult.data.length}
-                              onChange={(e) => e.target.checked ? selectAll() : deselectAll()}
+                              onChange={(e) => (e.target.checked ? selectAll() : deselectAll())}
                             />
                           </th>
                           <th className="p-2 text-left">Name</th>
@@ -334,11 +347,15 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
                             <td className="p-2">{row.sku || 'Auto-generate'}</td>
                             <td className="p-2">{row.price ? `$${row.price}` : '-'}</td>
                             <td className="p-2">
-                              <span className={`px-2 py-1 rounded text-xs ${
-                                row.status === 'active' ? 'bg-green-100 text-green-800' :
-                                row.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }`}>
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${
+                                  row.status === 'active'
+                                    ? 'bg-green-100 text-green-800'
+                                    : row.status === 'inactive'
+                                      ? 'bg-gray-100 text-gray-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                }`}
+                              >
                                 {row.status || 'active'}
                               </span>
                             </td>
@@ -356,10 +373,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
 
                 {/* Import Button */}
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={handleImport} 
-                    disabled={importing || selectedRows.size === 0}
-                  >
+                  <Button onClick={handleImport} disabled={importing || selectedRows.size === 0}>
                     {importing ? (
                       <>
                         <Spinner className="w-4 h-4 mr-2" />
@@ -372,8 +386,8 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
                       </>
                     )}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setFile(null);
                       setParseResult(null);
@@ -395,7 +409,7 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
         <Card>
           <CardBody>
             <h3 className="text-lg font-semibold mb-4">Import Results</h3>
-            
+
             {importResult.success ? (
               <Alert type="success" className="mb-4">
                 <CheckCircle className="w-4 h-4 inline mr-2" />
@@ -413,7 +427,9 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
                 <p className="font-semibold mb-2">Errors:</p>
                 <ul className="list-disc list-inside space-y-1">
                   {importResult.errors.map((error, index) => (
-                    <li key={index} className="text-sm text-red-600">{error}</li>
+                    <li key={index} className="text-sm text-red-600">
+                      {error}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -421,16 +437,12 @@ export default function BulkImport({ onImportComplete }: { onImportComplete?: ()
 
             <div className="flex gap-2">
               {importResult.rollbackId && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleRollback}
-                  disabled={importing}
-                >
+                <Button variant="outline" onClick={handleRollback} disabled={importing}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Rollback Import
                 </Button>
               )}
-              <Button 
+              <Button
                 onClick={() => {
                   setFile(null);
                   setParseResult(null);

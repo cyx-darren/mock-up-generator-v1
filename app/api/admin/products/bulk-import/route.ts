@@ -21,12 +21,9 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const { accessToken } = getAuthTokens(request);
-    
+
     if (!accessToken) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const tokenPayload = verifyAccessToken(accessToken);
@@ -40,38 +37,29 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid user' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
 
     // Check if user has permission to create products
     if (user.role !== 'super_admin' && user.role !== 'product_manager') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
     const { products }: BulkImportRequest = await request.json();
 
     if (!products || !Array.isArray(products) || products.length === 0) {
-      return NextResponse.json(
-        { error: 'No products provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No products provided' }, { status: 400 });
     }
 
     // Generate rollback ID
     const rollbackId = `bulk_import_${Date.now()}_${user.id}`;
-    
+
     const result: BulkImportResult = {
       success: true,
       imported: 0,
       failed: 0,
       errors: [],
-      rollbackId
+      rollbackId,
     };
 
     const importedProductIds: string[] = [];
@@ -79,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Process each product
     for (let i = 0; i < products.length; i++) {
       const product = products[i];
-      
+
       try {
         // Check for duplicate SKU if provided
         if (product.sku) {
@@ -97,15 +85,17 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate SKU if not provided
-        const generatedSku = product.sku || `${product.category.toUpperCase().slice(0, 3)}-${Date.now().toString().slice(-6)}-${i}`;
+        const generatedSku =
+          product.sku ||
+          `${product.category.toUpperCase().slice(0, 3)}-${Date.now().toString().slice(-6)}-${i}`;
 
         // Parse additional images
         let additionalImagesArray: string[] = [];
         if (product.additional_images) {
           additionalImagesArray = product.additional_images
             .split(';')
-            .map(url => url.trim())
-            .filter(url => url.length > 0);
+            .map((url) => url.trim())
+            .filter((url) => url.length > 0);
         }
 
         // Parse tags
@@ -113,14 +103,13 @@ export async function POST(request: NextRequest) {
         if (product.tags) {
           tagsArray = product.tags
             .split(';')
-            .map(tag => tag.trim())
-            .filter(tag => tag.length > 0);
+            .map((tag) => tag.trim())
+            .filter((tag) => tag.length > 0);
         }
 
         // Ensure base_image_url has a value (required by database)
-        const baseImageUrl = product.primary_image_url || 
-                            product.thumbnail_url || 
-                            '/placeholder-product-image.jpg'; // Default placeholder
+        const baseImageUrl =
+          product.primary_image_url || product.thumbnail_url || '/placeholder-product-image.jpg'; // Default placeholder
 
         // Create product
         const { data: newProduct, error: createError } = await supabase
@@ -157,7 +146,9 @@ export async function POST(request: NextRequest) {
           importedProductIds.push(newProduct.id);
         }
       } catch (error) {
-        result.errors?.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        result.errors?.push(
+          `Row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         result.failed++;
       }
     }
@@ -177,18 +168,14 @@ export async function POST(request: NextRequest) {
         imported: result.imported,
         failed: result.failed,
         rollback_id: rollbackId,
-        errors: result.errors?.slice(0, 10) // Limit errors in audit log
+        errors: result.errors?.slice(0, 10), // Limit errors in audit log
       },
-      ...clientInfo
+      ...clientInfo,
     });
 
     return NextResponse.json(result);
-
   } catch (error) {
     console.error('Bulk import error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

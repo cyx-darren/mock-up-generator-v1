@@ -2,18 +2,18 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { 
+import {
   ColorDetectionResult,
   DetectionSettings,
   GREEN_COLOR_RANGES,
   DEFAULT_DETECTION_SETTINGS,
-  colorDetectionService
+  colorDetectionService,
 } from '@/lib/color-detection';
 import {
   GeneratedMask,
   MaskGenerationOptions,
   DEFAULT_MASK_OPTIONS,
-  maskGenerationService
+  maskGenerationService,
 } from '@/lib/mask-generation';
 import {
   ConstraintValidationResult,
@@ -21,7 +21,7 @@ import {
   DEFAULT_CONSTRAINT_REQUIREMENTS,
   constraintValidationService,
   ValidationIssue,
-  PlacementZone
+  PlacementZone,
 } from '@/lib/constraint-validation';
 
 export default function TestConstraintValidationPage() {
@@ -34,11 +34,15 @@ export default function TestConstraintValidationPage() {
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState<string | null>(null);
   const [visualizationUrl, setVisualizationUrl] = useState<string | null>(null);
   const [validationReport, setValidationReport] = useState<string | null>(null);
-  
+
   // Settings
-  const [detectionSettings, setDetectionSettings] = useState<DetectionSettings>(DEFAULT_DETECTION_SETTINGS);
+  const [detectionSettings, setDetectionSettings] = useState<DetectionSettings>(
+    DEFAULT_DETECTION_SETTINGS
+  );
   const [maskOptions, setMaskOptions] = useState<MaskGenerationOptions>(DEFAULT_MASK_OPTIONS);
-  const [constraintRequirements, setConstraintRequirements] = useState<ConstraintRequirements>(DEFAULT_CONSTRAINT_REQUIREMENTS);
+  const [constraintRequirements, setConstraintRequirements] = useState<ConstraintRequirements>(
+    DEFAULT_CONSTRAINT_REQUIREMENTS
+  );
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -50,7 +54,7 @@ export default function TestConstraintValidationPage() {
       setValidationResult(null);
       setVisualizationUrl(null);
       setValidationReport(null);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setOriginalPreviewUrl(e.target?.result as string);
@@ -75,7 +79,7 @@ export default function TestConstraintValidationPage() {
       colorDetectionService.updateSettings(detectionSettings);
       const detection = await colorDetectionService.analyzeImage(selectedFile);
       setDetectionResult(detection);
-      
+
       if (detection.regions.length === 0) {
         setError('No green constraint areas detected. Try adjusting color detection settings.');
         return;
@@ -85,7 +89,7 @@ export default function TestConstraintValidationPage() {
       const url = URL.createObjectURL(selectedFile);
       let imageWidth = 0;
       let imageHeight = 0;
-      
+
       try {
         const img = new Image();
         await new Promise((resolve, reject) => {
@@ -106,7 +110,7 @@ export default function TestConstraintValidationPage() {
         ctx.drawImage(img, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        
+
         // Step 3: Mask Generation
         maskGenerationService.updateOptions(maskOptions);
         const mask = await maskGenerationService.generateMask(imageData, detectionSettings);
@@ -114,7 +118,11 @@ export default function TestConstraintValidationPage() {
 
         // Step 4: Constraint Validation
         constraintValidationService.updateRequirements(constraintRequirements);
-        const validation = constraintValidationService.validateConstraint(mask, imageWidth, imageHeight);
+        const validation = constraintValidationService.validateConstraint(
+          mask,
+          imageWidth,
+          imageHeight
+        );
         setValidationResult(validation);
 
         // Step 5: Create validation report
@@ -128,14 +136,12 @@ export default function TestConstraintValidationPage() {
         );
         const visUrl = URL.createObjectURL(visualizationBlob);
         setVisualizationUrl(visUrl);
-
       } finally {
         URL.revokeObjectURL(url);
       }
-      
     } catch (err) {
       console.error('Constraint validation error:', err);
-      
+
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -147,33 +153,42 @@ export default function TestConstraintValidationPage() {
   };
 
   const updateDetectionSettings = (key: keyof DetectionSettings, value: any) => {
-    setDetectionSettings(prev => ({ ...prev, [key]: value }));
+    setDetectionSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const updateConstraintRequirements = (section: string, key: string, value: any) => {
-    setConstraintRequirements(prev => ({
+    setConstraintRequirements((prev) => ({
       ...prev,
-      [section]: typeof prev[section as keyof ConstraintRequirements] === 'object' 
-        ? { ...prev[section as keyof ConstraintRequirements] as any, [key]: value }
-        : value
+      [section]:
+        typeof prev[section as keyof ConstraintRequirements] === 'object'
+          ? { ...(prev[section as keyof ConstraintRequirements] as any), [key]: value }
+          : value,
     }));
   };
 
   const getSeverityIcon = (level: string) => {
     switch (level) {
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
-      default: return '•';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+        return 'ℹ️';
+      default:
+        return '•';
     }
   };
 
   const getSeverityColor = (level: string) => {
     switch (level) {
-      case 'error': return 'text-red-600';
-      case 'warning': return 'text-yellow-600';
-      case 'info': return 'text-blue-600';
-      default: return 'text-gray-600';
+      case 'error':
+        return 'text-red-600';
+      case 'warning':
+        return 'text-yellow-600';
+      case 'info':
+        return 'text-blue-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -186,7 +201,8 @@ export default function TestConstraintValidationPage() {
               Complete Constraint Validation Test
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              End-to-end validation: Color Detection → Mask Generation → Constraint Validation → Quality Assessment
+              End-to-end validation: Color Detection → Mask Generation → Constraint Validation →
+              Quality Assessment
             </p>
           </div>
 
@@ -209,7 +225,7 @@ export default function TestConstraintValidationPage() {
                     Selected: {selectedFile.name}
                   </div>
                 )}
-                
+
                 <Button
                   onClick={handleCompleteValidation}
                   disabled={!selectedFile || isProcessing}
@@ -228,14 +244,23 @@ export default function TestConstraintValidationPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Color Range</label>
                     <select
-                      value={Object.keys(GREEN_COLOR_RANGES).find(key => 
-                        GREEN_COLOR_RANGES[key as keyof typeof GREEN_COLOR_RANGES] === detectionSettings.colorRange
+                      value={Object.keys(GREEN_COLOR_RANGES).find(
+                        (key) =>
+                          GREEN_COLOR_RANGES[key as keyof typeof GREEN_COLOR_RANGES] ===
+                          detectionSettings.colorRange
                       )}
-                      onChange={(e) => updateDetectionSettings('colorRange', GREEN_COLOR_RANGES[e.target.value as keyof typeof GREEN_COLOR_RANGES])}
+                      onChange={(e) =>
+                        updateDetectionSettings(
+                          'colorRange',
+                          GREEN_COLOR_RANGES[e.target.value as keyof typeof GREEN_COLOR_RANGES]
+                        )
+                      }
                       className="w-full px-3 py-2 border rounded-md text-sm"
                     >
-                      {Object.keys(GREEN_COLOR_RANGES).map(key => (
-                        <option key={key} value={key}>{key.replace('_', ' ').toLowerCase()}</option>
+                      {Object.keys(GREEN_COLOR_RANGES).map((key) => (
+                        <option key={key} value={key}>
+                          {key.replace('_', ' ').toLowerCase()}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -248,7 +273,9 @@ export default function TestConstraintValidationPage() {
                       min="0"
                       max="30"
                       value={detectionSettings.tolerance}
-                      onChange={(e) => updateDetectionSettings('tolerance', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateDetectionSettings('tolerance', parseInt(e.target.value))
+                      }
                       className="w-full"
                     />
                   </div>
@@ -270,11 +297,13 @@ export default function TestConstraintValidationPage() {
                       min="100"
                       max="2000"
                       value={constraintRequirements.minArea}
-                      onChange={(e) => updateConstraintRequirements('minArea', '', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateConstraintRequirements('minArea', '', parseInt(e.target.value))
+                      }
                       className="w-full"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Min Logo Size: {constraintRequirements.logoPlacement.minLogoSize} px
@@ -284,11 +313,17 @@ export default function TestConstraintValidationPage() {
                       min="20"
                       max="200"
                       value={constraintRequirements.logoPlacement.minLogoSize}
-                      onChange={(e) => updateConstraintRequirements('logoPlacement', 'minLogoSize', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateConstraintRequirements(
+                          'logoPlacement',
+                          'minLogoSize',
+                          parseInt(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Edge Margin: {constraintRequirements.position.marginFromEdges} px
@@ -298,7 +333,13 @@ export default function TestConstraintValidationPage() {
                       min="5"
                       max="50"
                       value={constraintRequirements.position.marginFromEdges}
-                      onChange={(e) => updateConstraintRequirements('position', 'marginFromEdges', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateConstraintRequirements(
+                          'position',
+                          'marginFromEdges',
+                          parseInt(e.target.value)
+                        )
+                      }
                       className="w-full"
                     />
                   </div>
@@ -307,7 +348,13 @@ export default function TestConstraintValidationPage() {
                     <input
                       type="checkbox"
                       checked={constraintRequirements.contiguity.requireSingleRegion}
-                      onChange={(e) => updateConstraintRequirements('contiguity', 'requireSingleRegion', e.target.checked)}
+                      onChange={(e) =>
+                        updateConstraintRequirements(
+                          'contiguity',
+                          'requireSingleRegion',
+                          e.target.checked
+                        )
+                      }
                       className="mr-2"
                     />
                     <span className="text-sm">Require single region</span>
@@ -365,19 +412,23 @@ export default function TestConstraintValidationPage() {
             {/* Results Panel */}
             <div className="space-y-6">
               {validationResult && (
-                <div className={`rounded-lg border p-6 ${
-                  validationResult.isValid 
-                    ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' 
-                    : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
-                }`}>
-                  <h2 className={`text-xl font-semibold mb-4 ${
-                    validationResult.isValid 
-                      ? 'text-green-900 dark:text-green-100' 
-                      : 'text-red-900 dark:text-red-100'
-                  }`}>
+                <div
+                  className={`rounded-lg border p-6 ${
+                    validationResult.isValid
+                      ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                      : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                  }`}
+                >
+                  <h2
+                    className={`text-xl font-semibold mb-4 ${
+                      validationResult.isValid
+                        ? 'text-green-900 dark:text-green-100'
+                        : 'text-red-900 dark:text-red-100'
+                    }`}
+                  >
                     Validation Results
                   </h2>
-                  
+
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span>Status:</span>
@@ -420,7 +471,9 @@ export default function TestConstraintValidationPage() {
                         <div className="flex items-start space-x-2">
                           <span className="text-lg">{getSeverityIcon(issue.severity.level)}</span>
                           <div className="flex-1">
-                            <div className={`font-medium ${getSeverityColor(issue.severity.level)}`}>
+                            <div
+                              className={`font-medium ${getSeverityColor(issue.severity.level)}`}
+                            >
                               {issue.title}
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -452,9 +505,16 @@ export default function TestConstraintValidationPage() {
                           </span>
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                          <div>Size: {zone.region.width} × {zone.region.height} px</div>
-                          <div>Center: ({zone.centerPoint.x}, {zone.centerPoint.y})</div>
-                          <div>Suggested Logo: {zone.suggestedLogoSize.width} × {zone.suggestedLogoSize.height} px</div>
+                          <div>
+                            Size: {zone.region.width} × {zone.region.height} px
+                          </div>
+                          <div>
+                            Center: ({zone.centerPoint.x}, {zone.centerPoint.y})
+                          </div>
+                          <div>
+                            Suggested Logo: {zone.suggestedLogoSize.width} ×{' '}
+                            {zone.suggestedLogoSize.height} px
+                          </div>
                           {zone.restrictions.length > 0 && (
                             <div className="text-xs text-yellow-600">
                               ⚠️ {zone.restrictions.join(', ')}

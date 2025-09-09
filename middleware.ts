@@ -13,15 +13,14 @@ const authRoutes = ['/admin/login', '/admin/register'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Check if the current route is protected
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
-  
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+
   // Get auth tokens from cookies
   const { accessToken, sessionId } = getAuthTokens(request);
-  
-  
+
   // Handle protected routes
   if (isProtectedRoute) {
     if (!accessToken || !sessionId) {
@@ -34,16 +33,16 @@ export async function middleware(request: NextRequest) {
     try {
       // Verify access token
       const tokenPayload = verifyAccessToken(accessToken);
-      
+
       // Validate session and track activity
       const sessionValidation = await validateAndRefreshSession(sessionId);
-      
+
       if (!sessionValidation.isValid) {
         const url = request.nextUrl.clone();
         url.pathname = '/admin/login';
         url.searchParams.set('redirect', pathname);
         url.searchParams.set('reason', sessionValidation.reason || 'session_invalid');
-        
+
         const response = NextResponse.redirect(url);
         // Clear auth cookies
         response.cookies.delete(AUTH_COOKIES.ACCESS_TOKEN);
@@ -51,9 +50,8 @@ export async function middleware(request: NextRequest) {
         response.cookies.delete(AUTH_COOKIES.SESSION_ID);
         return response;
       }
-      
+
       // Session is valid, activity was automatically updated by validateAndRefreshSession
-      
     } catch (error) {
       console.error('Auth middleware error:', error);
       const url = request.nextUrl.clone();
@@ -62,13 +60,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
-  
+
   // Redirect to dashboard if accessing auth routes with valid token
   if (isAuthRoute && accessToken && sessionId) {
     try {
       verifyAccessToken(accessToken);
       const sessionValidation = await validateAndRefreshSession(sessionId);
-      
+
       if (sessionValidation.isValid) {
         const url = request.nextUrl.clone();
         url.pathname = '/admin/dashboard';
@@ -78,10 +76,10 @@ export async function middleware(request: NextRequest) {
       // Token invalid, allow access to auth routes
     }
   }
-  
+
   // Add security headers
   const response = NextResponse.next();
-  
+
   // Security headers
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -90,7 +88,7 @@ export async function middleware(request: NextRequest) {
     'Content-Security-Policy',
     "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:;"
   );
-  
+
   return response;
 }
 

@@ -9,28 +9,28 @@ export interface PlacementConstraint {
   item_id: string;
   placement_type: 'horizontal' | 'vertical' | 'all_over';
   is_validated: boolean;
-  
+
   // Constraint image and detection
   constraint_image_url?: string;
   detected_area_pixels?: number;
   detected_area_percentage?: number;
-  
+
   // Logo size limits
   min_logo_width?: number;
   max_logo_width?: number;
   min_logo_height?: number;
   max_logo_height?: number;
-  
+
   // Default positioning
   default_x_position?: number;
   default_y_position?: number;
-  
+
   // Guidelines and metadata
   guidelines_text?: string;
   pattern_settings?: any;
   created_at: string;
   updated_at: string;
-  
+
   // Computed fields for compatibility
   constraint_x?: number;
   constraint_y?: number;
@@ -108,7 +108,7 @@ export class ConstraintApplicationService {
    * Get constraint for specific placement type
    */
   async getConstraintForPlacement(
-    giftItemId: string, 
+    giftItemId: string,
     placementType: 'horizontal' | 'vertical' | 'all_over'
   ): Promise<PlacementConstraint | null> {
     const client = this.getSupabaseClient();
@@ -146,7 +146,10 @@ export class ConstraintApplicationService {
 
     // Apply safety margins
     const safetyMargins = this.applySafetyMargins(constraint, options.respectSafetyMargins);
-    const effectiveConstraintArea = this.calculateEffectiveConstraintArea(constraint, safetyMargins);
+    const effectiveConstraintArea = this.calculateEffectiveConstraintArea(
+      constraint,
+      safetyMargins
+    );
 
     // Check and enforce boundary constraints
     const boundaryResult = this.enforceBoundaryConstraints(
@@ -155,18 +158,14 @@ export class ConstraintApplicationService {
       constraint,
       options.allowAutoAdjustment
     );
-    
+
     appliedPlacement = boundaryResult.placement;
     violations.push(...boundaryResult.violations);
     adjustments.push(...boundaryResult.adjustments);
 
     // Apply dimension restrictions
-    const dimensionResult = this.applyDimensionRestrictions(
-      appliedPlacement,
-      constraint,
-      options
-    );
-    
+    const dimensionResult = this.applyDimensionRestrictions(appliedPlacement, constraint, options);
+
     appliedPlacement = dimensionResult.placement;
     violations.push(...dimensionResult.violations);
     adjustments.push(...dimensionResult.adjustments);
@@ -176,9 +175,13 @@ export class ConstraintApplicationService {
       const defaultResult = this.useDefaultPosition(constraint, appliedPlacement);
       appliedPlacement = defaultResult.placement;
       adjustments.push(...defaultResult.adjustments);
-      
+
       // Re-validate with default position
-      const revalidation = this.validatePlacement(appliedPlacement, effectiveConstraintArea, constraint);
+      const revalidation = this.validatePlacement(
+        appliedPlacement,
+        effectiveConstraintArea,
+        constraint
+      );
       if (revalidation.isValid) {
         // Clear violations if default position resolves them
         violations.length = 0;
@@ -243,7 +246,9 @@ export class ConstraintApplicationService {
 
     // Check left boundary
     if (placement.x < effectiveArea.x) {
-      violations.push(`Logo X position (${placement.x}) is outside left boundary (${effectiveArea.x})`);
+      violations.push(
+        `Logo X position (${placement.x}) is outside left boundary (${effectiveArea.x})`
+      );
       if (allowAutoAdjustment) {
         adjustedPlacement.x = effectiveArea.x;
         adjustments.push(`Adjusted X position from ${placement.x} to ${effectiveArea.x}`);
@@ -252,7 +257,9 @@ export class ConstraintApplicationService {
 
     // Check top boundary
     if (placement.y < effectiveArea.y) {
-      violations.push(`Logo Y position (${placement.y}) is outside top boundary (${effectiveArea.y})`);
+      violations.push(
+        `Logo Y position (${placement.y}) is outside top boundary (${effectiveArea.y})`
+      );
       if (allowAutoAdjustment) {
         adjustedPlacement.y = effectiveArea.y;
         adjustments.push(`Adjusted Y position from ${placement.y} to ${effectiveArea.y}`);
@@ -298,43 +305,55 @@ export class ConstraintApplicationService {
 
     // Check minimum width
     if (placement.width < constraint.min_logo_width) {
-      violations.push(`Logo width (${placement.width}) is below minimum (${constraint.min_logo_width})`);
+      violations.push(
+        `Logo width (${placement.width}) is below minimum (${constraint.min_logo_width})`
+      );
       if (options.allowAutoAdjustment) {
         adjustedPlacement.width = constraint.min_logo_width;
         adjustments.push(`Adjusted width from ${placement.width} to ${constraint.min_logo_width}`);
-        
+
         // Maintain aspect ratio if required
         if (options.enforceAspectRatio) {
           const aspectRatio = placement.width / placement.height;
           adjustedPlacement.height = adjustedPlacement.width / aspectRatio;
-          adjustments.push(`Maintained aspect ratio, adjusted height to ${adjustedPlacement.height}`);
+          adjustments.push(
+            `Maintained aspect ratio, adjusted height to ${adjustedPlacement.height}`
+          );
         }
       }
     }
 
     // Check maximum width
     if (placement.width > constraint.max_logo_width) {
-      violations.push(`Logo width (${placement.width}) exceeds maximum (${constraint.max_logo_width})`);
+      violations.push(
+        `Logo width (${placement.width}) exceeds maximum (${constraint.max_logo_width})`
+      );
       if (options.allowAutoAdjustment) {
         adjustedPlacement.width = constraint.max_logo_width;
         adjustments.push(`Adjusted width from ${placement.width} to ${constraint.max_logo_width}`);
-        
+
         // Maintain aspect ratio if required
         if (options.enforceAspectRatio) {
           const aspectRatio = placement.width / placement.height;
           adjustedPlacement.height = adjustedPlacement.width / aspectRatio;
-          adjustments.push(`Maintained aspect ratio, adjusted height to ${adjustedPlacement.height}`);
+          adjustments.push(
+            `Maintained aspect ratio, adjusted height to ${adjustedPlacement.height}`
+          );
         }
       }
     }
 
     // Check minimum height
     if (placement.height < constraint.min_logo_height) {
-      violations.push(`Logo height (${placement.height}) is below minimum (${constraint.min_logo_height})`);
+      violations.push(
+        `Logo height (${placement.height}) is below minimum (${constraint.min_logo_height})`
+      );
       if (options.allowAutoAdjustment) {
         adjustedPlacement.height = constraint.min_logo_height;
-        adjustments.push(`Adjusted height from ${placement.height} to ${constraint.min_logo_height}`);
-        
+        adjustments.push(
+          `Adjusted height from ${placement.height} to ${constraint.min_logo_height}`
+        );
+
         // Maintain aspect ratio if required
         if (options.enforceAspectRatio) {
           const aspectRatio = placement.width / placement.height;
@@ -346,11 +365,15 @@ export class ConstraintApplicationService {
 
     // Check maximum height
     if (placement.height > constraint.max_logo_height) {
-      violations.push(`Logo height (${placement.height}) exceeds maximum (${constraint.max_logo_height})`);
+      violations.push(
+        `Logo height (${placement.height}) exceeds maximum (${constraint.max_logo_height})`
+      );
       if (options.allowAutoAdjustment) {
         adjustedPlacement.height = constraint.max_logo_height;
-        adjustments.push(`Adjusted height from ${placement.height} to ${constraint.max_logo_height}`);
-        
+        adjustments.push(
+          `Adjusted height from ${placement.height} to ${constraint.max_logo_height}`
+        );
+
         // Maintain aspect ratio if required
         if (options.enforceAspectRatio) {
           const aspectRatio = placement.width / placement.height;
@@ -371,7 +394,7 @@ export class ConstraintApplicationService {
     currentPlacement: LogoPlacement
   ): { placement: LogoPlacement; adjustments: string[] } {
     const adjustments: string[] = [];
-    
+
     const defaultPlacement: LogoPlacement = {
       x: constraint.default_x,
       y: constraint.default_y,
@@ -380,8 +403,12 @@ export class ConstraintApplicationService {
       rotation: currentPlacement.rotation,
     };
 
-    adjustments.push(`Applied default position: (${constraint.default_x}, ${constraint.default_y})`);
-    adjustments.push(`Applied default size: ${constraint.default_width}x${constraint.default_height}`);
+    adjustments.push(
+      `Applied default position: (${constraint.default_x}, ${constraint.default_y})`
+    );
+    adjustments.push(
+      `Applied default size: ${constraint.default_width}x${constraint.default_height}`
+    );
 
     return { placement: defaultPlacement, adjustments };
   }
@@ -486,13 +513,13 @@ export class ConstraintApplicationService {
     logoAspectRatio?: number
   ): Promise<LogoPlacement | null> {
     const constraint = await this.getConstraintForPlacement(giftItemId, placementType);
-    
+
     if (!constraint) {
       return null;
     }
 
     // Start with default placement
-    let recommendedPlacement: LogoPlacement = {
+    const recommendedPlacement: LogoPlacement = {
       x: constraint.default_x,
       y: constraint.default_y,
       width: constraint.default_width,
@@ -502,7 +529,7 @@ export class ConstraintApplicationService {
     // Adjust for logo aspect ratio if provided
     if (logoAspectRatio) {
       const currentAspectRatio = recommendedPlacement.width / recommendedPlacement.height;
-      
+
       if (Math.abs(currentAspectRatio - logoAspectRatio) > 0.1) {
         // Adjust size to match logo aspect ratio while staying within constraints
         if (logoAspectRatio > currentAspectRatio) {
@@ -539,8 +566,8 @@ export class ConstraintApplicationService {
     const results: Array<ConstraintApplication & { type: string }> = [];
 
     for (const { type, placement, options } of placements) {
-      const constraint = constraints.find(c => c.placement_type === type);
-      
+      const constraint = constraints.find((c) => c.placement_type === type);
+
       if (constraint) {
         const result = this.applyConstraints(constraint, placement, options);
         results.push({ ...result, type });

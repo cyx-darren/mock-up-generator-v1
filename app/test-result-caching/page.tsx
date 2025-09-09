@@ -18,14 +18,16 @@ interface MockupResult {
 }
 
 export default function TestResultCachingPage() {
-  const [cache] = useState(() => getResultCache({
-    maxSize: 1024 * 1024 * 10, // 10MB for testing
-    maxEntries: 100,
-    defaultTTL: 5 * 60 * 1000, // 5 minutes for testing
-    cleanupInterval: 30 * 1000, // 30 seconds for testing
-    compressionEnabled: true,
-    persistenceEnabled: true
-  }));
+  const [cache] = useState(() =>
+    getResultCache({
+      maxSize: 1024 * 1024 * 10, // 10MB for testing
+      maxEntries: 100,
+      defaultTTL: 5 * 60 * 1000, // 5 minutes for testing
+      cleanupInterval: 30 * 1000, // 30 seconds for testing
+      compressionEnabled: true,
+      persistenceEnabled: true,
+    })
+  );
 
   const [metrics, setMetrics] = useState<CacheMetrics | null>(null);
   const [testKey, setTestKey] = useState('');
@@ -44,7 +46,7 @@ export default function TestResultCachingPage() {
 
   useEffect(() => {
     updateMetrics();
-    
+
     if (isAutoRefresh) {
       const interval = setInterval(updateMetrics, 2000);
       return () => clearInterval(interval);
@@ -54,9 +56,9 @@ export default function TestResultCachingPage() {
   const updateMetrics = () => {
     const currentMetrics = cache.getMetrics();
     setMetrics(currentMetrics);
-    
+
     // Update cache keys list
-    const keys = currentMetrics.topKeys.map(k => k.key);
+    const keys = currentMetrics.topKeys.map((k) => k.key);
     setCacheKeys(keys);
   };
 
@@ -64,11 +66,11 @@ export default function TestResultCachingPage() {
     const sizes = {
       small: 1000,
       medium: 10000,
-      large: 100000
+      large: 100000,
     };
-    
+
     const mockImageData = 'x'.repeat(sizes[size]);
-    
+
     return {
       id: `mockup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       imageUrl: `data:image/png;base64,${btoa(mockImageData)}`,
@@ -78,8 +80,8 @@ export default function TestResultCachingPage() {
         placementType: ['horizontal', 'vertical', 'center'][Math.floor(Math.random() * 3)],
         qualityLevel: ['basic', 'enhanced', 'premium'][Math.floor(Math.random() * 3)],
         generatedAt: new Date(),
-        processingTime: Math.floor(Math.random() * 5000) + 1000
-      }
+        processingTime: Math.floor(Math.random() * 5000) + 1000,
+      },
     };
   };
 
@@ -91,7 +93,7 @@ export default function TestResultCachingPage() {
       qualityLevel: data.metadata.qualityLevel,
       stylePreferences: {},
       constraintVersion: '1.0',
-      apiVersion: '1.0'
+      apiVersion: '1.0',
     });
   };
 
@@ -106,7 +108,7 @@ export default function TestResultCachingPage() {
       const success = await cache.set(testKey, data, {
         priority: 'normal',
         tags: ['test', 'manual'],
-        contentType: 'application/json'
+        contentType: 'application/json',
       });
 
       if (success) {
@@ -147,20 +149,20 @@ export default function TestResultCachingPage() {
 
   const addMockMockups = async (count: number, size: 'small' | 'medium' | 'large' = 'small') => {
     const priorities: CachePriority[] = ['low', 'normal', 'high', 'critical'];
-    
+
     for (let i = 0; i < count; i++) {
       const mockData = generateMockData(size);
       const key = generateCacheKey(mockData);
       const priority = priorities[Math.floor(Math.random() * priorities.length)];
-      
+
       await cache.set(key, mockData, {
         priority,
         tags: ['mockup', size, priority],
         contentType: 'application/json',
-        ttl: Math.random() * 300000 + 60000 // 1-5 minutes
+        ttl: Math.random() * 300000 + 60000, // 1-5 minutes
       });
     }
-    
+
     console.log(`Added ${count} mock mockups (${size} size)`);
     updateMetrics();
   };
@@ -168,10 +170,10 @@ export default function TestResultCachingPage() {
   const performanceTest = async () => {
     console.log('Starting performance test...');
     const iterations = 100;
-    
+
     // Generate test data
     const testMockups = Array.from({ length: 50 }, () => generateMockData('medium'));
-    
+
     // Pre-populate cache with half the data
     for (let i = 0; i < testMockups.length / 2; i++) {
       const key = generateCacheKey(testMockups[i]);
@@ -181,7 +183,7 @@ export default function TestResultCachingPage() {
     // Test cache hits
     const cacheHitStart = performance.now();
     for (let i = 0; i < iterations; i++) {
-      const testData = testMockups[Math.floor(Math.random() * testMockups.length / 2)];
+      const testData = testMockups[Math.floor((Math.random() * testMockups.length) / 2)];
       const key = generateCacheKey(testData);
       await cache.get(key);
     }
@@ -190,7 +192,8 @@ export default function TestResultCachingPage() {
     // Test cache misses
     const cacheMissStart = performance.now();
     for (let i = 0; i < iterations; i++) {
-      const testData = testMockups[Math.floor(Math.random() * testMockups.length / 2) + testMockups.length / 2];
+      const testData =
+        testMockups[Math.floor((Math.random() * testMockups.length) / 2) + testMockups.length / 2];
       const key = generateCacheKey(testData);
       await cache.get(key);
     }
@@ -200,7 +203,7 @@ export default function TestResultCachingPage() {
     const directStart = performance.now();
     for (let i = 0; i < iterations; i++) {
       // Simulate computation delay
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
       generateMockData('medium');
     }
     const directTime = performance.now() - directStart;
@@ -208,7 +211,7 @@ export default function TestResultCachingPage() {
     setPerformanceResults({
       cacheHit: cacheHitTime,
       cacheMiss: cacheMissTime,
-      directComputation: directTime
+      directComputation: directTime,
     });
 
     console.log('Performance test completed');
@@ -248,12 +251,12 @@ export default function TestResultCachingPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Result Caching System Test</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Control Panel */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Cache Controls</h2>
-            
+
             <div className="space-y-4">
               {/* Manual Cache Operations */}
               <div>
@@ -384,7 +387,7 @@ export default function TestResultCachingPage() {
           {/* Cache Metrics */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Cache Metrics</h2>
-            
+
             {metrics ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -398,11 +401,15 @@ export default function TestResultCachingPage() {
                   </div>
                   <div>
                     <div className="text-gray-600">Hit Rate</div>
-                    <div className="text-2xl font-bold text-green-600">{metrics.hitRate.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {metrics.hitRate.toFixed(1)}%
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-600">Miss Rate</div>
-                    <div className="text-2xl font-bold text-red-600">{metrics.missRate.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-red-600">
+                      {metrics.missRate.toFixed(1)}%
+                    </div>
                   </div>
                 </div>
 
@@ -495,7 +502,12 @@ export default function TestResultCachingPage() {
                   <div className="border-t pt-3">
                     <div className="text-sm font-medium">Performance Improvement:</div>
                     <div className="text-xs text-gray-600">
-                      Cache Hit vs Direct: {((performanceResults.directComputation / performanceResults.cacheHit) - 1).toFixed(1)}x faster
+                      Cache Hit vs Direct:{' '}
+                      {(
+                        performanceResults.directComputation / performanceResults.cacheHit -
+                        1
+                      ).toFixed(1)}
+                      x faster
                     </div>
                   </div>
                 </div>
@@ -508,8 +520,8 @@ export default function TestResultCachingPage() {
                 <h2 className="text-xl font-semibold mb-4">Active Cache Keys</h2>
                 <div className="max-h-64 overflow-y-auto space-y-1">
                   {cacheKeys.map((key, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="text-xs font-mono bg-gray-100 p-2 rounded cursor-pointer hover:bg-gray-200"
                       onClick={() => setTestKey(key)}
                     >
@@ -525,7 +537,7 @@ export default function TestResultCachingPage() {
         {/* Implementation Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg mt-8">
           <h2 className="text-xl font-semibold mb-4">Task 5.3.3 Implementation Status</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-medium mb-3">Completed Features</h3>
@@ -540,7 +552,7 @@ export default function TestResultCachingPage() {
                   'Intelligent cache persistence to localStorage',
                   'Priority-based cache management',
                   'Performance optimization with LRU/LFU algorithms',
-                  'Interactive test interface with real-time metrics'
+                  'Interactive test interface with real-time metrics',
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
@@ -555,14 +567,30 @@ export default function TestResultCachingPage() {
             <div>
               <h3 className="font-medium mb-3">Technical Implementation</h3>
               <div className="text-sm space-y-2">
-                <div>• <strong>Key Generation:</strong> Deterministic hashing from input parameters</div>
-                <div>• <strong>Storage:</strong> In-memory with optional compression</div>
-                <div>• <strong>Eviction:</strong> LRU, LFU, TTL, and priority-based strategies</div>
-                <div>• <strong>Invalidation:</strong> Tag-based and TTL-based expiration</div>
-                <div>• <strong>Persistence:</strong> LocalStorage with automatic recovery</div>
-                <div>• <strong>Monitoring:</strong> Real-time metrics and performance tracking</div>
-                <div>• <strong>Optimization:</strong> Cache warming and intelligent preloading</div>
-                <div>• <strong>Performance:</strong> Sub-millisecond cache hit times</div>
+                <div>
+                  • <strong>Key Generation:</strong> Deterministic hashing from input parameters
+                </div>
+                <div>
+                  • <strong>Storage:</strong> In-memory with optional compression
+                </div>
+                <div>
+                  • <strong>Eviction:</strong> LRU, LFU, TTL, and priority-based strategies
+                </div>
+                <div>
+                  • <strong>Invalidation:</strong> Tag-based and TTL-based expiration
+                </div>
+                <div>
+                  • <strong>Persistence:</strong> LocalStorage with automatic recovery
+                </div>
+                <div>
+                  • <strong>Monitoring:</strong> Real-time metrics and performance tracking
+                </div>
+                <div>
+                  • <strong>Optimization:</strong> Cache warming and intelligent preloading
+                </div>
+                <div>
+                  • <strong>Performance:</strong> Sub-millisecond cache hit times
+                </div>
               </div>
             </div>
           </div>
@@ -570,13 +598,18 @@ export default function TestResultCachingPage() {
           <div className="mt-6 p-4 bg-green-50 rounded-lg">
             <div className="font-medium text-green-800 mb-2">Verification Requirements Met</div>
             <div className="text-sm text-green-700">
-              ✅ Retrieve cached result instantly - Performance test shows cache hits<br/>
-              ✅ Cache key generation implemented - Deterministic hashing working<br/>
-              ✅ Cache storage functional - Multiple data types supported<br/>
-              ✅ Cache invalidation working - Tag-based and TTL expiration<br/>
-              ✅ Cache cleanup implemented - Automatic and manual cleanup<br/>
-              ✅ Cache metrics tracked - Real-time performance monitoring<br/>
-              ✅ Cache warming operational - Preloading frequently accessed data
+              ✅ Retrieve cached result instantly - Performance test shows cache hits
+              <br />
+              ✅ Cache key generation implemented - Deterministic hashing working
+              <br />
+              ✅ Cache storage functional - Multiple data types supported
+              <br />
+              ✅ Cache invalidation working - Tag-based and TTL expiration
+              <br />
+              ✅ Cache cleanup implemented - Automatic and manual cleanup
+              <br />
+              ✅ Cache metrics tracked - Real-time performance monitoring
+              <br />✅ Cache warming operational - Preloading frequently accessed data
             </div>
           </div>
         </div>

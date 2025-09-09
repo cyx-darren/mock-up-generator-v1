@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { 
+import {
   ColorDetectionResult,
   DetectionSettings,
   GREEN_COLOR_RANGES,
   DEFAULT_DETECTION_SETTINGS,
   colorDetectionService,
   DetectedRegion,
-  HSVColor
+  HSVColor,
 } from '@/lib/color-detection';
 
 export default function TestColorDetectionPage() {
@@ -19,7 +19,7 @@ export default function TestColorDetectionPage() {
   const [error, setError] = useState<string | null>(null);
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState<string | null>(null);
   const [visualizationUrl, setVisualizationUrl] = useState<string | null>(null);
-  
+
   // Detection settings
   const [settings, setSettings] = useState<DetectionSettings>(DEFAULT_DETECTION_SETTINGS);
 
@@ -30,7 +30,7 @@ export default function TestColorDetectionPage() {
       setError(null);
       setResult(null);
       setVisualizationUrl(null);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setOriginalPreviewUrl(e.target?.result as string);
@@ -50,11 +50,11 @@ export default function TestColorDetectionPage() {
     try {
       // Update service settings
       colorDetectionService.updateSettings(settings);
-      
+
       // Analyze image
       const detectionResult = await colorDetectionService.analyzeImage(selectedFile);
       setResult(detectionResult);
-      
+
       // Create visualization if regions found
       if (detectionResult.regions.length > 0) {
         const visualizationBlob = await colorDetectionService.createVisualizationMask(
@@ -64,10 +64,9 @@ export default function TestColorDetectionPage() {
         const visUrl = URL.createObjectURL(visualizationBlob);
         setVisualizationUrl(visUrl);
       }
-      
     } catch (err) {
       console.error('Color detection error:', err);
-      
+
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -79,39 +78,39 @@ export default function TestColorDetectionPage() {
   };
 
   const updateColorRange = (rangeType: keyof typeof GREEN_COLOR_RANGES) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      colorRange: GREEN_COLOR_RANGES[rangeType]
+      colorRange: GREEN_COLOR_RANGES[rangeType],
     }));
   };
 
   const updateTolerance = (tolerance: number) => {
-    setSettings(prev => ({ ...prev, tolerance }));
+    setSettings((prev) => ({ ...prev, tolerance }));
   };
 
   const updateAreaConstraints = (minArea: number, maxArea: number) => {
-    setSettings(prev => ({ ...prev, minArea, maxArea }));
+    setSettings((prev) => ({ ...prev, minArea, maxArea }));
   };
 
   const updateNoiseReduction = (enabled: boolean, kernelSize?: number, iterations?: number) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       noiseReduction: {
         enabled,
         kernelSize: kernelSize ?? prev.noiseReduction.kernelSize,
-        iterations: iterations ?? prev.noiseReduction.iterations
-      }
+        iterations: iterations ?? prev.noiseReduction.iterations,
+      },
     }));
   };
 
   const updateEdgeSmoothing = (enabled: boolean, blurRadius?: number, threshold?: number) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       edgeSmoothing: {
         enabled,
         blurRadius: blurRadius ?? prev.edgeSmoothing.blurRadius,
-        threshold: threshold ?? prev.edgeSmoothing.threshold
-      }
+        threshold: threshold ?? prev.edgeSmoothing.threshold,
+      },
     }));
   };
 
@@ -128,7 +127,8 @@ export default function TestColorDetectionPage() {
               Color Detection & Constraint Analysis Test
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Test the color detection algorithm for identifying green constraint areas in mockup templates
+              Test the color detection algorithm for identifying green constraint areas in mockup
+              templates
             </p>
           </div>
 
@@ -139,7 +139,7 @@ export default function TestColorDetectionPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Upload Image
                 </h2>
-                
+
                 <div className="space-y-4">
                   <input
                     type="file"
@@ -147,7 +147,7 @@ export default function TestColorDetectionPage() {
                     onChange={handleFileSelect}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
-                  
+
                   {selectedFile && (
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       Selected: {selectedFile.name}
@@ -161,7 +161,7 @@ export default function TestColorDetectionPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Color Range
                 </h2>
-                
+
                 <div className="space-y-3">
                   {Object.entries(GREEN_COLOR_RANGES).map(([key, range]) => (
                     <label key={key} className="flex items-center">
@@ -199,7 +199,7 @@ export default function TestColorDetectionPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Area Constraints
                 </h2>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -210,7 +210,9 @@ export default function TestColorDetectionPage() {
                       min="10"
                       max="1000"
                       value={settings.minArea}
-                      onChange={(e) => updateAreaConstraints(parseInt(e.target.value), settings.maxArea)}
+                      onChange={(e) =>
+                        updateAreaConstraints(parseInt(e.target.value), settings.maxArea)
+                      }
                       className="w-full"
                     />
                   </div>
@@ -225,7 +227,9 @@ export default function TestColorDetectionPage() {
                       max="100000"
                       step="1000"
                       value={settings.maxArea}
-                      onChange={(e) => updateAreaConstraints(settings.minArea, parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateAreaConstraints(settings.minArea, parseInt(e.target.value))
+                      }
                       className="w-full"
                     />
                   </div>
@@ -237,7 +241,7 @@ export default function TestColorDetectionPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Processing Options
                 </h2>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="flex items-center">
@@ -277,7 +281,9 @@ export default function TestColorDetectionPage() {
                             min="1"
                             max="3"
                             value={settings.noiseReduction.iterations}
-                            onChange={(e) => updateNoiseReduction(true, undefined, parseInt(e.target.value))}
+                            onChange={(e) =>
+                              updateNoiseReduction(true, undefined, parseInt(e.target.value))
+                            }
                             className="w-full"
                           />
                         </div>
@@ -322,7 +328,9 @@ export default function TestColorDetectionPage() {
                             min="64"
                             max="192"
                             value={settings.edgeSmoothing.threshold}
-                            onChange={(e) => updateEdgeSmoothing(true, undefined, parseInt(e.target.value))}
+                            onChange={(e) =>
+                              updateEdgeSmoothing(true, undefined, parseInt(e.target.value))
+                            }
                             className="w-full"
                           />
                         </div>
@@ -347,7 +355,7 @@ export default function TestColorDetectionPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Original Image
                 </h2>
-                
+
                 <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                   {originalPreviewUrl ? (
                     <img
@@ -356,9 +364,7 @@ export default function TestColorDetectionPage() {
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
-                    <div className="text-gray-400 dark:text-gray-500">
-                      No image selected
-                    </div>
+                    <div className="text-gray-400 dark:text-gray-500">No image selected</div>
                   )}
                 </div>
               </div>
@@ -368,7 +374,7 @@ export default function TestColorDetectionPage() {
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Detected Constraints
                   </h2>
-                  
+
                   <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                     <img
                       src={visualizationUrl}
@@ -417,9 +423,16 @@ export default function TestColorDetectionPage() {
                       </h3>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {result.regions.map((region, index) => (
-                          <div key={index} className="text-xs bg-green-100 dark:bg-green-800 p-2 rounded">
-                            <div>Region {index + 1}: {region.width}×{region.height}</div>
-                            <div>Center: ({region.center.x}, {region.center.y})</div>
+                          <div
+                            key={index}
+                            className="text-xs bg-green-100 dark:bg-green-800 p-2 rounded"
+                          >
+                            <div>
+                              Region {index + 1}: {region.width}×{region.height}
+                            </div>
+                            <div>
+                              Center: ({region.center.x}, {region.center.y})
+                            </div>
                             <div>Area: {region.area} pixels</div>
                             <div>Confidence: {region.confidence}%</div>
                           </div>
@@ -450,9 +463,7 @@ export default function TestColorDetectionPage() {
                   <h2 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-4">
                     Error
                   </h2>
-                  <p className="text-sm text-red-800 dark:text-red-200">
-                    {error}
-                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
                 </div>
               )}
 

@@ -2,19 +2,19 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { 
+import {
   ColorDetectionResult,
   DetectionSettings,
   GREEN_COLOR_RANGES,
   DEFAULT_DETECTION_SETTINGS,
-  colorDetectionService
+  colorDetectionService,
 } from '@/lib/color-detection';
 import {
   GeneratedMask,
   MaskGenerationOptions,
   DEFAULT_MASK_OPTIONS,
   maskGenerationService,
-  MaskValidationResult
+  MaskValidationResult,
 } from '@/lib/mask-generation';
 
 export default function TestMaskGenerationPage() {
@@ -26,9 +26,11 @@ export default function TestMaskGenerationPage() {
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState<string | null>(null);
   const [maskPreviewUrl, setMaskPreviewUrl] = useState<string | null>(null);
   const [svgMask, setSvgMask] = useState<string | null>(null);
-  
+
   // Settings
-  const [detectionSettings, setDetectionSettings] = useState<DetectionSettings>(DEFAULT_DETECTION_SETTINGS);
+  const [detectionSettings, setDetectionSettings] = useState<DetectionSettings>(
+    DEFAULT_DETECTION_SETTINGS
+  );
   const [maskOptions, setMaskOptions] = useState<MaskGenerationOptions>(DEFAULT_MASK_OPTIONS);
   const [exportFormat, setExportFormat] = useState<'png' | 'svg' | 'json'>('png');
 
@@ -41,7 +43,7 @@ export default function TestMaskGenerationPage() {
       setMaskResult(null);
       setMaskPreviewUrl(null);
       setSvgMask(null);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setOriginalPreviewUrl(e.target?.result as string);
@@ -65,7 +67,7 @@ export default function TestMaskGenerationPage() {
       colorDetectionService.updateSettings(detectionSettings);
       const detection = await colorDetectionService.analyzeImage(selectedFile);
       setDetectionResult(detection);
-      
+
       if (detection.regions.length === 0) {
         setError('No green constraint areas detected. Try adjusting color tolerance or range.');
         return;
@@ -90,7 +92,7 @@ export default function TestMaskGenerationPage() {
         ctx.drawImage(img, 0, 0);
 
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        
+
         // Generate mask
         maskGenerationService.updateOptions(maskOptions);
         const mask = await maskGenerationService.generateMask(imageData, detectionSettings);
@@ -108,14 +110,12 @@ export default function TestMaskGenerationPage() {
         if (typeof svgString === 'string') {
           setSvgMask(svgString);
         }
-
       } finally {
         URL.revokeObjectURL(url);
       }
-      
     } catch (err) {
       console.error('Mask generation error:', err);
-      
+
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -131,7 +131,7 @@ export default function TestMaskGenerationPage() {
 
     try {
       const exported = await maskGenerationService.exportMask(maskResult, exportFormat);
-      
+
       if (exported instanceof Blob) {
         // Download as file
         const url = URL.createObjectURL(exported);
@@ -156,22 +156,23 @@ export default function TestMaskGenerationPage() {
   };
 
   const updateDetectionSettings = (key: keyof DetectionSettings, value: any) => {
-    setDetectionSettings(prev => ({ ...prev, [key]: value }));
+    setDetectionSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const updateMaskOptions = (section: keyof MaskGenerationOptions, key: string, value: any) => {
-    setMaskOptions(prev => ({
+    setMaskOptions((prev) => ({
       ...prev,
-      [section]: typeof prev[section] === 'object' 
-        ? { ...prev[section] as any, [key]: value }
-        : value
+      [section]:
+        typeof prev[section] === 'object' ? { ...(prev[section] as any), [key]: value } : value,
     }));
   };
 
   const renderValidationResults = (validation: MaskValidationResult) => {
     return (
       <div className="space-y-3">
-        <div className={`p-3 rounded ${validation.isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
+        <div
+          className={`p-3 rounded ${validation.isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}
+        >
           <div className="font-medium">
             Validation: {validation.isValid ? '✅ Valid' : '❌ Invalid'}
           </div>
@@ -233,7 +234,8 @@ export default function TestMaskGenerationPage() {
               Mask Generation & Validation Test
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Test the complete mask generation pipeline: detection → binary mask → morphological ops → contour detection → validation
+              Test the complete mask generation pipeline: detection → binary mask → morphological
+              ops → contour detection → validation
             </p>
           </div>
 
@@ -267,14 +269,23 @@ export default function TestMaskGenerationPage() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Color Range</label>
                     <select
-                      value={Object.keys(GREEN_COLOR_RANGES).find(key => 
-                        GREEN_COLOR_RANGES[key as keyof typeof GREEN_COLOR_RANGES] === detectionSettings.colorRange
+                      value={Object.keys(GREEN_COLOR_RANGES).find(
+                        (key) =>
+                          GREEN_COLOR_RANGES[key as keyof typeof GREEN_COLOR_RANGES] ===
+                          detectionSettings.colorRange
                       )}
-                      onChange={(e) => updateDetectionSettings('colorRange', GREEN_COLOR_RANGES[e.target.value as keyof typeof GREEN_COLOR_RANGES])}
+                      onChange={(e) =>
+                        updateDetectionSettings(
+                          'colorRange',
+                          GREEN_COLOR_RANGES[e.target.value as keyof typeof GREEN_COLOR_RANGES]
+                        )
+                      }
                       className="w-full px-3 py-2 border rounded-md text-sm"
                     >
-                      {Object.keys(GREEN_COLOR_RANGES).map(key => (
-                        <option key={key} value={key}>{key.replace('_', ' ').toLowerCase()}</option>
+                      {Object.keys(GREEN_COLOR_RANGES).map((key) => (
+                        <option key={key} value={key}>
+                          {key.replace('_', ' ').toLowerCase()}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -287,7 +298,9 @@ export default function TestMaskGenerationPage() {
                       min="0"
                       max="30"
                       value={detectionSettings.tolerance}
-                      onChange={(e) => updateDetectionSettings('tolerance', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateDetectionSettings('tolerance', parseInt(e.target.value))
+                      }
                       className="w-full"
                     />
                   </div>
@@ -320,7 +333,9 @@ export default function TestMaskGenerationPage() {
                         min="10"
                         max="500"
                         value={maskOptions.minHoleSize}
-                        onChange={(e) => updateMaskOptions('minHoleSize', '', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          updateMaskOptions('minHoleSize', '', parseInt(e.target.value))
+                        }
                         className="w-full"
                       />
                     </div>
@@ -347,7 +362,9 @@ export default function TestMaskGenerationPage() {
                           min="1"
                           max="5"
                           value={maskOptions.smoothing.iterations}
-                          onChange={(e) => updateMaskOptions('smoothing', 'iterations', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateMaskOptions('smoothing', 'iterations', parseInt(e.target.value))
+                          }
                           className="w-full"
                         />
                       </div>
@@ -361,7 +378,9 @@ export default function TestMaskGenerationPage() {
                           max="9"
                           step="2"
                           value={maskOptions.smoothing.kernelSize}
-                          onChange={(e) => updateMaskOptions('smoothing', 'kernelSize', parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateMaskOptions('smoothing', 'kernelSize', parseInt(e.target.value))
+                          }
                           className="w-full"
                         />
                       </div>
@@ -372,7 +391,9 @@ export default function TestMaskGenerationPage() {
                     <input
                       type="checkbox"
                       checked={maskOptions.contourSimplification.enabled}
-                      onChange={(e) => updateMaskOptions('contourSimplification', 'enabled', e.target.checked)}
+                      onChange={(e) =>
+                        updateMaskOptions('contourSimplification', 'enabled', e.target.checked)
+                      }
                       className="mr-2"
                     />
                     <span className="text-sm">Contour simplification</span>
@@ -389,7 +410,13 @@ export default function TestMaskGenerationPage() {
                         max="10"
                         step="0.5"
                         value={maskOptions.contourSimplification.epsilon}
-                        onChange={(e) => updateMaskOptions('contourSimplification', 'epsilon', parseFloat(e.target.value))}
+                        onChange={(e) =>
+                          updateMaskOptions(
+                            'contourSimplification',
+                            'epsilon',
+                            parseFloat(e.target.value)
+                          )
+                        }
                         className="w-full"
                       />
                     </div>
@@ -497,7 +524,9 @@ export default function TestMaskGenerationPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Mask Size:</span>
-                      <span>{maskResult.width} × {maskResult.height}</span>
+                      <span>
+                        {maskResult.width} × {maskResult.height}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Fill Holes:</span>

@@ -11,7 +11,7 @@ export function ProductCardSkeleton() {
         <div className="space-y-2">
           {/* Title */}
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          
+
           {/* Description */}
           <div className="space-y-1">
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />

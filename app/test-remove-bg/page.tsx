@@ -35,7 +35,7 @@ export default function TestRemoveBgPage() {
       setError(null);
       setResult(null);
       setPreviewUrl(null);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreviewUrl(e.target?.result as string);
@@ -75,7 +75,7 @@ export default function TestRemoveBgPage() {
 
       // Get image data
       const blob = await response.blob();
-      
+
       const processedResponse: RemoveBgResponse = {
         data: blob,
         detectedType,
@@ -87,17 +87,16 @@ export default function TestRemoveBgPage() {
       };
 
       setResult(processedResponse);
-      
+
       // Create blob URL for display
       const blobUrl = URL.createObjectURL(blob);
       setPreviewUrl(blobUrl);
-      
+
       // Update usage stats
       await handleRefreshStats();
-      
     } catch (err) {
       console.error('Remove background error:', err);
-      
+
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -159,7 +158,7 @@ export default function TestRemoveBgPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Upload Image
                 </h2>
-                
+
                 <div className="space-y-4">
                   <input
                     type="file"
@@ -167,7 +166,7 @@ export default function TestRemoveBgPage() {
                     onChange={handleFileSelect}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
-                  
+
                   {selectedFile && (
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
@@ -188,21 +187,13 @@ export default function TestRemoveBgPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   API Information
                 </h2>
-                
+
                 <div className="space-y-4">
-                  <Button
-                    onClick={handleCheckCredits}
-                    variant="outline"
-                    className="w-full"
-                  >
+                  <Button onClick={handleCheckCredits} variant="outline" className="w-full">
                     Check Credits
                   </Button>
 
-                  <Button
-                    onClick={handleRefreshStats}
-                    variant="outline"
-                    className="w-full"
-                  >
+                  <Button onClick={handleRefreshStats} variant="outline" className="w-full">
                     Refresh Usage Stats
                   </Button>
 
@@ -247,7 +238,7 @@ export default function TestRemoveBgPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Preview
                 </h2>
-                
+
                 <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                   {previewUrl ? (
                     <img
@@ -256,9 +247,7 @@ export default function TestRemoveBgPage() {
                       className="max-w-full max-h-full object-contain"
                     />
                   ) : (
-                    <div className="text-gray-400 dark:text-gray-500">
-                      No image selected
-                    </div>
+                    <div className="text-gray-400 dark:text-gray-500">No image selected</div>
                   )}
                 </div>
               </div>
@@ -270,7 +259,9 @@ export default function TestRemoveBgPage() {
                   </h2>
                   <div className="text-sm text-green-800 dark:text-green-200 space-y-1">
                     <p>Detected Type: {result.detectedType || 'N/A'}</p>
-                    <p>Dimensions: {result.result?.width} × {result.result?.height}</p>
+                    <p>
+                      Dimensions: {result.result?.width} × {result.result?.height}
+                    </p>
                     <p>Credits Charged: {result.result?.credits_charged}</p>
                   </div>
                 </div>
@@ -281,18 +272,14 @@ export default function TestRemoveBgPage() {
                   <h2 className="text-xl font-semibold text-red-900 dark:text-red-100 mb-4">
                     Error
                   </h2>
-                  <p className="text-sm text-red-800 dark:text-red-200">
-                    {error}
-                  </p>
+                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
                 </div>
               )}
             </div>
           </div>
 
           <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-            <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-              Test Instructions
-            </h3>
+            <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Test Instructions</h3>
             <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <p>1. Upload an image file (PNG, JPG, WebP)</p>
               <p>2. Click "Remove Background" to process</p>

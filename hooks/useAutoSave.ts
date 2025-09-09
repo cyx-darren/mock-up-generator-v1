@@ -29,24 +29,27 @@ export function useAutoSave({
   const storageKey = user?.userId ? `autosave_${user.userId}_${key}` : `autosave_${key}`;
 
   // Save data to localStorage
-  const saveToStorage = useCallback((dataToSave: any) => {
-    try {
-      const serializedData = JSON.stringify({
-        data: dataToSave,
-        timestamp: Date.now(),
-        version: '1.0',
-      });
-      
-      localStorage.setItem(storageKey, serializedData);
-      lastSavedRef.current = serializedData;
-      
-      if (onSave) {
-        onSave(dataToSave);
+  const saveToStorage = useCallback(
+    (dataToSave: any) => {
+      try {
+        const serializedData = JSON.stringify({
+          data: dataToSave,
+          timestamp: Date.now(),
+          version: '1.0',
+        });
+
+        localStorage.setItem(storageKey, serializedData);
+        lastSavedRef.current = serializedData;
+
+        if (onSave) {
+          onSave(dataToSave);
+        }
+      } catch (error) {
+        console.warn('Failed to auto-save data:', error);
       }
-    } catch (error) {
-      console.warn('Failed to auto-save data:', error);
-    }
-  }, [storageKey, onSave]);
+    },
+    [storageKey, onSave]
+  );
 
   // Restore data from localStorage
   const restoreFromStorage = useCallback(() => {
@@ -55,7 +58,7 @@ export function useAutoSave({
       if (!saved) return null;
 
       const { data: savedData, timestamp } = JSON.parse(saved);
-      
+
       // Check if data is not too old (24 hours)
       const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
       if (Date.now() - timestamp > maxAge) {
@@ -98,7 +101,7 @@ export function useAutoSave({
     // Don't save if data hasn't changed
     const currentData = JSON.stringify({ data, timestamp: 0 });
     const lastSaved = lastSavedRef.current.replace(/"timestamp":\d+/, '"timestamp":0');
-    
+
     if (currentData === lastSaved) {
       return;
     }

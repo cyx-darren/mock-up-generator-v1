@@ -78,17 +78,17 @@ export class ResultCache {
       warmupOnStart: true,
       evictionStrategy: 'lru',
       serialization: 'json',
-      ...config
+      ...config,
     };
 
     this.metrics = this.initializeMetrics();
-    
+
     if (this.config.compressionEnabled) {
       this.compressionWorker = new CompressionWorker();
     }
 
     this.startCleanup();
-    
+
     if (this.config.warmupOnStart) {
       this.warmCache();
     }
@@ -105,7 +105,7 @@ export class ResultCache {
       qualityLevel: params.qualityLevel || '',
       stylePreferences: params.stylePreferences || {},
       constraintVersion: params.constraintVersion || '1.0',
-      apiVersion: params.apiVersion || '1.0'
+      apiVersion: params.apiVersion || '1.0',
     };
 
     // Create deterministic hash
@@ -117,8 +117,8 @@ export class ResultCache {
    * Store result in cache
    */
   async set<T>(
-    key: string, 
-    data: T, 
+    key: string,
+    data: T,
     options: {
       ttl?: number;
       priority?: CachePriority;
@@ -128,7 +128,7 @@ export class ResultCache {
   ): Promise<boolean> {
     try {
       const serializedData = await this.serialize(data);
-      const compressedData = this.config.compressionEnabled 
+      const compressedData = this.config.compressionEnabled
         ? await this.compress(serializedData)
         : serializedData;
 
@@ -144,9 +144,9 @@ export class ResultCache {
           contentType: options.contentType || 'application/json',
           tags: options.tags || [],
           priority: options.priority || 'normal',
-          source: 'api'
+          source: 'api',
         },
-        checksum: this.generateHash(compressedData)
+        checksum: this.generateHash(compressedData),
       };
 
       // Check if we need to evict entries
@@ -164,7 +164,6 @@ export class ResultCache {
 
       console.log(`Cache: Stored ${key} (${entry.metadata.size} bytes)`);
       return true;
-
     } catch (error) {
       console.error('Cache set error:', error);
       return false;
@@ -176,7 +175,7 @@ export class ResultCache {
    */
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.updateMetrics('miss');
       return null;
@@ -197,7 +196,7 @@ export class ResultCache {
 
     try {
       let data = entry.data;
-      
+
       // Decompress if needed
       if (this.config.compressionEnabled && typeof data === 'string') {
         data = await this.decompress(data);
@@ -205,12 +204,11 @@ export class ResultCache {
 
       // Deserialize
       const result = await this.deserialize<T>(data);
-      
+
       this.updateMetrics('hit', entry);
       console.log(`Cache: Hit ${key} (accessed ${entry.metadata.accessCount} times)`);
-      
-      return result;
 
+      return result;
     } catch (error) {
       console.error('Cache get error:', error);
       this.cache.delete(key);
@@ -232,13 +230,13 @@ export class ResultCache {
   delete(key: string): boolean {
     const entry = this.cache.get(key);
     const success = this.cache.delete(key);
-    
+
     if (success && entry) {
       this.removeFromAccessOrder(key);
       this.updateMetrics('delete', entry);
       console.log(`Cache: Deleted ${key}`);
     }
-    
+
     return success;
   }
 
@@ -247,9 +245,9 @@ export class ResultCache {
    */
   invalidateByTags(tags: string[]): number {
     let invalidated = 0;
-    
+
     for (const [key, entry] of this.cache.entries()) {
-      if (entry.metadata.tags.some(tag => tags.includes(tag))) {
+      if (entry.metadata.tags.some((tag) => tags.includes(tag))) {
         this.cache.delete(key);
         this.removeFromAccessOrder(key);
         invalidated++;
@@ -349,19 +347,20 @@ export class ResultCache {
         low: 0,
         normal: 0,
         high: 0,
-        critical: 0
+        critical: 0,
       },
-      lastCleanup: new Date()
+      lastCleanup: new Date(),
     };
   }
 
   private needsEviction(newEntrySize: number): boolean {
-    const currentSize = Array.from(this.cache.values())
-      .reduce((sum, entry) => sum + entry.metadata.size, 0);
-    
+    const currentSize = Array.from(this.cache.values()).reduce(
+      (sum, entry) => sum + entry.metadata.size,
+      0
+    );
+
     return (
-      this.cache.size >= this.config.maxEntries ||
-      currentSize + newEntrySize > this.config.maxSize
+      this.cache.size >= this.config.maxEntries || currentSize + newEntrySize > this.config.maxSize
     );
   }
 
@@ -370,8 +369,7 @@ export class ResultCache {
     let evicted = 0;
 
     while (
-      (this.cache.size >= this.config.maxEntries || 
-       freedSpace < requiredSpace) && 
+      (this.cache.size >= this.config.maxEntries || freedSpace < requiredSpace) &&
       this.cache.size > 0
     ) {
       const victimKey = this.selectEvictionVictim();
@@ -397,24 +395,31 @@ export class ResultCache {
     switch (this.config.evictionStrategy) {
       case 'lru':
         return this.accessOrder[0] || null;
-      
+
       case 'lfu':
-        return Array.from(this.cache.entries())
-          .sort((a, b) => a[1].metadata.accessCount - b[1].metadata.accessCount)[0]?.[0] || null;
-      
+        return (
+          Array.from(this.cache.entries()).sort(
+            (a, b) => a[1].metadata.accessCount - b[1].metadata.accessCount
+          )[0]?.[0] || null
+        );
+
       case 'ttl':
-        return Array.from(this.cache.entries())
-          .sort((a, b) => a[1].metadata.expiresAt.getTime() - b[1].metadata.expiresAt.getTime())[0]?.[0] || null;
-      
+        return (
+          Array.from(this.cache.entries()).sort(
+            (a, b) => a[1].metadata.expiresAt.getTime() - b[1].metadata.expiresAt.getTime()
+          )[0]?.[0] || null
+        );
+
       case 'priority':
         const priorities: CachePriority[] = ['low', 'normal', 'high', 'critical'];
         for (const priority of priorities) {
-          const victim = Array.from(this.cache.entries())
-            .find(([_, entry]) => entry.metadata.priority === priority);
+          const victim = Array.from(this.cache.entries()).find(
+            ([_, entry]) => entry.metadata.priority === priority
+          );
           if (victim) return victim[0];
         }
         return null;
-      
+
       default:
         return this.accessOrder[0] || null;
     }
@@ -465,7 +470,7 @@ export class ResultCache {
     let hash = 0;
     for (let i = 0; i < data.length; i++) {
       const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
@@ -478,27 +483,35 @@ export class ResultCache {
 
   private calculateMetrics(): void {
     const entries = Array.from(this.cache.values());
-    
+
     this.metrics.totalEntries = entries.length;
     this.metrics.totalSize = entries.reduce((sum, entry) => sum + entry.metadata.size, 0);
-    
+
     if (entries.length > 0) {
-      const dates = entries.map(e => e.metadata.createdAt);
-      this.metrics.oldestEntry = new Date(Math.min(...dates.map(d => d.getTime())));
-      this.metrics.newestEntry = new Date(Math.max(...dates.map(d => d.getTime())));
-      
+      const dates = entries.map((e) => e.metadata.createdAt);
+      this.metrics.oldestEntry = new Date(Math.min(...dates.map((d) => d.getTime())));
+      this.metrics.newestEntry = new Date(Math.max(...dates.map((d) => d.getTime())));
+
       // Top accessed keys
       this.metrics.topKeys = entries
         .sort((a, b) => b.metadata.accessCount - a.metadata.accessCount)
         .slice(0, 10)
-        .map(entry => ({ key: entry.key, accessCount: entry.metadata.accessCount }));
-      
+        .map((entry) => ({ key: entry.key, accessCount: entry.metadata.accessCount }));
+
       // Size by priority
       this.metrics.sizeByPriority = {
-        low: entries.filter(e => e.metadata.priority === 'low').reduce((s, e) => s + e.metadata.size, 0),
-        normal: entries.filter(e => e.metadata.priority === 'normal').reduce((s, e) => s + e.metadata.size, 0),
-        high: entries.filter(e => e.metadata.priority === 'high').reduce((s, e) => s + e.metadata.size, 0),
-        critical: entries.filter(e => e.metadata.priority === 'critical').reduce((s, e) => s + e.metadata.size, 0)
+        low: entries
+          .filter((e) => e.metadata.priority === 'low')
+          .reduce((s, e) => s + e.metadata.size, 0),
+        normal: entries
+          .filter((e) => e.metadata.priority === 'normal')
+          .reduce((s, e) => s + e.metadata.size, 0),
+        high: entries
+          .filter((e) => e.metadata.priority === 'high')
+          .reduce((s, e) => s + e.metadata.size, 0),
+        critical: entries
+          .filter((e) => e.metadata.priority === 'critical')
+          .reduce((s, e) => s + e.metadata.size, 0),
       };
     }
   }
@@ -557,7 +570,7 @@ export class ResultCache {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
-    
+
     if (this.compressionWorker) {
       this.compressionWorker.destroy();
     }

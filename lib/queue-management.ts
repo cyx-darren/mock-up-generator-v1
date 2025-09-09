@@ -68,7 +68,10 @@ export class QueueManager {
   private isProcessing = false;
   private jobProcessors = new Map<string, (job: QueueJob) => Promise<any>>();
   private statusCallbacks = new Map<string, (job: QueueJob) => void>();
-  private progressCallbacks = new Map<string, (job: QueueJob, progress: QueueJob['progress']) => void>();
+  private progressCallbacks = new Map<
+    string,
+    (job: QueueJob, progress: QueueJob['progress']) => void
+  >();
 
   constructor(config: Partial<QueueConfig> = {}) {
     this.config = {
@@ -82,9 +85,9 @@ export class QueueManager {
         low: 1,
         medium: 2,
         high: 3,
-        urgent: 4
+        urgent: 4,
       },
-      ...config
+      ...config,
     };
 
     this.metrics = this.initializeMetrics();
@@ -104,7 +107,7 @@ export class QueueManager {
       averageProcessingTime: 0,
       throughputPerMinute: 0,
       currentLoad: 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -131,15 +134,15 @@ export class QueueManager {
         maxRetries: job.metadata?.maxRetries || 3,
         estimatedDuration: job.metadata?.estimatedDuration,
         tags: job.metadata?.tags || [],
-        ...job.metadata
+        ...job.metadata,
       },
       progress: {
         current: 0,
         total: 100,
         stage: 'queued',
         message: 'Job added to queue',
-        percentage: 0
-      }
+        percentage: 0,
+      },
     };
 
     this.jobs.set(jobId, queueJob);
@@ -167,10 +170,10 @@ export class QueueManager {
     userId?: string;
   }): QueueJob[] {
     const allJobs = Array.from(this.jobs.values());
-    
+
     if (!filter) return allJobs;
 
-    return allJobs.filter(job => {
+    return allJobs.filter((job) => {
       if (filter.status && !filter.status.includes(job.status)) return false;
       if (filter.type && !filter.type.includes(job.type)) return false;
       if (filter.priority && !filter.priority.includes(job.priority)) return false;
@@ -195,7 +198,7 @@ export class QueueManager {
       this.processingJobs.delete(jobId);
     } else if (job.status === 'queued') {
       // Remove from queue
-      this.queue = this.queue.filter(qJob => qJob.id !== jobId);
+      this.queue = this.queue.filter((qJob) => qJob.id !== jobId);
     }
 
     job.status = 'cancelled';
@@ -205,12 +208,12 @@ export class QueueManager {
       total: 100,
       stage: 'cancelled',
       message: 'Job cancelled by user',
-      percentage: 0
+      percentage: 0,
     };
 
     this.notifyStatusChange(job);
     this.updateMetrics();
-    
+
     console.log(`Job ${jobId} cancelled`);
     return true;
   }
@@ -233,7 +236,10 @@ export class QueueManager {
   /**
    * Register progress callback
    */
-  onProgress(jobId: string, callback: (job: QueueJob, progress: QueueJob['progress']) => void): void {
+  onProgress(
+    jobId: string,
+    callback: (job: QueueJob, progress: QueueJob['progress']) => void
+  ): void {
     this.progressCallbacks.set(jobId, callback);
   }
 
@@ -249,10 +255,11 @@ export class QueueManager {
    * Clear completed jobs (for cleanup)
    */
   clearCompleted(): number {
-    const completedJobs = Array.from(this.jobs.values())
-      .filter(job => job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled');
-    
-    completedJobs.forEach(job => {
+    const completedJobs = Array.from(this.jobs.values()).filter(
+      (job) => job.status === 'completed' || job.status === 'failed' || job.status === 'cancelled'
+    );
+
+    completedJobs.forEach((job) => {
       this.jobs.delete(job.id);
       this.statusCallbacks.delete(job.id);
       this.progressCallbacks.delete(job.id);
@@ -267,24 +274,24 @@ export class QueueManager {
    */
   private enqueueJob(job: QueueJob): void {
     job.status = 'queued';
-    
+
     // Insert job in priority order
     const insertIndex = this.findInsertionIndex(job);
     this.queue.splice(insertIndex, 0, job);
-    
+
     this.notifyStatusChange(job);
   }
 
   private findInsertionIndex(job: QueueJob): number {
     const jobWeight = this.config.priorityWeights[job.priority];
-    
+
     for (let i = 0; i < this.queue.length; i++) {
       const queueJobWeight = this.config.priorityWeights[this.queue[i].priority];
       if (jobWeight > queueJobWeight) {
         return i;
       }
     }
-    
+
     return this.queue.length;
   }
 
@@ -303,7 +310,7 @@ export class QueueManager {
         }
 
         // Small delay to prevent busy waiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error('Error in queue processing loop:', error);
       }
@@ -326,7 +333,7 @@ export class QueueManager {
       total: 100,
       stage: 'processing',
       message: 'Job processing started',
-      percentage: 10
+      percentage: 10,
     });
 
     this.notifyStatusChange(job);
@@ -344,26 +351,26 @@ export class QueueManager {
       job.status = 'completed';
       job.result = result;
       job.metadata.completedAt = new Date();
-      job.metadata.processingTime = job.metadata.completedAt.getTime() - job.metadata.startedAt!.getTime();
+      job.metadata.processingTime =
+        job.metadata.completedAt.getTime() - job.metadata.startedAt!.getTime();
 
       this.updateProgress(job, {
         current: 100,
         total: 100,
         stage: 'completed',
         message: 'Job completed successfully',
-        percentage: 100
+        percentage: 100,
       });
 
       console.log(`Job ${job.id} completed in ${job.metadata.processingTime}ms`);
-
     } catch (error: any) {
       console.error(`Job ${job.id} failed:`, error);
-      
+
       // Check if we should retry
       if (job.metadata.retryCount < job.metadata.maxRetries) {
         job.metadata.retryCount++;
         job.status = 'queued';
-        
+
         // Add back to queue with delay
         setTimeout(() => {
           this.enqueueJob(job);
@@ -374,7 +381,7 @@ export class QueueManager {
           total: 100,
           stage: 'retrying',
           message: `Retrying job (attempt ${job.metadata.retryCount + 1}/${job.metadata.maxRetries + 1})`,
-          percentage: 0
+          percentage: 0,
         });
       } else {
         this.failJob(job, error.message);
@@ -391,9 +398,10 @@ export class QueueManager {
     job.status = 'failed';
     job.error = error;
     job.metadata.completedAt = new Date();
-    
+
     if (job.metadata.startedAt) {
-      job.metadata.processingTime = job.metadata.completedAt.getTime() - job.metadata.startedAt.getTime();
+      job.metadata.processingTime =
+        job.metadata.completedAt.getTime() - job.metadata.startedAt.getTime();
     }
 
     this.updateProgress(job, {
@@ -401,7 +409,7 @@ export class QueueManager {
       total: 100,
       stage: 'failed',
       message: `Job failed: ${error}`,
-      percentage: 0
+      percentage: 0,
     });
 
     console.log(`Job ${job.id} failed: ${error}`);
@@ -428,40 +436,42 @@ export class QueueManager {
 
   private updateMetrics(): void {
     const allJobs = Array.from(this.jobs.values());
-    
+
     this.metrics = {
       totalJobs: allJobs.length,
-      pendingJobs: allJobs.filter(j => j.status === 'pending').length,
-      queuedJobs: allJobs.filter(j => j.status === 'queued').length,
-      processingJobs: allJobs.filter(j => j.status === 'processing').length,
-      completedJobs: allJobs.filter(j => j.status === 'completed').length,
-      failedJobs: allJobs.filter(j => j.status === 'failed').length,
-      cancelledJobs: allJobs.filter(j => j.status === 'cancelled').length,
+      pendingJobs: allJobs.filter((j) => j.status === 'pending').length,
+      queuedJobs: allJobs.filter((j) => j.status === 'queued').length,
+      processingJobs: allJobs.filter((j) => j.status === 'processing').length,
+      completedJobs: allJobs.filter((j) => j.status === 'completed').length,
+      failedJobs: allJobs.filter((j) => j.status === 'failed').length,
+      cancelledJobs: allJobs.filter((j) => j.status === 'cancelled').length,
       averageProcessingTime: this.calculateAverageProcessingTime(allJobs),
       throughputPerMinute: this.calculateThroughput(allJobs),
       currentLoad: (this.processingJobs.size / this.config.maxConcurrentJobs) * 100,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
   private calculateAverageProcessingTime(jobs: QueueJob[]): number {
-    const completedJobs = jobs.filter(j => j.status === 'completed' && j.metadata.processingTime);
+    const completedJobs = jobs.filter((j) => j.status === 'completed' && j.metadata.processingTime);
     if (completedJobs.length === 0) return 0;
-    
-    const totalTime = completedJobs.reduce((sum, job) => sum + (job.metadata.processingTime || 0), 0);
+
+    const totalTime = completedJobs.reduce(
+      (sum, job) => sum + (job.metadata.processingTime || 0),
+      0
+    );
     return totalTime / completedJobs.length;
   }
 
   private calculateThroughput(jobs: QueueJob[]): number {
     const now = new Date();
     const oneMinuteAgo = new Date(now.getTime() - 60000);
-    
-    const recentCompleted = jobs.filter(j => 
-      j.status === 'completed' && 
-      j.metadata.completedAt && 
-      j.metadata.completedAt >= oneMinuteAgo
+
+    const recentCompleted = jobs.filter(
+      (j) =>
+        j.status === 'completed' && j.metadata.completedAt && j.metadata.completedAt >= oneMinuteAgo
     );
-    
+
     return recentCompleted.length;
   }
 
@@ -470,7 +480,9 @@ export class QueueManager {
 
     setInterval(() => {
       this.updateMetrics();
-      console.log(`[Queue Monitor] Jobs: ${this.metrics.processingJobs} processing, ${this.metrics.queuedJobs} queued, Load: ${this.metrics.currentLoad.toFixed(1)}%`);
+      console.log(
+        `[Queue Monitor] Jobs: ${this.metrics.processingJobs} processing, ${this.metrics.queuedJobs} queued, Load: ${this.metrics.currentLoad.toFixed(1)}%`
+      );
     }, 60000); // Log every minute
   }
 

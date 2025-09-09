@@ -9,17 +9,31 @@ const ACCEPTED_TYPES = {
   'image/png': ['.png'],
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/svg+xml': ['.svg'],
-  'image/webp': ['.webp']
+  'image/webp': ['.webp'],
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 5;
 
 // Upload status types
-export type UploadStatus = 'idle' | 'uploading' | 'completed' | 'error' | 'cancelled' | 'paused' | 'retrying';
+export type UploadStatus =
+  | 'idle'
+  | 'uploading'
+  | 'completed'
+  | 'error'
+  | 'cancelled'
+  | 'paused'
+  | 'retrying';
 
 // Error types for better error handling
-export type ErrorType = 'file_type' | 'file_size' | 'network' | 'server' | 'duplicate' | 'limit_exceeded' | 'unknown';
+export type ErrorType =
+  | 'file_type'
+  | 'file_size'
+  | 'network'
+  | 'server'
+  | 'duplicate'
+  | 'limit_exceeded'
+  | 'unknown';
 
 export interface UploadError {
   type: ErrorType;
@@ -80,7 +94,7 @@ export function FileUpload({
   acceptedTypes = ACCEPTED_TYPES,
   multiple = true,
   uploadEndpoint = '/api/upload',
-  className
+  className,
 }: FileUploadProps) {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -101,14 +115,20 @@ export function FileUpload({
   }, []);
 
   // Validate file type
-  const validateFileType = useCallback((file: File): boolean => {
-    return Object.keys(acceptedTypes).includes(file.type);
-  }, [acceptedTypes]);
+  const validateFileType = useCallback(
+    (file: File): boolean => {
+      return Object.keys(acceptedTypes).includes(file.type);
+    },
+    [acceptedTypes]
+  );
 
   // Validate file size
-  const validateFileSize = useCallback((file: File): boolean => {
-    return file.size <= maxSize;
-  }, [maxSize]);
+  const validateFileSize = useCallback(
+    (file: File): boolean => {
+      return file.size <= maxSize;
+    },
+    [maxSize]
+  );
 
   // Format file size for display
   const formatFileSize = useCallback((bytes: number): string => {
@@ -139,24 +159,28 @@ export function FileUpload({
   }, []);
 
   // Create error object with user-friendly messages
-  const createError = useCallback((type: ErrorType, details?: any): UploadError => {
-    const errorMessages: Record<ErrorType, string> = {
-      file_type: 'This file type is not supported. Please upload PNG, JPG, SVG, or WebP files.',
-      file_size: `File is too large. Maximum size allowed is ${formatFileSize(maxSize)}.`,
-      network: 'Network connection error. Please check your internet connection and try again.',
-      server: 'Server error occurred. Please try again later or contact support if the issue persists.',
-      duplicate: 'This file has already been added to the upload queue.',
-      limit_exceeded: `Maximum ${maxFiles} files can be uploaded at once.`,
-      unknown: 'An unexpected error occurred. Please try again.'
-    };
+  const createError = useCallback(
+    (type: ErrorType, details?: any): UploadError => {
+      const errorMessages: Record<ErrorType, string> = {
+        file_type: 'This file type is not supported. Please upload PNG, JPG, SVG, or WebP files.',
+        file_size: `File is too large. Maximum size allowed is ${formatFileSize(maxSize)}.`,
+        network: 'Network connection error. Please check your internet connection and try again.',
+        server:
+          'Server error occurred. Please try again later or contact support if the issue persists.',
+        duplicate: 'This file has already been added to the upload queue.',
+        limit_exceeded: `Maximum ${maxFiles} files can be uploaded at once.`,
+        unknown: 'An unexpected error occurred. Please try again.',
+      };
 
-    return {
-      type,
-      message: errorMessages[type],
-      retryable: ['network', 'server', 'unknown'].includes(type),
-      details
-    };
-  }, [maxFiles, maxSize, formatFileSize]);
+      return {
+        type,
+        message: errorMessages[type],
+        retryable: ['network', 'server', 'unknown'].includes(type),
+        details,
+      };
+    },
+    [maxFiles, maxSize, formatFileSize]
+  );
 
   // Log errors for debugging
   const logError = useCallback((fileId: string, error: UploadError) => {
@@ -164,96 +188,111 @@ export function FileUpload({
       type: error.type,
       message: error.message,
       details: error.details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     // You could also send this to an error tracking service
     // sendToErrorTracking(error);
   }, []);
 
   // Process selected files
-  const processFiles = useCallback((files: FileList | File[]) => {
-    const fileArray = Array.from(files);
-    const validFiles: File[] = [];
-    const errors: string[] = [];
+  const processFiles = useCallback(
+    (files: FileList | File[]) => {
+      const fileArray = Array.from(files);
+      const validFiles: File[] = [];
+      const errors: string[] = [];
 
-    // Check total file count
-    if (uploadFiles.length + fileArray.length > maxFiles) {
-      errors.push(`Maximum ${maxFiles} files allowed. Currently have ${uploadFiles.length} files.`);
-      return;
-    }
-
-    // Validate each file with enhanced error handling
-    fileArray.forEach((file) => {
-      let fileError: UploadError | null = null;
-
-      if (!validateFileType(file)) {
-        fileError = createError('file_type', {
-          fileName: file.name,
-          fileType: file.type,
-          acceptedTypes: Object.keys(acceptedTypes)
-        });
-      } else if (!validateFileSize(file)) {
-        fileError = createError('file_size', {
-          fileName: file.name,
-          fileSize: file.size,
-          maxSize: maxSize
-        });
-      } else {
-        // Check for duplicates
-        const isDuplicate = uploadFiles.some(uploadFile => 
-          uploadFile.file.name === file.name && 
-          uploadFile.file.size === file.size
+      // Check total file count
+      if (uploadFiles.length + fileArray.length > maxFiles) {
+        errors.push(
+          `Maximum ${maxFiles} files allowed. Currently have ${uploadFiles.length} files.`
         );
-
-        if (isDuplicate) {
-          fileError = createError('duplicate', {
-            fileName: file.name,
-            fileSize: file.size
-          });
-        }
-      }
-
-      if (fileError) {
-        errors.push(`${file.name}: ${fileError.message}`);
-        logError('validation', fileError);
         return;
       }
 
-      validFiles.push(file);
-    });
+      // Validate each file with enhanced error handling
+      fileArray.forEach((file) => {
+        let fileError: UploadError | null = null;
 
-    if (errors.length > 0) {
-      // Show errors to user
-      console.error('File validation errors:', errors);
-      return;
-    }
+        if (!validateFileType(file)) {
+          fileError = createError('file_type', {
+            fileName: file.name,
+            fileType: file.type,
+            acceptedTypes: Object.keys(acceptedTypes),
+          });
+        } else if (!validateFileSize(file)) {
+          fileError = createError('file_size', {
+            fileName: file.name,
+            fileSize: file.size,
+            maxSize: maxSize,
+          });
+        } else {
+          // Check for duplicates
+          const isDuplicate = uploadFiles.some(
+            (uploadFile) => uploadFile.file.name === file.name && uploadFile.file.size === file.size
+          );
 
-    // Add valid files to upload queue
-    const newUploadFiles: UploadFile[] = validFiles.map(file => ({
-      id: generateFileId(),
-      file,
-      status: 'idle' as UploadStatus,
-      progress: 0,
-      previewUrl: createPreviewUrl(file)
-    }));
+          if (isDuplicate) {
+            fileError = createError('duplicate', {
+              fileName: file.name,
+              fileSize: file.size,
+            });
+          }
+        }
 
-    setUploadFiles(prev => [...prev, ...newUploadFiles]);
-    onFilesAdded?.(validFiles);
-  }, [uploadFiles, maxFiles, validateFileType, validateFileSize, acceptedTypes, maxSize, formatFileSize, generateFileId, createPreviewUrl, onFilesAdded]);
+        if (fileError) {
+          errors.push(`${file.name}: ${fileError.message}`);
+          logError('validation', fileError);
+          return;
+        }
+
+        validFiles.push(file);
+      });
+
+      if (errors.length > 0) {
+        // Show errors to user
+        console.error('File validation errors:', errors);
+        return;
+      }
+
+      // Add valid files to upload queue
+      const newUploadFiles: UploadFile[] = validFiles.map((file) => ({
+        id: generateFileId(),
+        file,
+        status: 'idle' as UploadStatus,
+        progress: 0,
+        previewUrl: createPreviewUrl(file),
+      }));
+
+      setUploadFiles((prev) => [...prev, ...newUploadFiles]);
+      onFilesAdded?.(validFiles);
+    },
+    [
+      uploadFiles,
+      maxFiles,
+      validateFileType,
+      validateFileSize,
+      acceptedTypes,
+      maxSize,
+      formatFileSize,
+      generateFileId,
+      createPreviewUrl,
+      onFilesAdded,
+    ]
+  );
 
   // Handle drag events
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter(prev => prev + 1);
+    setDragCounter((prev) => prev + 1);
     setIsDragging(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragCounter(prev => {
+    setDragCounter((prev) => {
       const newCounter = prev - 1;
       if (newCounter === 0) {
         setIsDragging(false);
@@ -267,29 +306,35 @@ export function FileUpload({
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    setDragCounter(0);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      setDragCounter(0);
 
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      processFiles(files);
-    }
-  }, [processFiles]);
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        processFiles(files);
+      }
+    },
+    [processFiles]
+  );
 
   // Handle file input change
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      processFiles(files);
-    }
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [processFiles]);
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        processFiles(files);
+      }
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [processFiles]
+  );
 
   // Open file dialog
   const openFileDialog = useCallback(() => {
@@ -297,223 +342,254 @@ export function FileUpload({
   }, []);
 
   // Create progress details
-  const createProgressDetails = useCallback((loaded: number, total: number, startTime: number): UploadProgress => {
-    const now = Date.now();
-    const timeElapsed = (now - startTime) / 1000; // seconds
-    const percentage = (loaded / total) * 100;
-    const speed = timeElapsed > 0 ? loaded / timeElapsed : 0; // bytes per second
-    const remainingBytes = total - loaded;
-    const timeRemaining = speed > 0 ? remainingBytes / speed : 0; // seconds
+  const createProgressDetails = useCallback(
+    (loaded: number, total: number, startTime: number): UploadProgress => {
+      const now = Date.now();
+      const timeElapsed = (now - startTime) / 1000; // seconds
+      const percentage = (loaded / total) * 100;
+      const speed = timeElapsed > 0 ? loaded / timeElapsed : 0; // bytes per second
+      const remainingBytes = total - loaded;
+      const timeRemaining = speed > 0 ? remainingBytes / speed : 0; // seconds
 
-    return {
-      loaded,
-      total,
-      percentage: Math.min(100, Math.max(0, percentage)),
-      speed,
-      timeRemaining,
-      startTime,
-      lastUpdate: now
-    };
-  }, []);
+      return {
+        loaded,
+        total,
+        percentage: Math.min(100, Math.max(0, percentage)),
+        speed,
+        timeRemaining,
+        startTime,
+        lastUpdate: now,
+      };
+    },
+    []
+  );
 
   // Upload file with enhanced error handling and retry mechanism
-  const uploadFile = useCallback(async (fileId: string, isRetry: boolean = false) => {
-    const file = uploadFiles.find(f => f.id === fileId);
-    if (!file || (file.status !== 'idle' && !isRetry)) return;
+  const uploadFile = useCallback(
+    async (fileId: string, isRetry: boolean = false) => {
+      const file = uploadFiles.find((f) => f.id === fileId);
+      if (!file || (file.status !== 'idle' && !isRetry)) return;
 
-    const controller = new AbortController();
-    const startTime = Date.now();
-    const currentRetryCount = file.retryCount || 0;
-    const maxRetries = file.maxRetries || 3;
+      const controller = new AbortController();
+      const startTime = Date.now();
+      const currentRetryCount = file.retryCount || 0;
+      const maxRetries = file.maxRetries || 3;
 
-    // Update file status and add controller
-    setUploadFiles(prev =>
-      prev.map(f =>
-        f.id === fileId
-          ? { 
-              ...f, 
-              status: isRetry ? 'retrying' : 'uploading', 
-              uploadController: controller,
-              retryCount: currentRetryCount
-            }
-          : f
-      )
-    );
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file.file);
-
-      const response = await fetch(uploadEndpoint, {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-        headers: {
-          // Add retry headers for debugging
-          'X-Retry-Count': currentRetryCount.toString(),
-        },
-      });
-
-      if (!response.ok) {
-        const errorType: ErrorType = response.status >= 500 ? 'server' : 
-                                   response.status === 413 ? 'file_size' :
-                                   response.status >= 400 ? 'server' : 'network';
-        throw new Error(JSON.stringify({ 
-          type: errorType, 
-          status: response.status, 
-          message: response.statusText 
-        }));
-      }
-
-      // Simulate progress updates for demonstration
-      let loaded = 0;
-      const total = file.file.size;
-      const progressInterval = setInterval(() => {
-        loaded = Math.min(total, loaded + (total * 0.1)); // 10% increments
-        const progressDetails = createProgressDetails(loaded, total, startTime);
-
-        setUploadFiles(prev =>
-          prev.map(f =>
-            f.id === fileId
-              ? {
-                  ...f,
-                  progress: progressDetails.percentage,
-                  progressDetails
-                }
-              : f
-          )
-        );
-
-        onUploadProgress?.(fileId, progressDetails.percentage, progressDetails);
-
-        if (loaded >= total) {
-          clearInterval(progressInterval);
-          // Mark as completed
-          setUploadFiles(prev =>
-            prev.map(f =>
-              f.id === fileId
-                ? { ...f, status: 'completed', progress: 100 }
-                : f
-            )
-          );
-          onUploadComplete?.(fileId, { success: true });
-        }
-      }, 200);
-
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        setUploadFiles(prev =>
-          prev.map(f =>
-            f.id === fileId ? { ...f, status: 'cancelled' } : f
-          )
-        );
-        return;
-      }
-
-      // Parse error details
-      let errorDetails: UploadError;
-      try {
-        const parsedError = JSON.parse(error.message);
-        errorDetails = createError(parsedError.type, {
-          status: parsedError.status,
-          originalMessage: parsedError.message
-        });
-      } catch {
-        // Network or other errors
-        const isNetworkError = !navigator.onLine || error.message.includes('fetch');
-        errorDetails = createError(isNetworkError ? 'network' : 'unknown', {
-          originalError: error.message
-        });
-      }
-
-      // Log the error
-      logError(fileId, errorDetails);
-
-      // Check if we should retry
-      if (errorDetails.retryable && currentRetryCount < maxRetries) {
-        setTimeout(() => {
-          uploadFile(fileId, true);
-        }, Math.pow(2, currentRetryCount) * 1000); // Exponential backoff
-        
-        setUploadFiles(prev =>
-          prev.map(f =>
-            f.id === fileId
-              ? { 
-                  ...f, 
-                  status: 'idle', 
-                  retryCount: currentRetryCount + 1,
-                  errorDetails 
-                }
-              : f
-          )
-        );
-        return;
-      }
-
-      // Final error state
-      setUploadFiles(prev =>
-        prev.map(f =>
+      // Update file status and add controller
+      setUploadFiles((prev) =>
+        prev.map((f) =>
           f.id === fileId
-            ? { 
-                ...f, 
-                status: 'error', 
-                error: errorDetails.message,
-                errorDetails 
+            ? {
+                ...f,
+                status: isRetry ? 'retrying' : 'uploading',
+                uploadController: controller,
+                retryCount: currentRetryCount,
               }
             : f
         )
       );
-      onUploadError?.(fileId, errorDetails.message);
-    }
-  }, [uploadFiles, uploadEndpoint, createProgressDetails, onUploadProgress, onUploadComplete, onUploadError]);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file.file);
+
+        const response = await fetch(uploadEndpoint, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+          headers: {
+            // Add retry headers for debugging
+            'X-Retry-Count': currentRetryCount.toString(),
+          },
+        });
+
+        if (!response.ok) {
+          const errorType: ErrorType =
+            response.status >= 500
+              ? 'server'
+              : response.status === 413
+                ? 'file_size'
+                : response.status >= 400
+                  ? 'server'
+                  : 'network';
+          throw new Error(
+            JSON.stringify({
+              type: errorType,
+              status: response.status,
+              message: response.statusText,
+            })
+          );
+        }
+
+        // Simulate progress updates for demonstration
+        let loaded = 0;
+        const total = file.file.size;
+        const progressInterval = setInterval(() => {
+          loaded = Math.min(total, loaded + total * 0.1); // 10% increments
+          const progressDetails = createProgressDetails(loaded, total, startTime);
+
+          setUploadFiles((prev) =>
+            prev.map((f) =>
+              f.id === fileId
+                ? {
+                    ...f,
+                    progress: progressDetails.percentage,
+                    progressDetails,
+                  }
+                : f
+            )
+          );
+
+          onUploadProgress?.(fileId, progressDetails.percentage, progressDetails);
+
+          if (loaded >= total) {
+            clearInterval(progressInterval);
+            // Mark as completed
+            setUploadFiles((prev) =>
+              prev.map((f) => (f.id === fileId ? { ...f, status: 'completed', progress: 100 } : f))
+            );
+            onUploadComplete?.(fileId, { success: true });
+          }
+        }, 200);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          setUploadFiles((prev) =>
+            prev.map((f) => (f.id === fileId ? { ...f, status: 'cancelled' } : f))
+          );
+          return;
+        }
+
+        // Parse error details
+        let errorDetails: UploadError;
+        try {
+          const parsedError = JSON.parse(error.message);
+          errorDetails = createError(parsedError.type, {
+            status: parsedError.status,
+            originalMessage: parsedError.message,
+          });
+        } catch {
+          // Network or other errors
+          const isNetworkError = !navigator.onLine || error.message.includes('fetch');
+          errorDetails = createError(isNetworkError ? 'network' : 'unknown', {
+            originalError: error.message,
+          });
+        }
+
+        // Log the error
+        logError(fileId, errorDetails);
+
+        // Check if we should retry
+        if (errorDetails.retryable && currentRetryCount < maxRetries) {
+          setTimeout(
+            () => {
+              uploadFile(fileId, true);
+            },
+            Math.pow(2, currentRetryCount) * 1000
+          ); // Exponential backoff
+
+          setUploadFiles((prev) =>
+            prev.map((f) =>
+              f.id === fileId
+                ? {
+                    ...f,
+                    status: 'idle',
+                    retryCount: currentRetryCount + 1,
+                    errorDetails,
+                  }
+                : f
+            )
+          );
+          return;
+        }
+
+        // Final error state
+        setUploadFiles((prev) =>
+          prev.map((f) =>
+            f.id === fileId
+              ? {
+                  ...f,
+                  status: 'error',
+                  error: errorDetails.message,
+                  errorDetails,
+                }
+              : f
+          )
+        );
+        onUploadError?.(fileId, errorDetails.message);
+      }
+    },
+    [
+      uploadFiles,
+      uploadEndpoint,
+      createProgressDetails,
+      onUploadProgress,
+      onUploadComplete,
+      onUploadError,
+    ]
+  );
 
   // Pause upload
-  const pauseUpload = useCallback((fileId: string) => {
-    setUploadFiles(prev =>
-      prev.map(file => {
-        if (file.id === fileId && file.status === 'uploading') {
-          file.uploadController?.abort();
-          onUploadPaused?.(fileId);
-          return { ...file, status: 'paused' };
-        }
-        return file;
-      })
-    );
-  }, [onUploadPaused]);
+  const pauseUpload = useCallback(
+    (fileId: string) => {
+      setUploadFiles((prev) =>
+        prev.map((file) => {
+          if (file.id === fileId && file.status === 'uploading') {
+            file.uploadController?.abort();
+            onUploadPaused?.(fileId);
+            return { ...file, status: 'paused' };
+          }
+          return file;
+        })
+      );
+    },
+    [onUploadPaused]
+  );
 
   // Resume upload
-  const resumeUpload = useCallback((fileId: string) => {
-    setUploadFiles(prev =>
-      prev.map(file => {
-        if (file.id === fileId && file.status === 'paused') {
-          onUploadResumed?.(fileId);
-          return { ...file, status: 'idle' };
-        }
-        return file;
-      })
-    );
-    // Restart the upload
-    setTimeout(() => uploadFile(fileId), 100);
-  }, [onUploadResumed, uploadFile]);
+  const resumeUpload = useCallback(
+    (fileId: string) => {
+      setUploadFiles((prev) =>
+        prev.map((file) => {
+          if (file.id === fileId && file.status === 'paused') {
+            onUploadResumed?.(fileId);
+            return { ...file, status: 'idle' };
+          }
+          return file;
+        })
+      );
+      // Restart the upload
+      setTimeout(() => uploadFile(fileId), 100);
+    },
+    [onUploadResumed, uploadFile]
+  );
 
   // Retry upload with reset retry count
-  const retryUpload = useCallback((fileId: string) => {
-    setUploadFiles(prev =>
-      prev.map(file => {
-        if (file.id === fileId && file.status === 'error') {
-          return { ...file, status: 'idle', retryCount: 0, error: undefined, errorDetails: undefined };
-        }
-        return file;
-      })
-    );
-    // Start the upload
-    setTimeout(() => uploadFile(fileId), 100);
-  }, [uploadFile]);
+  const retryUpload = useCallback(
+    (fileId: string) => {
+      setUploadFiles((prev) =>
+        prev.map((file) => {
+          if (file.id === fileId && file.status === 'error') {
+            return {
+              ...file,
+              status: 'idle',
+              retryCount: 0,
+              error: undefined,
+              errorDetails: undefined,
+            };
+          }
+          return file;
+        })
+      );
+      // Start the upload
+      setTimeout(() => uploadFile(fileId), 100);
+    },
+    [uploadFile]
+  );
 
   // Cancel upload
   const cancelUpload = useCallback((fileId: string) => {
-    setUploadFiles(prev => 
-      prev.map(file => {
+    setUploadFiles((prev) =>
+      prev.map((file) => {
         if (file.id === fileId) {
           file.uploadController?.abort();
           return { ...file, status: 'cancelled' as UploadStatus };
@@ -525,10 +601,10 @@ export function FileUpload({
 
   // Remove file from queue
   const removeFile = useCallback((fileId: string) => {
-    setUploadFiles(prev => {
-      const updatedFiles = prev.filter(file => file.id !== fileId);
+    setUploadFiles((prev) => {
+      const updatedFiles = prev.filter((file) => file.id !== fileId);
       // Cleanup preview URLs
-      const fileToRemove = prev.find(file => file.id === fileId);
+      const fileToRemove = prev.find((file) => file.id === fileId);
       if (fileToRemove?.previewUrl) {
         URL.revokeObjectURL(fileToRemove.previewUrl);
       }
@@ -539,7 +615,7 @@ export function FileUpload({
   // Clear all files
   const clearAll = useCallback(() => {
     // Cleanup all preview URLs
-    uploadFiles.forEach(file => {
+    uploadFiles.forEach((file) => {
       if (file.previewUrl) {
         URL.revokeObjectURL(file.previewUrl);
       }
@@ -553,7 +629,7 @@ export function FileUpload({
   }, [acceptedTypes]);
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn('space-y-4', className)}>
       {/* Drag and Drop Zone */}
       <div
         onDragEnter={handleDragEnter}
@@ -561,10 +637,10 @@ export function FileUpload({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         className={cn(
-          "relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200",
+          'relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200',
           isDragging
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
         )}
       >
         <input
@@ -575,14 +651,14 @@ export function FileUpload({
           onChange={handleFileInputChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        
+
         <div className="space-y-4">
           <div className="mx-auto w-16 h-16 text-gray-400">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
             </svg>
           </div>
-          
+
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
               {isDragging ? 'Drop files here' : 'Upload your logo files'}
@@ -591,18 +667,14 @@ export function FileUpload({
               Drag & drop files here or click to browse
             </p>
           </div>
-          
+
           <div className="text-xs text-gray-500 dark:text-gray-400">
             <p>Supported formats: PNG, JPG, SVG, WebP</p>
             <p>Maximum file size: {formatFileSize(maxSize)}</p>
             <p>Maximum files: {maxFiles}</p>
           </div>
-          
-          <Button
-            onClick={openFileDialog}
-            variant="outline"
-            className="mt-4"
-          >
+
+          <Button onClick={openFileDialog} variant="outline" className="mt-4">
             Choose Files
           </Button>
         </div>
@@ -615,11 +687,7 @@ export function FileUpload({
             <h4 className="font-medium text-gray-900 dark:text-gray-100">
               Upload Queue ({uploadFiles.length}/{maxFiles})
             </h4>
-            <Button
-              onClick={clearAll}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={clearAll} variant="outline" size="sm">
               Clear All
             </Button>
           </div>
@@ -655,22 +723,23 @@ export function FileUpload({
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatFileSize(fileItem.file.size)} • {fileItem.file.type}
                   </p>
-                  
+
                   {/* Progress Bar with Enhanced Details */}
                   {(fileItem.status === 'uploading' || fileItem.status === 'paused') && (
                     <div className="mt-2 space-y-1">
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className={cn(
-                            "h-2 rounded-full transition-all duration-300",
-                            fileItem.status === 'uploading' ? "bg-blue-600" : "bg-yellow-500"
+                            'h-2 rounded-full transition-all duration-300',
+                            fileItem.status === 'uploading' ? 'bg-blue-600' : 'bg-yellow-500'
                           )}
                           style={{ width: `${fileItem.progress}%` }}
                         />
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {Math.round(fileItem.progress)}%{fileItem.status === 'paused' ? ' (Paused)' : ''}
+                          {Math.round(fileItem.progress)}%
+                          {fileItem.status === 'paused' ? ' (Paused)' : ''}
                         </span>
                         {fileItem.progressDetails && (
                           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -681,7 +750,8 @@ export function FileUpload({
                       {fileItem.progressDetails && fileItem.progressDetails.timeRemaining > 0 && (
                         <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
                           <span>
-                            {formatFileSize(fileItem.progressDetails.loaded)} of {formatFileSize(fileItem.progressDetails.total)}
+                            {formatFileSize(fileItem.progressDetails.loaded)} of{' '}
+                            {formatFileSize(fileItem.progressDetails.total)}
                           </span>
                           <span>
                             {formatTimeRemaining(fileItem.progressDetails.timeRemaining)} remaining
@@ -690,7 +760,7 @@ export function FileUpload({
                       )}
                     </div>
                   )}
-                  
+
                   {/* Error Message with Enhanced Details */}
                   {fileItem.status === 'error' && fileItem.error && (
                     <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
@@ -700,7 +770,9 @@ export function FileUpload({
                       {fileItem.errorDetails?.retryable && (
                         <div className="mt-1 flex items-center justify-between">
                           <p className="text-xs text-red-600 dark:text-red-400">
-                            {fileItem.retryCount ? `Tried ${fileItem.retryCount} time(s)` : 'Click retry to try again'}
+                            {fileItem.retryCount
+                              ? `Tried ${fileItem.retryCount} time(s)`
+                              : 'Click retry to try again'}
                           </p>
                           <button
                             onClick={() => retryUpload(fileItem.id)}
@@ -712,7 +784,7 @@ export function FileUpload({
                       )}
                     </div>
                   )}
-                  
+
                   {/* Retry Status */}
                   {fileItem.status === 'retrying' && (
                     <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
@@ -736,7 +808,7 @@ export function FileUpload({
                       </svg>
                     </button>
                   )}
-                  
+
                   {fileItem.status === 'uploading' && (
                     <>
                       <button
@@ -759,7 +831,7 @@ export function FileUpload({
                       </button>
                     </>
                   )}
-                  
+
                   {fileItem.status === 'paused' && (
                     <>
                       <button
@@ -782,7 +854,7 @@ export function FileUpload({
                       </button>
                     </>
                   )}
-                  
+
                   {fileItem.status === 'completed' && (
                     <div className="w-6 h-6 text-green-500">
                       <svg viewBox="0 0 24 24" fill="currentColor">
@@ -790,7 +862,7 @@ export function FileUpload({
                       </svg>
                     </div>
                   )}
-                  
+
                   {fileItem.status === 'error' && (
                     <>
                       <div className="w-6 h-6 text-red-500" title="Upload failed">
@@ -811,7 +883,7 @@ export function FileUpload({
                       )}
                     </>
                   )}
-                  
+
                   {fileItem.status === 'retrying' && (
                     <div className="w-6 h-6 text-orange-500 animate-spin" title="Retrying...">
                       <svg viewBox="0 0 24 24" fill="currentColor">
@@ -819,7 +891,7 @@ export function FileUpload({
                       </svg>
                     </div>
                   )}
-                  
+
                   {fileItem.status === 'cancelled' && (
                     <div className="w-6 h-6 text-yellow-500" title="Cancelled">
                       <svg viewBox="0 0 24 24" fill="currentColor">
@@ -827,7 +899,7 @@ export function FileUpload({
                       </svg>
                     </div>
                   )}
-                  
+
                   <button
                     onClick={() => removeFile(fileItem.id)}
                     className="w-6 h-6 text-gray-400 hover:text-red-500"

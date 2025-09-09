@@ -30,15 +30,15 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
 
   const imageUrl = product.thumbnail_url || product.primary_image_url || '';
-  
+
   // Check if the image URL is valid for Next.js Image component
-  const isValidImageUrl = imageUrl && (
-    imageUrl.startsWith('https://images.unsplash.com/') ||
-    imageUrl.includes('supabase.co') ||
-    imageUrl.startsWith('/') ||
-    imageUrl.startsWith('http://localhost') ||
-    imageUrl.startsWith('https://localhost')
-  );
+  const isValidImageUrl =
+    imageUrl &&
+    (imageUrl.startsWith('https://images.unsplash.com/') ||
+      imageUrl.includes('supabase.co') ||
+      imageUrl.startsWith('/') ||
+      imageUrl.startsWith('http://localhost') ||
+      imageUrl.startsWith('https://localhost'));
 
   const handleImageLoad = () => {
     setImageLoading(false);
@@ -52,7 +52,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(price);
   };
 
@@ -65,8 +65,8 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
   };
 
   return (
-    <Card 
-      variant="shadow" 
+    <Card
+      variant="shadow"
       hoverable
       className="group transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
       onClick={() => onSelect?.(product)}
@@ -77,7 +77,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
           {imageLoading && !imageError && (
             <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg" />
           )}
-          
+
           {!imageError && imageUrl ? (
             isValidImageUrl ? (
               <Image
@@ -106,7 +106,11 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
             <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
               <div className="text-center">
                 <svg className="w-16 h-16 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <p className="text-sm">No Image</p>
               </div>
@@ -135,15 +139,13 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {product.name}
           </h3>
-          
+
           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
             {product.description}
           </p>
 
           {/* SKU */}
-          <p className="text-xs text-gray-500 dark:text-gray-500 font-mono">
-            SKU: {product.sku}
-          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 font-mono">SKU: {product.sku}</p>
 
           {/* Constraint Badges */}
           <div className="flex flex-wrap gap-1">
@@ -179,7 +181,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
 
         {/* Select Button */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <button 
+          <button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
             onClick={(e) => {
               e.stopPropagation();

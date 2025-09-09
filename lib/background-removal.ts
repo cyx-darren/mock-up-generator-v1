@@ -1,4 +1,10 @@
-import { RemoveBgClient, RemoveBgOptions, RemoveBgResponse, RemoveBgError, isRemoveBgError } from './remove-bg';
+import {
+  RemoveBgClient,
+  RemoveBgOptions,
+  RemoveBgResponse,
+  RemoveBgError,
+  isRemoveBgError,
+} from './remove-bg';
 import { removeBgUsageTracker } from './rate-limiter';
 
 export interface QualitySettings {
@@ -14,7 +20,7 @@ export interface QualitySettings {
 export interface EdgeRefinementOptions {
   enabled: boolean;
   smoothing: number; // 0-10
-  feathering: number; // 0-5  
+  feathering: number; // 0-5
   threshold: number; // 0-255
 }
 
@@ -60,36 +66,41 @@ class BackgroundRemovalCache {
     if (typeof imageFile === 'string') {
       return `url_${btoa(imageFile)}_${JSON.stringify(options)}`;
     }
-    
+
     // For files/blobs, use size + name + lastModified + options as hash
-    const fileInfo = imageFile instanceof File 
-      ? `${imageFile.name}_${imageFile.size}_${imageFile.lastModified}`
-      : `blob_${imageFile.size}`;
-    
+    const fileInfo =
+      imageFile instanceof File
+        ? `${imageFile.name}_${imageFile.size}_${imageFile.lastModified}`
+        : `blob_${imageFile.size}`;
+
     return btoa(`${fileInfo}_${JSON.stringify(options)}`);
   }
 
   get(imageFile: File | Blob | string, options: BackgroundRemovalOptions): CacheEntry | null {
     const hash = this.generateHash(imageFile, options);
     const entry = this.cache.get(hash);
-    
+
     if (!entry) return null;
-    
+
     const now = Date.now();
     if (now - entry.timestamp > entry.maxAge * 1000) {
       this.cache.delete(hash);
       return null;
     }
-    
+
     return entry;
   }
 
-  set(imageFile: File | Blob | string, options: BackgroundRemovalOptions, result: RemoveBgResponse): void {
+  set(
+    imageFile: File | Blob | string,
+    options: BackgroundRemovalOptions,
+    result: RemoveBgResponse
+  ): void {
     const hash = this.generateHash(imageFile, options);
     const maxAge = options.cacheMaxAge || 3600; // 1 hour default
-    
+
     const originalSize = typeof imageFile === 'string' ? 0 : imageFile.size;
-    
+
     const entry: CacheEntry = {
       result,
       timestamp: Date.now(),
@@ -173,18 +184,13 @@ export class BackgroundRemovalService {
 
     // Prepare options with quality settings
     const removeBgOptions = this.prepareRemoveBgOptions(options);
-    
+
     try {
       // Call Remove.bg API
       const result = await this.client.removeBackground(imageFile, removeBgOptions, userId);
 
       // Process the result
-      const processedResult = await this.postProcessResult(
-        result,
-        imageFile,
-        options,
-        startTime
-      );
+      const processedResult = await this.postProcessResult(result, imageFile, options, startTime);
 
       // Cache the result
       if (options.enableCache !== false) {
@@ -196,13 +202,15 @@ export class BackgroundRemovalService {
       if (isRemoveBgError(error)) {
         throw error;
       }
-      throw new Error(`Background removal failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Background removal failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   private prepareRemoveBgOptions(options: BackgroundRemovalOptions): RemoveBgOptions {
     const quality = this.getDefaultQuality(options.quality);
-    
+
     return {
       size: quality.size,
       format: quality.format,
@@ -260,7 +268,7 @@ export class BackgroundRemovalService {
 
     // Browser-side analysis
     const url = URL.createObjectURL(blob);
-    
+
     try {
       const img = new Image();
       await new Promise((resolve, reject) => {
@@ -284,11 +292,11 @@ export class BackgroundRemovalService {
       // Analyze transparency and edge quality
       let transparentPixels = 0;
       let edgePixels = 0;
-      let totalPixels = canvas.width * canvas.height;
+      const totalPixels = canvas.width * canvas.height;
 
       for (let i = 0; i < data.length; i += 4) {
         const alpha = data[i + 3];
-        
+
         if (alpha === 0) {
           transparentPixels++;
         } else if (alpha < 255) {
@@ -337,7 +345,7 @@ export class BackgroundRemovalService {
 
     // Create URL for processing
     const url = URL.createObjectURL(blob);
-    
+
     try {
       const img = new Image();
       await new Promise((resolve, reject) => {
@@ -429,7 +437,7 @@ export class BackgroundRemovalService {
     }
 
     const url = URL.createObjectURL(imageFile);
-    
+
     try {
       const img = new Image();
       await new Promise((resolve, reject) => {
@@ -497,9 +505,9 @@ export async function removeBackgroundWithEdgeRefinement(
 ): Promise<ProcessedResult> {
   return backgroundRemovalService.removeBackground(
     imageFile,
-    { 
+    {
       edgeRefinement: { enabled: true, ...edgeOptions },
-      enableCache: true 
+      enableCache: true,
     },
     userId
   );

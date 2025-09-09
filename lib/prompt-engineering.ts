@@ -109,7 +109,7 @@ export class PromptEngineeringService {
       name: 'Corporate Gift Base Template',
       baseTemplate: `Create a professional, high-quality mockup of a {productType} as a corporate gift. The design should be clean, modern, and suitable for business branding. {qualityModifiers} {styleModifiers} {placementModifiers} The mockup should showcase the product in an appealing way that demonstrates its potential as a branded corporate gift.`,
       variables: ['productType', 'qualityModifiers', 'styleModifiers', 'placementModifiers'],
-      category: 'base'
+      category: 'base',
     };
 
     this.baseTemplates.set(baseTemplate.id, baseTemplate);
@@ -120,7 +120,7 @@ export class PromptEngineeringService {
       name: 'Premium Corporate Gift Template',
       baseTemplate: `Generate an elegant, premium mockup showcasing a {productType} designed for corporate gifting. Focus on luxury presentation and professional branding opportunities. {qualityModifiers} {styleModifiers} {placementModifiers} The result should convey quality and sophistication suitable for executive gifts.`,
       variables: ['productType', 'qualityModifiers', 'styleModifiers', 'placementModifiers'],
-      category: 'base'
+      category: 'base',
     };
 
     this.baseTemplates.set(alternativeBase.id, alternativeBase);
@@ -137,8 +137,8 @@ export class PromptEngineeringService {
           description: 'ceramic coffee mug with smooth finish',
           materials: ['ceramic', 'porcelain', 'high-quality glazed finish'],
           context: 'office environment, coffee break, professional setting',
-          branding: 'logo placement on side, handle visible, rim clean'
-        }
+          branding: 'logo placement on side, handle visible, rim clean',
+        },
       },
       {
         productType: 'tshirt',
@@ -146,8 +146,8 @@ export class PromptEngineeringService {
           description: 'premium cotton t-shirt with professional fit',
           materials: ['100% cotton', 'soft fabric texture', 'wrinkle-free appearance'],
           context: 'casual office wear, team building, company events',
-          branding: 'logo on chest area, clean print application, size appropriate'
-        }
+          branding: 'logo on chest area, clean print application, size appropriate',
+        },
       },
       {
         productType: 'pen',
@@ -155,8 +155,8 @@ export class PromptEngineeringService {
           description: 'elegant ballpoint pen with metallic finish',
           materials: ['metal body', 'smooth writing tip', 'comfortable grip'],
           context: 'business meetings, desk accessories, professional writing',
-          branding: 'engraved or printed logo, subtle placement, readable text'
-        }
+          branding: 'engraved or printed logo, subtle placement, readable text',
+        },
       },
       {
         productType: 'notebook',
@@ -164,8 +164,8 @@ export class PromptEngineeringService {
           description: 'professional bound notebook with clean cover',
           materials: ['quality paper', 'durable binding', 'smooth cover surface'],
           context: 'meetings, note-taking, office supplies',
-          branding: 'logo on front cover, embossed or printed, professional layout'
-        }
+          branding: 'logo on front cover, embossed or printed, professional layout',
+        },
       },
       {
         productType: 'tote_bag',
@@ -173,12 +173,12 @@ export class PromptEngineeringService {
           description: 'canvas tote bag with sturdy construction',
           materials: ['canvas fabric', 'reinforced handles', 'durable stitching'],
           context: 'conferences, shopping, daily use, eco-friendly option',
-          branding: 'large logo area, screen printing or embroidery, visible placement'
-        }
-      }
+          branding: 'large logo area, screen printing or embroidery, visible placement',
+        },
+      },
     ];
 
-    productPrompts.forEach(prompt => {
+    productPrompts.forEach((prompt) => {
       this.productPrompts.set(prompt.productType, prompt);
     });
   }
@@ -190,32 +190,57 @@ export class PromptEngineeringService {
     const placements: PlacementVariation[] = [
       {
         type: 'horizontal',
-        prompt: 'with logo placed horizontally across the center, maintaining readable proportions and professional spacing',
-        constraints: ['logo width should not exceed 60% of available space', 'maintain aspect ratio', 'ensure readability']
+        prompt:
+          'with logo placed horizontally across the center, maintaining readable proportions and professional spacing',
+        constraints: [
+          'logo width should not exceed 60% of available space',
+          'maintain aspect ratio',
+          'ensure readability',
+        ],
       },
       {
         type: 'vertical',
-        prompt: 'with logo positioned vertically along the side or in a tall format, creating elegant vertical branding',
-        constraints: ['logo height appropriate to product', 'maintain vertical alignment', 'ensure visibility']
+        prompt:
+          'with logo positioned vertically along the side or in a tall format, creating elegant vertical branding',
+        constraints: [
+          'logo height appropriate to product',
+          'maintain vertical alignment',
+          'ensure visibility',
+        ],
       },
       {
         type: 'all-over',
-        prompt: 'with branding pattern repeated across the entire surface, creating a cohesive branded design',
-        constraints: ['pattern should be balanced', 'avoid overcrowding', 'maintain brand consistency']
+        prompt:
+          'with branding pattern repeated across the entire surface, creating a cohesive branded design',
+        constraints: [
+          'pattern should be balanced',
+          'avoid overcrowding',
+          'maintain brand consistency',
+        ],
       },
       {
         type: 'corner',
-        prompt: 'with logo subtly placed in the corner, creating a sophisticated and understated branded look',
-        constraints: ['corner placement should be visible', 'size appropriate for corner space', 'maintain elegance']
+        prompt:
+          'with logo subtly placed in the corner, creating a sophisticated and understated branded look',
+        constraints: [
+          'corner placement should be visible',
+          'size appropriate for corner space',
+          'maintain elegance',
+        ],
       },
       {
         type: 'center',
-        prompt: 'with logo prominently centered, creating a bold and professional branded statement',
-        constraints: ['perfect center alignment', 'appropriate size for prominence', 'balanced composition']
-      }
+        prompt:
+          'with logo prominently centered, creating a bold and professional branded statement',
+        constraints: [
+          'perfect center alignment',
+          'appropriate size for prominence',
+          'balanced composition',
+        ],
+      },
     ];
 
-    placements.forEach(placement => {
+    placements.forEach((placement) => {
       this.placementVariations.set(placement.type, placement);
     });
   }
@@ -229,29 +254,47 @@ export class PromptEngineeringService {
         level: 'basic',
         modifiers: ['clean appearance', 'simple lighting', 'basic composition'],
         aspectRatio: '1:1',
-        resolution: 'standard'
+        resolution: 'standard',
       },
       {
         level: 'enhanced',
-        modifiers: ['professional lighting', 'detailed textures', 'refined composition', 'subtle shadows'],
+        modifiers: [
+          'professional lighting',
+          'detailed textures',
+          'refined composition',
+          'subtle shadows',
+        ],
         aspectRatio: '4:3',
-        resolution: 'high'
+        resolution: 'high',
       },
       {
         level: 'premium',
-        modifiers: ['studio lighting', 'ultra-detailed textures', 'sophisticated composition', 'perfect shadows', 'color accuracy'],
+        modifiers: [
+          'studio lighting',
+          'ultra-detailed textures',
+          'sophisticated composition',
+          'perfect shadows',
+          'color accuracy',
+        ],
         aspectRatio: '16:9',
-        resolution: 'ultra-high'
+        resolution: 'ultra-high',
       },
       {
         level: 'ultra',
-        modifiers: ['cinematic lighting', 'photorealistic detail', 'artistic composition', 'dynamic shadows', 'perfect color grading', '8K quality'],
+        modifiers: [
+          'cinematic lighting',
+          'photorealistic detail',
+          'artistic composition',
+          'dynamic shadows',
+          'perfect color grading',
+          '8K quality',
+        ],
         aspectRatio: '21:9',
-        resolution: '8K'
-      }
+        resolution: '8K',
+      },
     ];
 
-    qualities.forEach(quality => {
+    qualities.forEach((quality) => {
       this.qualityModifiers.set(quality.level, quality);
     });
   }
@@ -267,19 +310,19 @@ export class PromptEngineeringService {
           {
             name: 'natural',
             prompt: 'soft natural lighting with gentle shadows',
-            description: 'Mimics daylight for authentic appearance'
+            description: 'Mimics daylight for authentic appearance',
           },
           {
             name: 'studio',
             prompt: 'professional studio lighting with controlled shadows',
-            description: 'Clean, professional product photography style'
+            description: 'Clean, professional product photography style',
           },
           {
             name: 'dramatic',
             prompt: 'dramatic lighting with strong contrasts and deep shadows',
-            description: 'Creates visual impact and premium feel'
-          }
-        ]
+            description: 'Creates visual impact and premium feel',
+          },
+        ],
       },
       {
         category: 'angle',
@@ -287,19 +330,19 @@ export class PromptEngineeringService {
           {
             name: 'front',
             prompt: 'straight-on front view showcasing the main branding area',
-            description: 'Direct view of primary logo placement'
+            description: 'Direct view of primary logo placement',
           },
           {
             name: 'three-quarter',
             prompt: '3/4 angle view showing depth and dimension',
-            description: 'Adds depth while maintaining brand visibility'
+            description: 'Adds depth while maintaining brand visibility',
           },
           {
             name: 'overhead',
             prompt: 'overhead flat lay view for modern presentation',
-            description: 'Contemporary style popular in social media'
-          }
-        ]
+            description: 'Contemporary style popular in social media',
+          },
+        ],
       },
       {
         category: 'background',
@@ -307,19 +350,19 @@ export class PromptEngineeringService {
           {
             name: 'white',
             prompt: 'clean white background for product focus',
-            description: 'Professional, distraction-free presentation'
+            description: 'Professional, distraction-free presentation',
           },
           {
             name: 'context',
             prompt: 'realistic office or business environment background',
-            description: 'Shows product in natural usage context'
+            description: 'Shows product in natural usage context',
           },
           {
             name: 'gradient',
             prompt: 'subtle gradient background in brand colors',
-            description: 'Adds visual interest while maintaining professionalism'
-          }
-        ]
+            description: 'Adds visual interest while maintaining professionalism',
+          },
+        ],
       },
       {
         category: 'mood',
@@ -327,19 +370,19 @@ export class PromptEngineeringService {
           {
             name: 'professional',
             prompt: 'serious, professional mood suitable for corporate environments',
-            description: 'Conservative approach for traditional businesses'
+            description: 'Conservative approach for traditional businesses',
           },
           {
             name: 'modern',
             prompt: 'contemporary, sleek mood with clean lines',
-            description: 'Appeals to modern, tech-forward companies'
+            description: 'Appeals to modern, tech-forward companies',
           },
           {
             name: 'warm',
             prompt: 'warm, inviting mood that feels approachable',
-            description: 'Humanizes the corporate gift experience'
-          }
-        ]
+            description: 'Humanizes the corporate gift experience',
+          },
+        ],
       },
       {
         category: 'aesthetic',
@@ -347,23 +390,23 @@ export class PromptEngineeringService {
           {
             name: 'minimal',
             prompt: 'minimalist aesthetic with clean, simple composition',
-            description: 'Less is more approach'
+            description: 'Less is more approach',
           },
           {
             name: 'luxury',
             prompt: 'luxury aesthetic with premium finishes and elegant presentation',
-            description: 'High-end corporate gift positioning'
+            description: 'High-end corporate gift positioning',
           },
           {
             name: 'creative',
             prompt: 'creative aesthetic with artistic elements and unique presentation',
-            description: 'For creative industries and innovative companies'
-          }
-        ]
-      }
+            description: 'For creative industries and innovative companies',
+          },
+        ],
+      },
     ];
 
-    styles.forEach(style => {
+    styles.forEach((style) => {
       this.styleParameters.set(style.category, style);
     });
   }
@@ -378,22 +421,22 @@ export class PromptEngineeringService {
         name: 'Standard Corporate',
         description: 'Traditional professional approach',
         modifiers: ['professional', 'clean', 'traditional'],
-        weight: 0.4
+        weight: 0.4,
       },
       {
         id: 'variation-b-modern',
         name: 'Modern Minimal',
         description: 'Contemporary minimalist style',
         modifiers: ['modern', 'minimal', 'sleek'],
-        weight: 0.3
+        weight: 0.3,
       },
       {
         id: 'variation-c-premium',
         name: 'Premium Luxury',
         description: 'High-end luxury presentation',
         modifiers: ['luxury', 'premium', 'sophisticated'],
-        weight: 0.3
-      }
+        weight: 0.3,
+      },
     ];
   }
 
@@ -421,7 +464,7 @@ export class PromptEngineeringService {
     Object.entries(request.stylePreferences).forEach(([category, option]) => {
       const styleParam = this.styleParameters.get(category);
       if (styleParam && option) {
-        const styleOption = styleParam.options.find(opt => opt.name === option);
+        const styleOption = styleParam.options.find((opt) => opt.name === option);
         if (styleOption) {
           styleModifiers.push(styleOption.prompt);
         }
@@ -466,13 +509,13 @@ export class PromptEngineeringService {
         productPrompt: productDescription,
         placementPrompt: placementModifiersStr,
         qualityModifiers: qualityModifier.modifiers,
-        styleModifiers: styleModifiers
+        styleModifiers: styleModifiers,
       },
       metadata: {
         variation: 'standard',
         confidence,
-        estimatedTokens
-      }
+        estimatedTokens,
+      },
     };
   }
 
@@ -485,10 +528,7 @@ export class PromptEngineeringService {
     for (const variation of this.abTestVariations) {
       const modifiedRequest = {
         ...request,
-        additionalRequirements: [
-          ...(request.additionalRequirements || []),
-          ...variation.modifiers
-        ]
+        additionalRequirements: [...(request.additionalRequirements || []), ...variation.modifiers],
       };
 
       const prompt = this.generatePrompt(modifiedRequest);

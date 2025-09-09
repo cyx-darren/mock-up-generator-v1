@@ -6,10 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const size = formData.get('size') as string || 'preview';
-    const format = formData.get('format') as string || 'png';
-    const userId = formData.get('userId') as string || undefined;
-    
+    const size = (formData.get('size') as string) || 'preview';
+    const format = (formData.get('format') as string) || 'png';
+    const userId = (formData.get('userId') as string) || undefined;
+
     // Enhanced options
     const enableCache = formData.get('enableCache') === 'true';
     const smoothing = parseInt(formData.get('smoothing') as string) || 0;
@@ -17,10 +17,7 @@ export async function POST(request: NextRequest) {
     const edgeRefinement = formData.get('edgeRefinement') === 'true';
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     console.log(`Processing background removal for file: ${file.name} (${file.size} bytes)`);
@@ -34,12 +31,14 @@ export async function POST(request: NextRequest) {
         semitransparency: true,
       },
       enableCache,
-      edgeRefinement: edgeRefinement ? {
-        enabled: true,
-        smoothing,
-        feathering,
-        threshold: 128,
-      } : undefined,
+      edgeRefinement: edgeRefinement
+        ? {
+            enabled: true,
+            smoothing,
+            feathering,
+            threshold: 128,
+          }
+        : undefined,
       retryAttempts: 2,
       timeout: 30000,
     };
@@ -65,10 +64,9 @@ export async function POST(request: NextRequest) {
         'X-Edge-Quality': result.metadata.edgeQuality,
       },
     });
-
   } catch (error) {
     console.error('Background removal error:', error);
-    
+
     if (isRemoveBgError(error)) {
       return NextResponse.json(
         {
@@ -80,10 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -93,9 +88,6 @@ export async function GET() {
     return NextResponse.json(stats);
   } catch (error) {
     console.error('Usage stats error:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve usage stats' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve usage stats' }, { status: 500 });
   }
 }

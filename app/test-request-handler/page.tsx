@@ -16,13 +16,15 @@ export default function TestRequestHandlerPage() {
   const refreshData = useCallback(() => {
     // Get all jobs (active, queued, completed)
     const allJobs: RequestJob[] = [];
-    
+
     // Add some dummy jobs for display (in real app, this would come from the handler)
-    const testJobs = ['job1', 'job2', 'job3', 'job4', 'job5'].map(id => {
-      const status = requestHandler.getJobStatus(id);
-      return status;
-    }).filter(Boolean) as RequestJob[];
-    
+    const testJobs = ['job1', 'job2', 'job3', 'job4', 'job5']
+      .map((id) => {
+        const status = requestHandler.getJobStatus(id);
+        return status;
+      })
+      .filter(Boolean) as RequestJob[];
+
     setJobs(testJobs);
     setMetrics(requestHandler.getMetrics());
     setQueueStatus(requestHandler.getQueueStatus());
@@ -38,17 +40,23 @@ export default function TestRequestHandlerPage() {
   // Generate test requests
   const generateTestRequests = async () => {
     setIsGenerating(true);
-    
+
     const testPrompts = [
       'Create a modern logo design for a tech startup',
       'Generate a vintage-style coffee shop logo',
       'Design a minimalist fitness brand logo',
       'Create an elegant jewelry brand logo',
-      'Generate a playful children\'s toy logo',
+      "Generate a playful children's toy logo",
     ];
 
-    const priorities: ('low' | 'medium' | 'high' | 'urgent')[] = ['low', 'medium', 'high', 'medium', 'urgent'];
-    
+    const priorities: ('low' | 'medium' | 'high' | 'urgent')[] = [
+      'low',
+      'medium',
+      'high',
+      'medium',
+      'urgent',
+    ];
+
     try {
       for (let i = 0; i < 5; i++) {
         const request = requestHandler.createRequest({
@@ -71,9 +79,9 @@ export default function TestRequestHandlerPage() {
 
         const jobId = await requestHandler.addJob(request, payload);
         console.log(`Added job ${jobId} with prompt: ${testPrompts[i]}`);
-        
+
         // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     } catch (error) {
       console.error('Error generating test requests:', error);
@@ -99,7 +107,10 @@ export default function TestRequestHandlerPage() {
   };
 
   // Test prompts for individual requests
-  const testIndividualRequest = async (prompt: string, priority: 'low' | 'medium' | 'high' | 'urgent') => {
+  const testIndividualRequest = async (
+    prompt: string,
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+  ) => {
     const request = requestHandler.createRequest({
       type: 'image_generation',
       priority,
@@ -128,11 +139,11 @@ export default function TestRequestHandlerPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">AI Request Handler Test</h1>
-        
+
         {/* Control Panel */}
         <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
           <h2 className="text-xl font-semibold mb-4">Test Controls</h2>
-          
+
           <div className="flex gap-4 mb-4">
             <button
               onClick={generateTestRequests}
@@ -141,7 +152,7 @@ export default function TestRequestHandlerPage() {
             >
               {isGenerating ? 'Generating 5 Test Jobs...' : 'Generate 5 Test Jobs'}
             </button>
-            
+
             <button
               onClick={refreshData}
               className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
@@ -149,7 +160,7 @@ export default function TestRequestHandlerPage() {
               Refresh Data
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
             <button
               onClick={() => testIndividualRequest('Design a simple logo', 'urgent')}
@@ -182,7 +193,7 @@ export default function TestRequestHandlerPage() {
           {/* Metrics Dashboard */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">System Metrics</h2>
-            
+
             {metrics && (
               <div className="space-y-3">
                 <div className="flex justify-between">
@@ -207,7 +218,9 @@ export default function TestRequestHandlerPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Avg Processing Time:</span>
-                  <span className="font-mono">{(metrics.averageProcessingTime / 1000).toFixed(1)}s</span>
+                  <span className="font-mono">
+                    {(metrics.averageProcessingTime / 1000).toFixed(1)}s
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Throughput:</span>
@@ -220,7 +233,7 @@ export default function TestRequestHandlerPage() {
           {/* Queue Status */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Queue Status</h2>
-            
+
             {queueStatus && (
               <div className="space-y-3">
                 <div className="flex justify-between">
@@ -231,29 +244,37 @@ export default function TestRequestHandlerPage() {
                   <span>Active Jobs:</span>
                   <span className="font-mono">{queueStatus.activeJobs}</span>
                 </div>
-                
+
                 <div className="pt-2">
                   <h3 className="font-medium mb-2">Jobs by Priority:</h3>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex justify-between">
                       <span>Urgent:</span>
-                      <span className="font-mono text-red-600">{queueStatus.jobsByPriority.urgent}</span>
+                      <span className="font-mono text-red-600">
+                        {queueStatus.jobsByPriority.urgent}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>High:</span>
-                      <span className="font-mono text-orange-600">{queueStatus.jobsByPriority.high}</span>
+                      <span className="font-mono text-orange-600">
+                        {queueStatus.jobsByPriority.high}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Medium:</span>
-                      <span className="font-mono text-yellow-600">{queueStatus.jobsByPriority.medium}</span>
+                      <span className="font-mono text-yellow-600">
+                        {queueStatus.jobsByPriority.medium}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Low:</span>
-                      <span className="font-mono text-gray-600">{queueStatus.jobsByPriority.low}</span>
+                      <span className="font-mono text-gray-600">
+                        {queueStatus.jobsByPriority.low}
+                      </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="pt-2">
                   <h3 className="font-medium mb-2">Jobs by Type:</h3>
                   <div className="space-y-1 text-sm">
@@ -289,24 +310,63 @@ export default function TestRequestHandlerPage() {
                   ×
                 </button>
               </div>
-              
+
               <div className="space-y-2 text-sm">
-                <div><strong>Status:</strong> <span className={`px-2 py-1 rounded text-xs ${
-                  jobDetails.status === 'completed' ? 'bg-green-100 text-green-800' :
-                  jobDetails.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                  jobDetails.status === 'failed' ? 'bg-red-100 text-red-800' :
-                  jobDetails.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>{jobDetails.status}</span></div>
-                <div><strong>Type:</strong> {jobDetails.type}</div>
-                <div><strong>Priority:</strong> {jobDetails.priority}</div>
-                <div><strong>Created:</strong> {jobDetails.createdAt.toLocaleString()}</div>
-                {jobDetails.startedAt && <div><strong>Started:</strong> {jobDetails.startedAt.toLocaleString()}</div>}
-                {jobDetails.completedAt && <div><strong>Completed:</strong> {jobDetails.completedAt.toLocaleString()}</div>}
-                <div><strong>Retry Count:</strong> {jobDetails.retryCount}/{jobDetails.maxRetries}</div>
-                {jobDetails.userId && <div><strong>User ID:</strong> {jobDetails.userId}</div>}
-                {jobDetails.sessionId && <div><strong>Session ID:</strong> {jobDetails.sessionId}</div>}
-                {jobDetails.error && <div><strong>Error:</strong> <span className="text-red-600">{jobDetails.error}</span></div>}
+                <div>
+                  <strong>Status:</strong>{' '}
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      jobDetails.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : jobDetails.status === 'processing'
+                          ? 'bg-blue-100 text-blue-800'
+                          : jobDetails.status === 'failed'
+                            ? 'bg-red-100 text-red-800'
+                            : jobDetails.status === 'cancelled'
+                              ? 'bg-gray-100 text-gray-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {jobDetails.status}
+                  </span>
+                </div>
+                <div>
+                  <strong>Type:</strong> {jobDetails.type}
+                </div>
+                <div>
+                  <strong>Priority:</strong> {jobDetails.priority}
+                </div>
+                <div>
+                  <strong>Created:</strong> {jobDetails.createdAt.toLocaleString()}
+                </div>
+                {jobDetails.startedAt && (
+                  <div>
+                    <strong>Started:</strong> {jobDetails.startedAt.toLocaleString()}
+                  </div>
+                )}
+                {jobDetails.completedAt && (
+                  <div>
+                    <strong>Completed:</strong> {jobDetails.completedAt.toLocaleString()}
+                  </div>
+                )}
+                <div>
+                  <strong>Retry Count:</strong> {jobDetails.retryCount}/{jobDetails.maxRetries}
+                </div>
+                {jobDetails.userId && (
+                  <div>
+                    <strong>User ID:</strong> {jobDetails.userId}
+                  </div>
+                )}
+                {jobDetails.sessionId && (
+                  <div>
+                    <strong>Session ID:</strong> {jobDetails.sessionId}
+                  </div>
+                )}
+                {jobDetails.error && (
+                  <div>
+                    <strong>Error:</strong> <span className="text-red-600">{jobDetails.error}</span>
+                  </div>
+                )}
                 {jobDetails.metadata && (
                   <div>
                     <strong>Metadata:</strong>
@@ -331,7 +391,7 @@ export default function TestRequestHandlerPage() {
         {/* Task Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg mt-8">
           <h2 className="text-xl font-semibold mb-4">Task 5.1.3 Implementation Status</h2>
-          
+
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
@@ -339,35 +399,35 @@ export default function TestRequestHandlerPage() {
               </div>
               <span>Request builder implemented</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Request queue with priority handling implemented</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Response parser for different AI services implemented</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Error handler with retry logic implemented</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Logging system with structured logs implemented</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
@@ -375,18 +435,34 @@ export default function TestRequestHandlerPage() {
               <span>Metrics tracking with real-time updates implemented</span>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-blue-50 rounded">
             <h3 className="font-semibold mb-2">Implementation Features:</h3>
             <ul className="text-sm space-y-1">
-              <li>• <strong>Priority Queue:</strong> Urgent, High, Medium, Low priority handling</li>
-              <li>• <strong>Concurrency Control:</strong> Max 3 concurrent jobs (configurable)</li>
-              <li>• <strong>Retry Logic:</strong> Exponential backoff, configurable max retries</li>
-              <li>• <strong>Job Tracking:</strong> Full lifecycle tracking with timestamps</li>
-              <li>• <strong>Metrics:</strong> Success rate, throughput, processing time, queue length</li>
-              <li>• <strong>Error Handling:</strong> Structured error logging and recovery</li>
-              <li>• <strong>Cancellation:</strong> Job cancellation support</li>
-              <li>• <strong>Memory Management:</strong> Automatic cleanup of completed jobs</li>
+              <li>
+                • <strong>Priority Queue:</strong> Urgent, High, Medium, Low priority handling
+              </li>
+              <li>
+                • <strong>Concurrency Control:</strong> Max 3 concurrent jobs (configurable)
+              </li>
+              <li>
+                • <strong>Retry Logic:</strong> Exponential backoff, configurable max retries
+              </li>
+              <li>
+                • <strong>Job Tracking:</strong> Full lifecycle tracking with timestamps
+              </li>
+              <li>
+                • <strong>Metrics:</strong> Success rate, throughput, processing time, queue length
+              </li>
+              <li>
+                • <strong>Error Handling:</strong> Structured error logging and recovery
+              </li>
+              <li>
+                • <strong>Cancellation:</strong> Job cancellation support
+              </li>
+              <li>
+                • <strong>Memory Management:</strong> Automatic cleanup of completed jobs
+              </li>
             </ul>
           </div>
         </div>

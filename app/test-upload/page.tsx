@@ -10,9 +10,9 @@ export default function TestUploadPage() {
 
   const handleFilesAdded = (files: File[]) => {
     console.log('Files added:', files);
-    setUploadResults(prev => [
+    setUploadResults((prev) => [
       ...prev,
-      `Added ${files.length} file(s): ${files.map(f => f.name).join(', ')}`
+      `Added ${files.length} file(s): ${files.map((f) => f.name).join(', ')}`,
     ]);
 
     // Simulate upload progress for testing
@@ -31,10 +31,7 @@ export default function TestUploadPage() {
         if (progress >= 100) {
           progress = 100;
           clearInterval(interval);
-          setUploadResults(prev => [
-            ...prev,
-            `✅ Upload completed: ${fileName}`
-          ]);
+          setUploadResults((prev) => [...prev, `✅ Upload completed: ${fileName}`]);
         }
         // Note: In a real implementation, you would update the FileUpload component's progress
         console.log(`Upload progress for ${fileName}: ${progress.toFixed(1)}%`);
@@ -48,18 +45,12 @@ export default function TestUploadPage() {
 
   const handleUploadComplete = (fileId: string, result: any) => {
     console.log(`Upload completed for ${fileId}:`, result);
-    setUploadResults(prev => [
-      ...prev,
-      `✅ Upload completed for file ID: ${fileId}`
-    ]);
+    setUploadResults((prev) => [...prev, `✅ Upload completed for file ID: ${fileId}`]);
   };
 
   const handleUploadError = (fileId: string, error: string) => {
     console.log(`Upload error for ${fileId}:`, error);
-    setUploadResults(prev => [
-      ...prev,
-      `❌ Upload error for file ID ${fileId}: ${error}`
-    ]);
+    setUploadResults((prev) => [...prev, `❌ Upload error for file ID ${fileId}: ${error}`]);
   };
 
   const clearResults = () => {
@@ -142,9 +133,7 @@ export default function TestUploadPage() {
                           <span className="text-gray-500 dark:text-gray-400">
                             [{new Date().toLocaleTimeString()}]
                           </span>{' '}
-                          <span className="text-gray-900 dark:text-gray-100">
-                            {result}
-                          </span>
+                          <span className="text-gray-900 dark:text-gray-100">{result}</span>
                         </div>
                       ))}
                     </div>

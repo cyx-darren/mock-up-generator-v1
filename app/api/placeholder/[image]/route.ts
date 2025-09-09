@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { image: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { image: string } }) {
   const { image } = params;
-  
+
   // Create a simple colored rectangle as placeholder
   const width = 400;
   const height = 300;
-  
+
   // Different colors for different images
   const colors: Record<string, string> = {
     'logo.png': '#2563eb',
@@ -17,11 +14,11 @@ export async function GET(
     'tshirt.png': '#ef4444',
     'pen.png': '#10b981',
     'notebook.png': '#f59e0b',
-    'tote_bag.png': '#8b5cf6'
+    'tote_bag.png': '#8b5cf6',
   };
-  
+
   const color = colors[image] || '#6b7280';
-  
+
   // Create SVG placeholder
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -36,7 +33,7 @@ export async function GET(
       </text>
     </svg>
   `;
-  
+
   return new NextResponse(svg, {
     headers: {
       'Content-Type': 'image/svg+xml',

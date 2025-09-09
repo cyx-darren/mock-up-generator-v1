@@ -32,22 +32,22 @@ export class InMemoryRateLimiter {
 
   check(key: string): RateLimitResult {
     this.cleanup();
-    
+
     const now = Date.now();
     const resetTime = now + this.config.windowMs;
-    
+
     let entry = this.store.get(key);
-    
+
     if (!entry || now >= entry.resetTime) {
       entry = {
         count: 0,
-        resetTime
+        resetTime,
       };
       this.store.set(key, entry);
     }
 
     const allowed = entry.count < this.config.maxRequests;
-    
+
     if (allowed) {
       entry.count++;
     }
@@ -56,7 +56,7 @@ export class InMemoryRateLimiter {
       limit: this.config.maxRequests,
       remaining: Math.max(0, this.config.maxRequests - entry.count),
       reset: new Date(entry.resetTime),
-      retryAfter: allowed ? undefined : Math.ceil((entry.resetTime - now) / 1000)
+      retryAfter: allowed ? undefined : Math.ceil((entry.resetTime - now) / 1000),
     };
 
     return { allowed, info };
@@ -114,7 +114,7 @@ export class UsageTracker {
   recordRequest(entry: Omit<UsageEntry, 'timestamp'>): void {
     this.entries.push({
       ...entry,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     if (this.entries.length > this.maxEntries) {
@@ -123,25 +123,26 @@ export class UsageTracker {
   }
 
   getStats(since?: Date): UsageStats {
-    const relevantEntries = since 
-      ? this.entries.filter(entry => entry.timestamp >= since)
+    const relevantEntries = since
+      ? this.entries.filter((entry) => entry.timestamp >= since)
       : this.entries;
 
     const totalRequests = relevantEntries.length;
-    const successfulRequests = relevantEntries.filter(e => e.success).length;
-    const failedRequests = relevantEntries.filter(e => !e.success).length;
-    const rateLimitHits = relevantEntries.filter(e => e.rateLimited).length;
+    const successfulRequests = relevantEntries.filter((e) => e.success).length;
+    const failedRequests = relevantEntries.filter((e) => !e.success).length;
+    const rateLimitHits = relevantEntries.filter((e) => e.rateLimited).length;
     const creditsUsed = relevantEntries.reduce((sum, e) => sum + (e.creditsUsed || 0), 0);
-    
+
     const lastEntry = relevantEntries[relevantEntries.length - 1];
     const lastRequestTime = lastEntry?.timestamp;
-    
+
     const responseTimes = relevantEntries
-      .map(e => e.responseTime)
+      .map((e) => e.responseTime)
       .filter((time): time is number => time !== undefined);
-    const averageResponseTime = responseTimes.length > 0
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-      : undefined;
+    const averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : undefined;
 
     return {
       totalRequests,
@@ -150,7 +151,7 @@ export class UsageTracker {
       rateLimitHits,
       creditsUsed,
       lastRequestTime,
-      averageResponseTime
+      averageResponseTime,
     };
   }
 
@@ -173,7 +174,7 @@ export class UsageTracker {
 
 const removeBgRateLimiter = new InMemoryRateLimiter({
   windowMs: 60 * 1000,
-  maxRequests: 50
+  maxRequests: 50,
 });
 
 const removeBgUsageTracker = new UsageTracker();
@@ -183,14 +184,14 @@ export { removeBgRateLimiter, removeBgUsageTracker };
 export function createRateLimitMiddleware(rateLimiter: InMemoryRateLimiter) {
   return (key: string = 'global') => {
     const result = rateLimiter.check(key);
-    
+
     if (!result.allowed) {
       const error = new Error('Rate limit exceeded');
       (error as any).rateLimitInfo = result.info;
       (error as any).isRateLimitError = true;
       throw error;
     }
-    
+
     return result.info;
   };
 }

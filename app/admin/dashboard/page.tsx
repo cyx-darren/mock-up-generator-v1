@@ -14,7 +14,9 @@ import BulkImageProcessor from '@/components/admin/BulkImageProcessor';
 export default function AdminDashboard() {
   const { user, can, logout } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'bulk-import' | 'bulk-images' | 'audit'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'products' | 'bulk-import' | 'bulk-images' | 'audit'
+  >('overview');
 
   // Check if user has permission to view products
   if (!can('canViewProducts')) {
@@ -124,11 +126,11 @@ export default function AdminDashboard() {
         {activeTab === 'products' && <ProductListManager refreshTrigger={refreshTrigger} />}
 
         {activeTab === 'bulk-import' && can('canCreateProducts') && (
-          <BulkImport onImportComplete={() => setRefreshTrigger(prev => prev + 1)} />
+          <BulkImport onImportComplete={() => setRefreshTrigger((prev) => prev + 1)} />
         )}
 
         {activeTab === 'bulk-images' && can('canCreateProducts') && (
-          <BulkImageProcessor onProcessingComplete={() => setRefreshTrigger(prev => prev + 1)} />
+          <BulkImageProcessor onProcessingComplete={() => setRefreshTrigger((prev) => prev + 1)} />
         )}
 
         {activeTab === 'audit' && can('canManageAdmins') && <AuditLogViewer />}

@@ -13,7 +13,7 @@ export interface ProductCSVRow {
 
 export const CSV_HEADERS = [
   'name',
-  'description', 
+  'description',
   'sku',
   'category',
   'price',
@@ -21,27 +21,27 @@ export const CSV_HEADERS = [
   'tags',
   'thumbnail_url',
   'primary_image_url',
-  'additional_images'
+  'additional_images',
 ] as const;
 
 export const REQUIRED_HEADERS = ['name', 'description', 'category'] as const;
 
 export const VALID_CATEGORIES = [
   'apparel',
-  'bags', 
+  'bags',
   'drinkware',
   'electronics',
   'office',
   'outdoor',
   'wellness',
-  'other'
+  'other',
 ] as const;
 
 export const VALID_STATUSES = ['active', 'inactive', 'draft'] as const;
 
 export function generateCSVTemplate(): string {
   const headers = CSV_HEADERS.join(',');
-  
+
   const sampleRows = [
     [
       'Premium Coffee Mug',
@@ -53,7 +53,7 @@ export function generateCSVTemplate(): string {
       'coffee;ceramic;gift',
       'https://example.com/mug-thumb.jpg',
       'https://example.com/mug-main.jpg',
-      'https://example.com/mug-1.jpg;https://example.com/mug-2.jpg'
+      'https://example.com/mug-1.jpg;https://example.com/mug-2.jpg',
     ],
     [
       'Executive Pen Set',
@@ -65,7 +65,7 @@ export function generateCSVTemplate(): string {
       'pen;executive;engraving',
       'https://example.com/pen-thumb.jpg',
       'https://example.com/pen-main.jpg',
-      ''
+      '',
     ],
     [
       'Eco-Friendly Tote Bag',
@@ -77,14 +77,11 @@ export function generateCSVTemplate(): string {
       'eco-friendly;tote;canvas;sustainable',
       '',
       '',
-      ''
-    ]
+      '',
+    ],
   ];
 
-  const csvContent = [
-    headers,
-    ...sampleRows.map(row => row.join(','))
-  ].join('\n');
+  const csvContent = [headers, ...sampleRows.map((row) => row.join(','))].join('\n');
 
   return csvContent;
 }
@@ -94,14 +91,14 @@ export function downloadCSVTemplate(): void {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  
+
   link.setAttribute('href', url);
   link.setAttribute('download', 'product_import_template.csv');
   link.style.visibility = 'hidden';
-  
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   URL.revokeObjectURL(url);
 }

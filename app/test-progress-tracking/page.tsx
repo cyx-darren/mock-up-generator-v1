@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { getProgressTracker, ProgressTracker, ProgressUpdate, ProgressSession, ProgressState } from '../../lib/progress-tracking';
+import {
+  getProgressTracker,
+  ProgressTracker,
+  ProgressUpdate,
+  ProgressSession,
+  ProgressState,
+} from '../../lib/progress-tracking';
 
 // Mock WebSocket for demonstration (in real app, would connect to actual WebSocket server)
 class MockWebSocket extends EventTarget {
@@ -38,12 +44,12 @@ export default function TestProgressTrackingPage() {
   const createNewSession = () => {
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const session = progressTracker.createSession(jobId, totalSteps, true);
-    
+
     // Register callbacks
     progressTracker.registerCallbacks(jobId, {
       onProgress: (update) => {
         console.log(`Progress update for ${jobId}:`, update);
-        setProgressUpdates(prev => new Map(prev).set(jobId, update));
+        setProgressUpdates((prev) => new Map(prev).set(jobId, update));
       },
       onStateChange: (oldState, newState) => {
         console.log(`State changed from ${oldState} to ${newState}`);
@@ -53,7 +59,7 @@ export default function TestProgressTrackingPage() {
       },
       onEtaUpdate: (eta) => {
         console.log(`ETA update:`, eta);
-      }
+      },
     });
 
     // Add WebSocket connection if enabled
@@ -63,14 +69,20 @@ export default function TestProgressTrackingPage() {
       progressTracker.addWebSocketConnection(jobId, ws as any);
     }
 
-    setSessions(prev => [...prev, session]);
+    setSessions((prev) => [...prev, session]);
     setSelectedSessionId(jobId);
-    
+
     console.log(`Created new session: ${jobId}`);
   };
 
   const updateSessionProgress = (jobId: string, step: number) => {
-    const states: ProgressState[] = ['initializing', 'preparing', 'processing', 'finalizing', 'completed'];
+    const states: ProgressState[] = [
+      'initializing',
+      'preparing',
+      'processing',
+      'finalizing',
+      'completed',
+    ];
     const stateIndex = Math.floor((step / totalSteps) * (states.length - 1));
     const state = states[Math.min(stateIndex, states.length - 1)];
 
@@ -85,9 +97,9 @@ export default function TestProgressTrackingPage() {
         stepDescription: `Executing ${state} phase`,
         subSteps: {
           current: Math.min(step * 2, totalSteps * 2),
-          total: totalSteps * 2
-        }
-      }
+          total: totalSteps * 2,
+        },
+      },
     });
 
     // Update local state
@@ -111,14 +123,14 @@ export default function TestProgressTrackingPage() {
         clearInterval(interval);
         setIsAutoProgress(false);
         autoProgressRef.current = null;
-        
+
         // Mark as completed
         progressTracker.updateProgress(selectedSessionId, {
           state: 'completed',
           currentStep: totalSteps,
           totalSteps,
           percentage: 100,
-          message: 'Process completed successfully'
+          message: 'Process completed successfully',
         });
       }
     }, stepDelay);
@@ -154,18 +166,20 @@ export default function TestProgressTrackingPage() {
     const jobId = `long_job_${Date.now()}`;
     const steps = 20;
     const session = progressTracker.createSession(jobId, steps, true);
-    
-    setSessions(prev => [...prev, session]);
+
+    setSessions((prev) => [...prev, session]);
     setSelectedSessionId(jobId);
 
     // Register callbacks
     progressTracker.registerCallbacks(jobId, {
       onProgress: (update) => {
-        setProgressUpdates(prev => new Map(prev).set(jobId, update));
+        setProgressUpdates((prev) => new Map(prev).set(jobId, update));
       },
       onEtaUpdate: (eta) => {
-        console.log(`ETA for long job: ${Math.round(eta!.estimatedTimeRemaining / 1000)}s remaining`);
-      }
+        console.log(
+          `ETA for long job: ${Math.round(eta!.estimatedTimeRemaining / 1000)}s remaining`
+        );
+      },
     });
 
     // Simulate varying step durations
@@ -184,7 +198,7 @@ export default function TestProgressTrackingPage() {
           currentStep: steps,
           totalSteps: steps,
           percentage: 100,
-          message: 'Long generation completed'
+          message: 'Long generation completed',
         });
       }
     };
@@ -200,7 +214,7 @@ export default function TestProgressTrackingPage() {
       finalizing: 'bg-green-100 text-green-800',
       completed: 'bg-green-500 text-white',
       failed: 'bg-red-500 text-white',
-      cancelled: 'bg-gray-500 text-white'
+      cancelled: 'bg-gray-500 text-white',
     };
     return colors[state] || 'bg-gray-100 text-gray-800';
   };
@@ -211,19 +225,19 @@ export default function TestProgressTrackingPage() {
     return `${(ms / 60000).toFixed(1)}m`;
   };
 
-  const selectedSession = sessions.find(s => s.jobId === selectedSessionId);
+  const selectedSession = sessions.find((s) => s.jobId === selectedSessionId);
   const selectedProgress = selectedSessionId ? progressUpdates.get(selectedSessionId) : null;
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Progress Tracking System Test</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Control Panel */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Progress Controls</h2>
-            
+
             <div className="space-y-4">
               {/* Configuration */}
               <div>
@@ -276,20 +290,20 @@ export default function TestProgressTrackingPage() {
                   >
                     Create New Session
                   </button>
-                  
+
                   {selectedSessionId && (
                     <>
                       <button
                         onClick={isAutoProgress ? stopAutoProgress : startAutoProgress}
                         className={`w-full px-4 py-2 rounded text-sm ${
-                          isAutoProgress 
-                            ? 'bg-red-500 hover:bg-red-600 text-white' 
+                          isAutoProgress
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
                             : 'bg-green-500 hover:bg-green-600 text-white'
                         }`}
                       >
                         {isAutoProgress ? 'Stop Auto Progress' : 'Start Auto Progress'}
                       </button>
-                      
+
                       <div className="flex gap-2">
                         <button
                           onClick={() => pauseSession(selectedSessionId)}
@@ -306,7 +320,7 @@ export default function TestProgressTrackingPage() {
                       </div>
                     </>
                   )}
-                  
+
                   <button
                     onClick={simulateLongGeneration}
                     className="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
@@ -321,14 +335,14 @@ export default function TestProgressTrackingPage() {
           {/* Sessions List */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Active Sessions ({sessions.length})</h2>
-            
+
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {sessions.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   No active sessions. Create a new session to start.
                 </div>
               ) : (
-                sessions.map(session => {
+                sessions.map((session) => {
                   const progress = progressUpdates.get(session.jobId);
                   return (
                     <div
@@ -339,7 +353,9 @@ export default function TestProgressTrackingPage() {
                       onClick={() => setSelectedSessionId(session.jobId)}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`px-2 py-1 rounded text-xs ${getStateColor(session.currentState)}`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${getStateColor(session.currentState)}`}
+                        >
                           {session.currentState}
                         </span>
                         {session.isPaused && (
@@ -348,11 +364,9 @@ export default function TestProgressTrackingPage() {
                           </span>
                         )}
                       </div>
-                      
-                      <div className="text-sm font-medium truncate">
-                        {session.jobId}
-                      </div>
-                      
+
+                      <div className="text-sm font-medium truncate">{session.jobId}</div>
+
                       {progress && (
                         <div className="mt-2">
                           <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -367,7 +381,7 @@ export default function TestProgressTrackingPage() {
                           </div>
                           {progress.eta && (
                             <div className="text-xs text-gray-600 mt-1">
-                              ETA: {formatTime(progress.eta.estimatedTimeRemaining)} 
+                              ETA: {formatTime(progress.eta.estimatedTimeRemaining)}
                               (confidence: {(progress.eta.confidence * 100).toFixed(0)}%)
                             </div>
                           )}
@@ -383,26 +397,30 @@ export default function TestProgressTrackingPage() {
           {/* Session Details */}
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4">Session Details</h2>
-            
+
             {selectedSession && selectedProgress ? (
               <div className="space-y-4">
                 <div>
                   <div className="font-medium text-sm">Session ID</div>
                   <div className="text-xs text-gray-600 break-all">{selectedSession.jobId}</div>
                 </div>
-                
+
                 <div>
                   <div className="font-medium text-sm">Current State</div>
-                  <span className={`px-2 py-1 rounded text-xs ${getStateColor(selectedSession.currentState)}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${getStateColor(selectedSession.currentState)}`}
+                  >
                     {selectedSession.currentState}
                   </span>
                 </div>
-                
+
                 <div>
                   <div className="font-medium text-sm">Progress</div>
                   <div className="mt-1">
                     <div className="flex justify-between text-xs mb-1">
-                      <span>Step {selectedProgress.currentStep} of {selectedProgress.totalSteps}</span>
+                      <span>
+                        Step {selectedProgress.currentStep} of {selectedProgress.totalSteps}
+                      </span>
                       <span>{selectedProgress.percentage.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
@@ -422,7 +440,8 @@ export default function TestProgressTrackingPage() {
                       <div>Description: {selectedProgress.details.stepDescription}</div>
                       {selectedProgress.details.subSteps && (
                         <div>
-                          Sub-steps: {selectedProgress.details.subSteps.current}/{selectedProgress.details.subSteps.total}
+                          Sub-steps: {selectedProgress.details.subSteps.current}/
+                          {selectedProgress.details.subSteps.total}
                         </div>
                       )}
                     </div>
@@ -433,8 +452,13 @@ export default function TestProgressTrackingPage() {
                   <div>
                     <div className="font-medium text-sm">ETA Information</div>
                     <div className="text-xs space-y-1">
-                      <div>Time Remaining: {formatTime(selectedProgress.eta.estimatedTimeRemaining)}</div>
-                      <div>Completion Time: {selectedProgress.eta.estimatedCompletionTime.toLocaleTimeString()}</div>
+                      <div>
+                        Time Remaining: {formatTime(selectedProgress.eta.estimatedTimeRemaining)}
+                      </div>
+                      <div>
+                        Completion Time:{' '}
+                        {selectedProgress.eta.estimatedCompletionTime.toLocaleTimeString()}
+                      </div>
                       <div>Confidence: {(selectedProgress.eta.confidence * 100).toFixed(0)}%</div>
                     </div>
                   </div>
@@ -444,9 +468,16 @@ export default function TestProgressTrackingPage() {
                   <div>
                     <div className="font-medium text-sm">Performance Metrics</div>
                     <div className="text-xs space-y-1">
-                      <div>Last Step Duration: {formatTime(selectedProgress.performance.stepDuration)}</div>
-                      <div>Average Step Time: {formatTime(selectedProgress.performance.averageStepTime)}</div>
-                      <div>Throughput: {selectedProgress.performance.throughput.toFixed(2)} steps/sec</div>
+                      <div>
+                        Last Step Duration: {formatTime(selectedProgress.performance.stepDuration)}
+                      </div>
+                      <div>
+                        Average Step Time:{' '}
+                        {formatTime(selectedProgress.performance.averageStepTime)}
+                      </div>
+                      <div>
+                        Throughput: {selectedProgress.performance.throughput.toFixed(2)} steps/sec
+                      </div>
                     </div>
                   </div>
                 )}
@@ -465,9 +496,7 @@ export default function TestProgressTrackingPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-8">
-                Select a session to view details
-              </div>
+              <div className="text-center text-gray-500 py-8">Select a session to view details</div>
             )}
           </div>
         </div>
@@ -475,7 +504,7 @@ export default function TestProgressTrackingPage() {
         {/* Implementation Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg mt-8">
           <h2 className="text-xl font-semibold mb-4">Task 5.3.2 Implementation Status</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-medium mb-3">Completed Features</h3>
@@ -490,7 +519,7 @@ export default function TestProgressTrackingPage() {
                   'Performance metrics tracking',
                   'Pause/resume functionality',
                   'Multi-session management',
-                  'Interactive test interface'
+                  'Interactive test interface',
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
@@ -505,14 +534,30 @@ export default function TestProgressTrackingPage() {
             <div>
               <h3 className="font-medium mb-3">Technical Implementation</h3>
               <div className="text-sm space-y-2">
-                <div>• <strong>State Management:</strong> 7 distinct progress states</div>
-                <div>• <strong>Real-time Updates:</strong> WebSocket + callbacks</div>
-                <div>• <strong>ETA Algorithm:</strong> Statistical analysis with variance</div>
-                <div>• <strong>Persistence:</strong> LocalStorage with session recovery</div>
-                <div>• <strong>Performance:</strong> Step timing and throughput tracking</div>
-                <div>• <strong>Resume Support:</strong> Checkpoint-based recovery</div>
-                <div>• <strong>Multi-session:</strong> Concurrent progress tracking</div>
-                <div>• <strong>User Experience:</strong> Visual progress with ETA</div>
+                <div>
+                  • <strong>State Management:</strong> 7 distinct progress states
+                </div>
+                <div>
+                  • <strong>Real-time Updates:</strong> WebSocket + callbacks
+                </div>
+                <div>
+                  • <strong>ETA Algorithm:</strong> Statistical analysis with variance
+                </div>
+                <div>
+                  • <strong>Persistence:</strong> LocalStorage with session recovery
+                </div>
+                <div>
+                  • <strong>Performance:</strong> Step timing and throughput tracking
+                </div>
+                <div>
+                  • <strong>Resume Support:</strong> Checkpoint-based recovery
+                </div>
+                <div>
+                  • <strong>Multi-session:</strong> Concurrent progress tracking
+                </div>
+                <div>
+                  • <strong>User Experience:</strong> Visual progress with ETA
+                </div>
               </div>
             </div>
           </div>
@@ -520,13 +565,18 @@ export default function TestProgressTrackingPage() {
           <div className="mt-6 p-4 bg-green-50 rounded-lg">
             <div className="font-medium text-green-800 mb-2">Verification Requirements Met</div>
             <div className="text-sm text-green-700">
-              ✅ Track progress for long generation - Use "Simulate Long Generation" button<br/>
-              ✅ Progress states implemented - All 7 states working<br/>
-              ✅ Progress callbacks functional - Real-time updates displayed<br/>
-              ✅ WebSocket updates ready - Mock WebSocket demonstrates capability<br/>
-              ✅ ETA calculation accurate - Shows time remaining with confidence<br/>
-              ✅ Progress persistence working - Sessions survive page refresh<br/>
-              ✅ Resume capability implemented - Checkpoint-based recovery system
+              ✅ Track progress for long generation - Use "Simulate Long Generation" button
+              <br />
+              ✅ Progress states implemented - All 7 states working
+              <br />
+              ✅ Progress callbacks functional - Real-time updates displayed
+              <br />
+              ✅ WebSocket updates ready - Mock WebSocket demonstrates capability
+              <br />
+              ✅ ETA calculation accurate - Shows time remaining with confidence
+              <br />
+              ✅ Progress persistence working - Sessions survive page refresh
+              <br />✅ Resume capability implemented - Checkpoint-based recovery system
             </div>
           </div>
         </div>

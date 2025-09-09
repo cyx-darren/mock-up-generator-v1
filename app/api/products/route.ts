@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();
-    
+
     // Get query parameters for filtering and pagination
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
@@ -15,10 +15,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Build query
-    let query = supabase
-      .from('gift_items')
-      .select('*')
-      .eq('is_active', true); // Only show active products
+    let query = supabase.from('gift_items').select('*').eq('is_active', true); // Only show active products
 
     // Apply filters
     if (category && category !== 'all') {
@@ -26,15 +23,17 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`);
+      query = query.or(
+        `name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`
+      );
     }
 
     // Apply tag filtering
     if (tags) {
-      const tagList = tags.split(',').map(tag => tag.trim());
+      const tagList = tags.split(',').map((tag) => tag.trim());
       // Use contains operator to check if any of the selected tags are in the product's tags array
       // Build OR conditions for each tag using proper JSONB syntax
-      const tagConditions = tagList.map(tag => `tags.cs.["${tag}"]`).join(',');
+      const tagConditions = tagList.map((tag) => `tags.cs.["${tag}"]`).join(',');
       query = query.or(tagConditions);
     }
 
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
       .select('category')
       .eq('is_active', true);
 
-    const uniqueCategories = [...new Set(categoriesData?.map(item => item.category) || [])];
+    const uniqueCategories = [...new Set(categoriesData?.map((item) => item.category) || [])];
 
     // Get unique tags for filtering
     const { data: tagsData } = await supabase
@@ -84,7 +83,7 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true);
 
     const allTags = new Set<string>();
-    tagsData?.forEach(item => {
+    tagsData?.forEach((item) => {
       if (item.tags && Array.isArray(item.tags)) {
         item.tags.forEach((tag: string) => allTags.add(tag));
       }
@@ -98,8 +97,8 @@ export async function GET(request: NextRequest) {
       pagination: {
         limit,
         offset,
-        hasMore: (count || 0) > offset + limit
-      }
+        hasMore: (count || 0) > offset + limit,
+      },
     });
   } catch (error) {
     console.error('Products fetch error:', error);

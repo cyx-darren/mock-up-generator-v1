@@ -109,7 +109,8 @@ export class FormatConverter {
 
     // Calculate compression ratio
     const originalBytes = this.estimateImageSize(originalImageData, originalFormat);
-    const compressionRatio = originalBytes > 0 ? conversionResult.convertedSize.bytes / originalBytes : 1;
+    const compressionRatio =
+      originalBytes > 0 ? conversionResult.convertedSize.bytes / originalBytes : 1;
 
     const result: ConversionResult = {
       originalFormat,
@@ -117,12 +118,12 @@ export class FormatConverter {
       originalSize: {
         bytes: originalBytes,
         width: originalImageData.width,
-        height: originalImageData.height
+        height: originalImageData.height,
       },
       convertedSize: {
         bytes: conversionResult.convertedSize.bytes,
         width: processedImageData.width,
-        height: processedImageData.height
+        height: processedImageData.height,
       },
       compressionRatio,
       quality: options.quality,
@@ -134,8 +135,8 @@ export class FormatConverter {
         dpi: options.dpi || 72,
         bitDepth: this.calculateBitDepth(processedImageData),
         hasAlpha: this.hasAlphaChannel(processedImageData),
-        profileSize: 0 // Could be expanded for ICC profiles
-      }
+        profileSize: 0, // Could be expanded for ICC profiles
+      },
     };
 
     return result;
@@ -153,11 +154,11 @@ export class FormatConverter {
 
     for (let i = 0; i < images.length; i++) {
       const { data, filename } = images[i];
-      
+
       try {
         const result = await this.convertFormat(data, options);
         results.push({ ...result, filename });
-        
+
         if (onProgress) {
           onProgress(i + 1, images.length);
         }
@@ -184,9 +185,17 @@ export class FormatConverter {
     switch (use) {
       case 'web':
         if (hasAlpha) {
-          return { format: 'webp', reason: 'WebP supports transparency with better compression', quality: 85 };
+          return {
+            format: 'webp',
+            reason: 'WebP supports transparency with better compression',
+            quality: 85,
+          };
         } else if (isPhotographic) {
-          return { format: 'webp', reason: 'WebP provides best compression for photos', quality: 80 };
+          return {
+            format: 'webp',
+            reason: 'WebP provides best compression for photos',
+            quality: 80,
+          };
         } else {
           return { format: 'png', reason: 'PNG best for graphics with few colors', quality: 95 };
         }
@@ -226,7 +235,7 @@ export class FormatConverter {
         maxDimensions: { width: 65535, height: 65535 },
         commonUses: ['Screenshots', 'Graphics', 'Logos', 'Images with transparency'],
         compressionTypes: ['Lossless', 'Palette reduction'],
-        qualityRange: { min: 1, max: 9 }
+        qualityRange: { min: 1, max: 9 },
       },
       jpg: {
         format: 'JPEG',
@@ -236,7 +245,7 @@ export class FormatConverter {
         maxDimensions: { width: 65535, height: 65535 },
         commonUses: ['Photographs', 'Web images', 'Email attachments'],
         compressionTypes: ['Lossy DCT'],
-        qualityRange: { min: 1, max: 100 }
+        qualityRange: { min: 1, max: 100 },
       },
       webp: {
         format: 'WebP',
@@ -246,8 +255,8 @@ export class FormatConverter {
         maxDimensions: { width: 16383, height: 16383 },
         commonUses: ['Modern web', 'Mobile apps', 'Progressive loading'],
         compressionTypes: ['Lossy VP8', 'Lossless VP8L'],
-        qualityRange: { min: 1, max: 100 }
-      }
+        qualityRange: { min: 1, max: 100 },
+      },
     };
   }
 
@@ -260,7 +269,7 @@ export class FormatConverter {
     quality: number
   ): number {
     const pixels = imageData.width * imageData.height;
-    
+
     switch (format) {
       case 'png':
         // PNG size varies greatly, rough estimate based on complexity
@@ -269,12 +278,12 @@ export class FormatConverter {
 
       case 'jpg':
         // JPEG size roughly inversely proportional to quality setting
-        const jpegFactor = (100 - quality) / 100 * 0.8 + 0.1;
+        const jpegFactor = ((100 - quality) / 100) * 0.8 + 0.1;
         return Math.floor(pixels * jpegFactor);
 
       case 'webp':
         // WebP is typically 25-35% smaller than JPEG
-        const webpFactor = ((100 - quality) / 100 * 0.6 + 0.07) * 0.7;
+        const webpFactor = (((100 - quality) / 100) * 0.6 + 0.07) * 0.7;
         return Math.floor(pixels * webpFactor);
 
       default:
@@ -317,7 +326,9 @@ export class FormatConverter {
     // Apply color space if needed
     if (options.colorSpace && options.colorSpace !== 'sRGB') {
       // For now, log that other color spaces would be implemented
-      console.log(`Color space ${options.colorSpace} requested - would implement ICC profile conversion`);
+      console.log(
+        `Color space ${options.colorSpace} requested - would implement ICC profile conversion`
+      );
     }
 
     // Put image data on canvas
@@ -361,11 +372,13 @@ export class FormatConverter {
     return {
       base64Data,
       blob,
-      convertedSize: { bytes: blob.size }
+      convertedSize: { bytes: blob.size },
     };
   }
 
-  private async loadImage(source: string | ImageData | HTMLImageElement): Promise<HTMLImageElement> {
+  private async loadImage(
+    source: string | ImageData | HTMLImageElement
+  ): Promise<HTMLImageElement> {
     if (source instanceof HTMLImageElement) {
       return source;
     }
@@ -412,7 +425,7 @@ export class FormatConverter {
         const format = imageData.split(';')[0].split('/')[1];
         return format;
       }
-      
+
       // Try to detect from URL extension
       const extension = imageData.split('.').pop()?.toLowerCase();
       if (extension && this.supportedFormats.has(extension)) {
@@ -423,19 +436,27 @@ export class FormatConverter {
     return 'unknown';
   }
 
-  private resizeImageData(imageData: ImageData, dimensions: FormatOptions['dimensions']): ImageData {
+  private resizeImageData(
+    imageData: ImageData,
+    dimensions: FormatOptions['dimensions']
+  ): ImageData {
     if (!dimensions || (!dimensions.width && !dimensions.height)) {
       return imageData;
     }
 
-    const { width: targetWidth, height: targetHeight, maintainAspectRatio, resizeMode } = dimensions;
-    
+    const {
+      width: targetWidth,
+      height: targetHeight,
+      maintainAspectRatio,
+      resizeMode,
+    } = dimensions;
+
     let newWidth = targetWidth || imageData.width;
     let newHeight = targetHeight || imageData.height;
 
     if (maintainAspectRatio) {
       const aspectRatio = imageData.width / imageData.height;
-      
+
       if (targetWidth && !targetHeight) {
         newHeight = targetWidth / aspectRatio;
       } else if (targetHeight && !targetWidth) {
@@ -488,8 +509,14 @@ export class FormatConverter {
 
     resizedCtx.drawImage(
       tempCanvas,
-      0, 0, imageData.width, imageData.height,
-      0, 0, Math.round(newWidth), Math.round(newHeight)
+      0,
+      0,
+      imageData.width,
+      imageData.height,
+      0,
+      0,
+      Math.round(newWidth),
+      Math.round(newHeight)
     );
 
     return resizedCtx.getImageData(0, 0, Math.round(newWidth), Math.round(newHeight));
@@ -497,7 +524,7 @@ export class FormatConverter {
 
   private estimateImageSize(imageData: ImageData, format: string): number {
     const pixels = imageData.width * imageData.height;
-    
+
     switch (format.toLowerCase()) {
       case 'png':
         return pixels * 3; // Rough estimate for PNG
@@ -529,16 +556,21 @@ export class FormatConverter {
     // Analyze image for photographic characteristics
     let totalVariation = 0;
     const sampleSize = Math.min(1000, imageData.data.length / 4);
-    
-    for (let i = 0; i < sampleSize * 4; i += 16) { // Sample every 4th pixel
+
+    for (let i = 0; i < sampleSize * 4; i += 16) {
+      // Sample every 4th pixel
       if (i + 7 < imageData.data.length) {
-        const r1 = imageData.data[i], g1 = imageData.data[i + 1], b1 = imageData.data[i + 2];
-        const r2 = imageData.data[i + 4], g2 = imageData.data[i + 5], b2 = imageData.data[i + 6];
-        
+        const r1 = imageData.data[i],
+          g1 = imageData.data[i + 1],
+          b1 = imageData.data[i + 2];
+        const r2 = imageData.data[i + 4],
+          g2 = imageData.data[i + 5],
+          b2 = imageData.data[i + 6];
+
         totalVariation += Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
       }
     }
-    
+
     const averageVariation = totalVariation / (sampleSize * 3);
     return averageVariation > 20; // Threshold for photographic content
   }
@@ -547,17 +579,17 @@ export class FormatConverter {
     // Calculate image complexity based on color variance
     let totalVariance = 0;
     const pixels = imageData.width * imageData.height;
-    
+
     for (let i = 0; i < imageData.data.length; i += 4) {
       const r = imageData.data[i];
       const g = imageData.data[i + 1];
       const b = imageData.data[i + 2];
-      
+
       // Calculate variance from average
       const avg = (r + g + b) / 3;
       totalVariance += Math.pow(r - avg, 2) + Math.pow(g - avg, 2) + Math.pow(b - avg, 2);
     }
-    
+
     return Math.min(1, totalVariance / (pixels * 255 * 255));
   }
 
@@ -569,16 +601,16 @@ export class FormatConverter {
     if (!compression) return quality;
 
     const complexity = this.calculateImageComplexity(imageData);
-    
+
     switch (compression.optimization) {
       case 'size':
         // Prioritize smaller file size
         return Math.max(0.1, quality * 0.8);
-        
+
       case 'quality':
         // Prioritize visual quality
         return Math.min(1, quality * 1.1);
-        
+
       case 'balanced':
       default:
         // Balance based on image complexity
@@ -598,11 +630,11 @@ export class FormatConverter {
       const byteString = atob(parts[1]);
       const arrayBuffer = new ArrayBuffer(byteString.length);
       const view = new Uint8Array(arrayBuffer);
-      
+
       for (let i = 0; i < byteString.length; i++) {
         view[i] = byteString.charCodeAt(i);
       }
-      
+
       resolve(new Blob([arrayBuffer], { type: mime }));
     });
   }
@@ -620,11 +652,11 @@ export function downloadConvertedImage(result: ConversionResult, filename: strin
     const byteString = atob(result.base64Data.split(',')[1]);
     const arrayBuffer = new ArrayBuffer(byteString.length);
     const view = new Uint8Array(arrayBuffer);
-    
+
     for (let i = 0; i < byteString.length; i++) {
       view[i] = byteString.charCodeAt(i);
     }
-    
+
     const mimeType = result.base64Data.split(',')[0].split(':')[1].split(';')[0];
     result.blob = new Blob([arrayBuffer], { type: mimeType });
   }

@@ -71,7 +71,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
+    const filtered = products.filter((product) => {
       // Search filter
       const matchesSearch =
         searchTerm === '' ||

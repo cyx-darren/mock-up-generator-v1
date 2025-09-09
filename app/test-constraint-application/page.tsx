@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getConstraintApplicationService, PlacementConstraint, LogoPlacement, ConstraintApplication, ConstraintApplicationOptions } from '../../lib/constraint-application';
+import {
+  getConstraintApplicationService,
+  PlacementConstraint,
+  LogoPlacement,
+  ConstraintApplication,
+  ConstraintApplicationOptions,
+} from '../../lib/constraint-application';
 
 export default function TestConstraintApplicationPage() {
   const [constraintService] = useState(() => getConstraintApplicationService());
@@ -40,9 +46,11 @@ export default function TestConstraintApplicationPage() {
   // Load constraint when placement type changes
   useEffect(() => {
     if (selectedGiftItem && constraints.length > 0) {
-      const constraint = constraints.find(c => c.placement_type === applicationOptions.placementType);
+      const constraint = constraints.find(
+        (c) => c.placement_type === applicationOptions.placementType
+      );
       setSelectedConstraint(constraint || null);
-      
+
       // Set default logo placement if constraint exists
       if (constraint) {
         setLogoPlacement({
@@ -78,7 +86,7 @@ export default function TestConstraintApplicationPage() {
   const loadConstraints = async (giftItemId: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Mock constraints data - in real app would come from Supabase
       const mockConstraints: PlacementConstraint[] = [
@@ -158,7 +166,7 @@ export default function TestConstraintApplicationPage() {
           updated_at: new Date().toISOString(),
         },
       ];
-      
+
       setConstraints(mockConstraints);
     } catch (error: any) {
       console.error('Error loading constraints:', error);
@@ -195,11 +203,11 @@ export default function TestConstraintApplicationPage() {
 
   const getRecommendedPlacement = async () => {
     if (!selectedGiftItem) return;
-    
+
     try {
       // Mock recommended placement - in real app would use aspect ratio from uploaded logo
       const mockLogoAspectRatio = 2; // 2:1 aspect ratio
-      
+
       // Use default from constraint as recommendation
       if (selectedConstraint) {
         const recommended: LogoPlacement = {
@@ -208,18 +216,24 @@ export default function TestConstraintApplicationPage() {
           width: selectedConstraint.default_width,
           height: selectedConstraint.default_height,
         };
-        
+
         // Adjust for aspect ratio
         if (mockLogoAspectRatio !== recommended.width / recommended.height) {
           if (mockLogoAspectRatio > recommended.width / recommended.height) {
             // Logo is wider
-            recommended.width = Math.min(recommended.height * mockLogoAspectRatio, selectedConstraint.max_logo_width);
+            recommended.width = Math.min(
+              recommended.height * mockLogoAspectRatio,
+              selectedConstraint.max_logo_width
+            );
           } else {
-            // Logo is taller  
-            recommended.height = Math.min(recommended.width / mockLogoAspectRatio, selectedConstraint.max_logo_height);
+            // Logo is taller
+            recommended.height = Math.min(
+              recommended.width / mockLogoAspectRatio,
+              selectedConstraint.max_logo_height
+            );
           }
         }
-        
+
         setLogoPlacement(recommended);
       }
     } catch (error) {
@@ -231,7 +245,7 @@ export default function TestConstraintApplicationPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Constraint Application Test</h1>
-        
+
         {error && (
           <div className="bg-red-50 text-red-700 p-4 rounded mb-8">
             <strong>Error:</strong> {error}
@@ -244,7 +258,7 @@ export default function TestConstraintApplicationPage() {
             {/* Product Selection */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Product Selection</h2>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Gift Item</label>
                 <select
@@ -252,22 +266,24 @@ export default function TestConstraintApplicationPage() {
                   onChange={(e) => setSelectedGiftItem(e.target.value)}
                   className="w-full px-3 py-2 border rounded"
                 >
-                  {giftItems.map(item => (
+                  {giftItems.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name} ({item.category})
                     </option>
                   ))}
                 </select>
               </div>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">Placement Type</label>
                 <select
                   value={applicationOptions.placementType}
-                  onChange={(e) => setApplicationOptions(prev => ({
-                    ...prev,
-                    placementType: e.target.value as any
-                  }))}
+                  onChange={(e) =>
+                    setApplicationOptions((prev) => ({
+                      ...prev,
+                      placementType: e.target.value as any,
+                    }))
+                  }
                   className="w-full px-3 py-2 border rounded"
                 >
                   <option value="horizontal">Horizontal</option>
@@ -275,7 +291,7 @@ export default function TestConstraintApplicationPage() {
                   <option value="all_over">All Over</option>
                 </select>
               </div>
-              
+
               <button
                 onClick={getRecommendedPlacement}
                 className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -287,14 +303,16 @@ export default function TestConstraintApplicationPage() {
             {/* Logo Placement Controls */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Logo Placement</h2>
-              
+
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">X Position</label>
                   <input
                     type="number"
                     value={logoPlacement.x}
-                    onChange={(e) => setLogoPlacement(prev => ({ ...prev, x: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setLogoPlacement((prev) => ({ ...prev, x: Number(e.target.value) }))
+                    }
                     className="w-full px-2 py-1 border rounded text-sm"
                   />
                 </div>
@@ -303,7 +321,9 @@ export default function TestConstraintApplicationPage() {
                   <input
                     type="number"
                     value={logoPlacement.y}
-                    onChange={(e) => setLogoPlacement(prev => ({ ...prev, y: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setLogoPlacement((prev) => ({ ...prev, y: Number(e.target.value) }))
+                    }
                     className="w-full px-2 py-1 border rounded text-sm"
                   />
                 </div>
@@ -312,7 +332,9 @@ export default function TestConstraintApplicationPage() {
                   <input
                     type="number"
                     value={logoPlacement.width}
-                    onChange={(e) => setLogoPlacement(prev => ({ ...prev, width: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setLogoPlacement((prev) => ({ ...prev, width: Number(e.target.value) }))
+                    }
                     className="w-full px-2 py-1 border rounded text-sm"
                   />
                 </div>
@@ -321,7 +343,9 @@ export default function TestConstraintApplicationPage() {
                   <input
                     type="number"
                     value={logoPlacement.height}
-                    onChange={(e) => setLogoPlacement(prev => ({ ...prev, height: Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setLogoPlacement((prev) => ({ ...prev, height: Number(e.target.value) }))
+                    }
                     className="w-full px-2 py-1 border rounded text-sm"
                   />
                 </div>
@@ -331,33 +355,48 @@ export default function TestConstraintApplicationPage() {
             {/* Application Options */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Application Options</h2>
-              
+
               <div className="space-y-3">
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={applicationOptions.allowAutoAdjustment}
-                    onChange={(e) => setApplicationOptions(prev => ({ ...prev, allowAutoAdjustment: e.target.checked }))}
+                    onChange={(e) =>
+                      setApplicationOptions((prev) => ({
+                        ...prev,
+                        allowAutoAdjustment: e.target.checked,
+                      }))
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm">Allow Auto Adjustment</span>
                 </label>
-                
+
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={applicationOptions.respectSafetyMargins}
-                    onChange={(e) => setApplicationOptions(prev => ({ ...prev, respectSafetyMargins: e.target.checked }))}
+                    onChange={(e) =>
+                      setApplicationOptions((prev) => ({
+                        ...prev,
+                        respectSafetyMargins: e.target.checked,
+                      }))
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm">Respect Safety Margins</span>
                 </label>
-                
+
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={applicationOptions.enforceAspectRatio}
-                    onChange={(e) => setApplicationOptions(prev => ({ ...prev, enforceAspectRatio: e.target.checked }))}
+                    onChange={(e) =>
+                      setApplicationOptions((prev) => ({
+                        ...prev,
+                        enforceAspectRatio: e.target.checked,
+                      }))
+                    }
                     className="mr-2"
                   />
                   <span className="text-sm">Enforce Aspect Ratio</span>
@@ -371,12 +410,15 @@ export default function TestConstraintApplicationPage() {
             {/* Visual Preview */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Constraint Visualization</h2>
-              
+
               {selectedConstraint && (
-                <div className="relative border border-gray-300 bg-gray-50" style={{ width: '400px', height: '400px' }}>
+                <div
+                  className="relative border border-gray-300 bg-gray-50"
+                  style={{ width: '400px', height: '400px' }}
+                >
                   {/* Product background */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-200 opacity-50"></div>
-                  
+
                   {/* Constraint area */}
                   <div
                     className="absolute border-2 border-green-500 bg-green-100 opacity-30"
@@ -387,7 +429,7 @@ export default function TestConstraintApplicationPage() {
                       height: `${selectedConstraint.constraint_height}px`,
                     }}
                   ></div>
-                  
+
                   {/* Safety margins (if enabled) */}
                   {applicationOptions.respectSafetyMargins && (
                     <div
@@ -400,7 +442,7 @@ export default function TestConstraintApplicationPage() {
                       }}
                     ></div>
                   )}
-                  
+
                   {/* Original logo placement */}
                   <div
                     className="absolute border-2 border-blue-500 bg-blue-200 opacity-50 flex items-center justify-center text-xs font-bold"
@@ -413,7 +455,7 @@ export default function TestConstraintApplicationPage() {
                   >
                     Original
                   </div>
-                  
+
                   {/* Applied logo placement */}
                   {applicationResult && (
                     <div
@@ -428,7 +470,7 @@ export default function TestConstraintApplicationPage() {
                       Applied
                     </div>
                   )}
-                  
+
                   {/* Legend */}
                   <div className="absolute bottom-2 right-2 bg-white p-2 rounded shadow text-xs">
                     <div className="flex items-center mb-1">
@@ -455,19 +497,25 @@ export default function TestConstraintApplicationPage() {
             {/* Application Results */}
             <div className="bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Application Results</h2>
-              
+
               {applicationResult && (
                 <div className="space-y-4">
                   {/* Status */}
                   <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${applicationResult.isValid ? 'bg-green-500' : 'bg-red-500'}`}>
-                      <span className="text-white text-sm">{applicationResult.isValid ? '✓' : '✗'}</span>
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center ${applicationResult.isValid ? 'bg-green-500' : 'bg-red-500'}`}
+                    >
+                      <span className="text-white text-sm">
+                        {applicationResult.isValid ? '✓' : '✗'}
+                      </span>
                     </div>
                     <span className="font-medium">
-                      {applicationResult.isValid ? 'Logo stays within constraints' : 'Constraint violations detected'}
+                      {applicationResult.isValid
+                        ? 'Logo stays within constraints'
+                        : 'Constraint violations detected'}
                     </span>
                   </div>
-                  
+
                   {/* Applied Placement */}
                   <div className="border rounded p-3">
                     <h3 className="font-medium mb-2">Applied Placement:</h3>
@@ -478,7 +526,7 @@ export default function TestConstraintApplicationPage() {
                       <div>H: {applicationResult.appliedPlacement.height}</div>
                     </div>
                   </div>
-                  
+
                   {/* Violations */}
                   {applicationResult.violations.length > 0 && (
                     <div className="border border-red-200 rounded p-3">
@@ -490,7 +538,7 @@ export default function TestConstraintApplicationPage() {
                       </ul>
                     </div>
                   )}
-                  
+
                   {/* Adjustments */}
                   {applicationResult.adjustments.length > 0 && (
                     <div className="border border-blue-200 rounded p-3">
@@ -502,7 +550,7 @@ export default function TestConstraintApplicationPage() {
                       </ul>
                     </div>
                   )}
-                  
+
                   {/* Safety Margins */}
                   <div className="border rounded p-3">
                     <h3 className="font-medium mb-2">Safety Margins:</h3>
@@ -522,7 +570,7 @@ export default function TestConstraintApplicationPage() {
         {/* Task Status */}
         <div className="bg-white p-6 rounded-lg shadow-lg mt-8">
           <h2 className="text-xl font-semibold mb-4">Task 5.2.1 Implementation Status</h2>
-          
+
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
@@ -530,35 +578,35 @@ export default function TestConstraintApplicationPage() {
               </div>
               <span>Load admin-configured constraints from database</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Apply placement-specific masks for AI generation</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Implement dimension restrictions (min/max width/height)</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Use default positions when constraints cannot be satisfied</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
               <span>Create boundary enforcement (logo stays within constraint area)</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
@@ -566,18 +614,34 @@ export default function TestConstraintApplicationPage() {
               <span>Add safety margins around constraint boundaries</span>
             </div>
           </div>
-          
+
           <div className="mt-6 p-4 bg-green-50 rounded">
             <h3 className="font-semibold mb-2">Implementation Features:</h3>
             <ul className="text-sm space-y-1">
-              <li>• <strong>Database Integration:</strong> Loads constraints from Supabase</li>
-              <li>• <strong>Multi-placement Support:</strong> Horizontal, Vertical, All-over</li>
-              <li>• <strong>Auto-adjustment:</strong> Automatically fixes constraint violations</li>
-              <li>• <strong>Safety Margins:</strong> Configurable margins around constraint areas</li>
-              <li>• <strong>Dimension Validation:</strong> Min/max width and height enforcement</li>
-              <li>• <strong>Aspect Ratio:</strong> Maintains logo proportions during adjustments</li>
-              <li>• <strong>Visual Feedback:</strong> Real-time constraint visualization</li>
-              <li>• <strong>Batch Processing:</strong> Apply constraints to multiple placements</li>
+              <li>
+                • <strong>Database Integration:</strong> Loads constraints from Supabase
+              </li>
+              <li>
+                • <strong>Multi-placement Support:</strong> Horizontal, Vertical, All-over
+              </li>
+              <li>
+                • <strong>Auto-adjustment:</strong> Automatically fixes constraint violations
+              </li>
+              <li>
+                • <strong>Safety Margins:</strong> Configurable margins around constraint areas
+              </li>
+              <li>
+                • <strong>Dimension Validation:</strong> Min/max width and height enforcement
+              </li>
+              <li>
+                • <strong>Aspect Ratio:</strong> Maintains logo proportions during adjustments
+              </li>
+              <li>
+                • <strong>Visual Feedback:</strong> Real-time constraint visualization
+              </li>
+              <li>
+                • <strong>Batch Processing:</strong> Apply constraints to multiple placements
+              </li>
             </ul>
           </div>
         </div>

@@ -29,7 +29,7 @@ interface ProductGridProps {
 export function ProductGrid({ onProductSelect }: ProductGridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,26 +57,24 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
     setSortBy(sort);
   }, [searchParams]);
 
-  const updateURL = useCallback((updates: {
-    category?: string;
-    search?: string;
-    tags?: string[];
-    sort?: string;
-  }) => {
-    const params = new URLSearchParams();
-    
-    const category = updates.category ?? selectedCategory;
-    const search = updates.search ?? searchQuery;
-    const tags = updates.tags ?? selectedTags;
-    const sort = updates.sort ?? sortBy;
+  const updateURL = useCallback(
+    (updates: { category?: string; search?: string; tags?: string[]; sort?: string }) => {
+      const params = new URLSearchParams();
 
-    if (category !== 'all') params.set('category', category);
-    if (search) params.set('search', search);
-    if (tags.length > 0) params.set('tags', tags.join(','));
-    if (sort !== 'name') params.set('sort', sort);
+      const category = updates.category ?? selectedCategory;
+      const search = updates.search ?? searchQuery;
+      const tags = updates.tags ?? selectedTags;
+      const sort = updates.sort ?? sortBy;
 
-    router.push(`/catalog?${params.toString()}`);
-  }, [router, selectedCategory, searchQuery, selectedTags, sortBy]);
+      if (category !== 'all') params.set('category', category);
+      if (search) params.set('search', search);
+      if (tags.length > 0) params.set('tags', tags.join(','));
+      if (sort !== 'name') params.set('sort', sort);
+
+      router.push(`/catalog?${params.toString()}`);
+    },
+    [router, selectedCategory, searchQuery, selectedTags, sortBy]
+  );
 
   // Debounce search query and update URL
   useEffect(() => {
@@ -106,7 +104,7 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
       params.append('sort', sortBy);
 
       const response = await fetch(`/api/products?${params}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
@@ -157,10 +155,10 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
   };
 
   const handleTagToggle = (tag: string) => {
-    const newTags = selectedTags.includes(tag) 
-      ? selectedTags.filter(t => t !== tag)
+    const newTags = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
       : [...selectedTags, tag];
-    
+
     setSelectedTags(newTags);
     updateURL({ tags: newTags });
   };
@@ -173,7 +171,8 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
     router.push('/catalog');
   };
 
-  const hasActiveFilters = selectedCategory !== 'all' || searchQuery !== '' || selectedTags.length > 0;
+  const hasActiveFilters =
+    selectedCategory !== 'all' || searchQuery !== '' || selectedTags.length > 0;
 
   if (loading) {
     return (
@@ -191,7 +190,7 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-full w-12 animate-pulse" />
           </div>
         </div>
-        
+
         <ProductGridSkeleton count={8} />
       </div>
     );
@@ -203,15 +202,17 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
         <div className="max-w-md mx-auto">
           <div className="w-16 h-16 mx-auto mb-4 text-red-500">
             <svg fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
             Failed to load products
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {error}
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={handleRetry}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -233,7 +234,11 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <input
@@ -319,11 +324,7 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
       {products.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onSelect={handleProductSelect}
-            />
+            <ProductCard key={product.id} product={product} onSelect={handleProductSelect} />
           ))}
         </div>
       ) : (
@@ -331,7 +332,11 @@ export function ProductGrid({ onProductSelect }: ProductGridProps) {
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
               <svg fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">

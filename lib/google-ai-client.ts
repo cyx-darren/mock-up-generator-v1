@@ -3,7 +3,12 @@
  * Wrapper for Google Generative AI SDK with rate limiting and monitoring
  */
 
-import { GoogleGenerativeAI, GenerativeModel, GenerationConfig, SafetySetting } from '@google/generative-ai';
+import {
+  GoogleGenerativeAI,
+  GenerativeModel,
+  GenerationConfig,
+  SafetySetting,
+} from '@google/generative-ai';
 
 // Types
 export interface GoogleAIConfig {
@@ -117,10 +122,13 @@ export class GoogleAIClient {
 
   constructor(config: GoogleAIConfig = {}) {
     // Get API key from environment or config
-    const apiKey = config.apiKey || process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY;
-    
+    const apiKey =
+      config.apiKey || process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY;
+
     if (!apiKey) {
-      throw new Error('Google AI API key is required. Set GOOGLE_AI_STUDIO_API_KEY or GEMINI_API_KEY environment variable.');
+      throw new Error(
+        'Google AI API key is required. Set GOOGLE_AI_STUDIO_API_KEY or GEMINI_API_KEY environment variable.'
+      );
     }
 
     // Initialize client
@@ -182,9 +190,9 @@ export class GoogleAIClient {
 
     for (const { name, window, limit } of buckets) {
       const bucket = this.rateLimitBuckets.get(name) || [];
-      
+
       // Remove old entries
-      const validEntries = bucket.filter(time => now - time < window);
+      const validEntries = bucket.filter((time) => now - time < window);
       this.rateLimitBuckets.set(name, validEntries);
 
       // Check limit
@@ -208,7 +216,7 @@ export class GoogleAIClient {
    */
   private updateMetrics(log: RequestLog): void {
     this.metrics.totalRequests++;
-    
+
     if (log.status === 'success') {
       this.metrics.successfulRequests++;
       if (log.tokensUsed) {
@@ -219,7 +227,8 @@ export class GoogleAIClient {
     }
 
     // Update average response time
-    const totalResponseTime = this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + log.responseTime;
+    const totalResponseTime =
+      this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + log.responseTime;
     this.metrics.averageResponseTime = totalResponseTime / this.metrics.totalRequests;
 
     // Update error rate
@@ -227,7 +236,7 @@ export class GoogleAIClient {
 
     // Update requests per minute
     const oneMinuteAgo = Date.now() - 60000;
-    const recentRequests = this.requestHistory.filter(r => r.timestamp.getTime() > oneMinuteAgo);
+    const recentRequests = this.requestHistory.filter((r) => r.timestamp.getTime() > oneMinuteAgo);
     this.metrics.requestsPerMinute = recentRequests.length;
 
     this.metrics.lastRequestTime = new Date();
@@ -249,17 +258,20 @@ export class GoogleAIClient {
   /**
    * Generate content with rate limiting and retries
    */
-  async generateContent(prompt: string, options?: {
-    images?: Array<{ data: string; mimeType: string }>;
-    retries?: number;
-  }): Promise<{
+  async generateContent(
+    prompt: string,
+    options?: {
+      images?: Array<{ data: string; mimeType: string }>;
+      retries?: number;
+    }
+  ): Promise<{
     text: string;
     tokensUsed?: number;
     responseTime: number;
   }> {
     const startTime = Date.now();
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Check rate limit
     const rateLimitCheck = this.checkRateLimit();
     if (!rateLimitCheck.allowed) {
@@ -273,8 +285,10 @@ export class GoogleAIClient {
         error: `Rate limit exceeded. Retry after ${rateLimitCheck.retryAfter} seconds`,
       };
       this.logRequest(log);
-      
-      throw new Error(`Rate limit exceeded. Please retry after ${rateLimitCheck.retryAfter} seconds`);
+
+      throw new Error(
+        `Rate limit exceeded. Please retry after ${rateLimitCheck.retryAfter} seconds`
+      );
     }
 
     const maxRetries = options?.retries ?? this.config.maxRetries;
@@ -284,7 +298,7 @@ export class GoogleAIClient {
       try {
         // Prepare content parts
         const parts: any[] = [{ text: prompt }];
-        
+
         // Add images if provided
         if (options?.images) {
           for (const image of options.images) {
@@ -324,7 +338,6 @@ export class GoogleAIClient {
           tokensUsed,
           responseTime,
         };
-
       } catch (error: any) {
         lastError = error;
 
@@ -343,8 +356,10 @@ export class GoogleAIClient {
         if (attempt < maxRetries) {
           // Exponential backoff
           const delay = this.config.retryDelay * Math.pow(2, attempt);
-          console.warn(`Request failed, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          console.warn(
+            `Request failed, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           this.logRequest(log);
         }
@@ -357,22 +372,27 @@ export class GoogleAIClient {
   /**
    * Generate content stream for real-time responses
    */
-  async *generateContentStream(prompt: string, options?: {
-    images?: Array<{ data: string; mimeType: string }>;
-  }): AsyncGenerator<string, void, unknown> {
+  async *generateContentStream(
+    prompt: string,
+    options?: {
+      images?: Array<{ data: string; mimeType: string }>;
+    }
+  ): AsyncGenerator<string, void, unknown> {
     const startTime = Date.now();
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Check rate limit
     const rateLimitCheck = this.checkRateLimit();
     if (!rateLimitCheck.allowed) {
-      throw new Error(`Rate limit exceeded. Please retry after ${rateLimitCheck.retryAfter} seconds`);
+      throw new Error(
+        `Rate limit exceeded. Please retry after ${rateLimitCheck.retryAfter} seconds`
+      );
     }
 
     try {
       // Prepare content parts
       const parts: any[] = [{ text: prompt }];
-      
+
       if (options?.images) {
         for (const image of options.images) {
           parts.push({
@@ -386,7 +406,7 @@ export class GoogleAIClient {
 
       // Generate content stream
       const result = await this.model.generateContentStream(parts);
-      
+
       let fullText = '';
       for await (const chunk of result.stream) {
         const chunkText = chunk.text();
@@ -405,7 +425,6 @@ export class GoogleAIClient {
         status: 'success',
       };
       this.logRequest(log);
-
     } catch (error: any) {
       // Log failed request
       const log: RequestLog = {
@@ -456,7 +475,9 @@ export class GoogleAIClient {
         error: `Rate limit exceeded. Retry after ${rateLimitCheck.retryAfter} seconds`,
       };
       this.logRequest(log);
-      throw new Error(`Rate limit exceeded. Please retry after ${rateLimitCheck.retryAfter} seconds`);
+      throw new Error(
+        `Rate limit exceeded. Please retry after ${rateLimitCheck.retryAfter} seconds`
+      );
     }
 
     const maxRetries = options.retries ?? this.config.maxRetries;
@@ -490,14 +511,14 @@ export class GoogleAIClient {
         // Generate the image
         const result = await imageModel.generateContent(enhancedPrompt);
         const response = await result.response;
-        
+
         const responseTime = Date.now() - startTime;
         const tokensUsed = response.usageMetadata?.totalTokenCount;
 
         // Extract images from response
         const images: GeneratedImage[] = [];
         const candidates = response.candidates || [];
-        
+
         for (const candidate of candidates) {
           if (candidate.content && candidate.content.parts) {
             for (const part of candidate.content.parts) {
@@ -538,10 +559,9 @@ export class GoogleAIClient {
           responseTime,
           hasWatermark: true, // Gemini images always include SynthID watermark
         };
-
       } catch (error: any) {
         lastError = error;
-        
+
         const log: RequestLog = {
           id: requestId,
           timestamp: new Date(),
@@ -556,7 +576,9 @@ export class GoogleAIClient {
           this.logRequest(log);
         } else {
           // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, this.config.retryDelay * Math.pow(2, attempt)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.config.retryDelay * Math.pow(2, attempt))
+          );
         }
       }
     }
