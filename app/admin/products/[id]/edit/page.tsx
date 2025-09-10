@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
+import { uploadFile, getPublicUrl } from '@/lib/supabase-client';
 
 interface Product {
   id: string;
@@ -45,6 +46,21 @@ export default function EditProductPage() {
     primary_image_url: '',
   });
 
+  const [uploadProgress, setUploadProgress] = useState({
+    thumbnail: 0,
+    primary: 0,
+  });
+
+  const [uploading, setUploading] = useState({
+    thumbnail: false,
+    primary: false,
+  });
+
+  const [previews, setPreviews] = useState({
+    thumbnail: '',
+    primary: '',
+  });
+
   // Check if user has permission to edit products
   if (!can('canEditProducts')) {
     return (
@@ -72,6 +88,14 @@ export default function EditProductPage() {
       fetchProduct();
     }
   }, [params.id]);
+
+  // Update previews when URLs change
+  useEffect(() => {
+    setPreviews({
+      thumbnail: formData.thumbnail_url,
+      primary: formData.primary_image_url,
+    });
+  }, [formData.thumbnail_url, formData.primary_image_url]);
 
   const fetchProduct = async () => {
     try {
@@ -118,6 +142,105 @@ export default function EditProductPage() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const validateImageFile = (file: File): string | null => {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!allowedTypes.includes(file.type)) {
+      return 'Please upload a PNG, JPG, JPEG, or WebP image.';
+    }
+
+    if (file.size > maxSize) {
+      return 'Image size must be less than 5MB.';
+    }
+
+    return null;
+  };
+
+  const handleImageUpload = async (
+    file: File,
+    imageType: 'thumbnail' | 'primary'
+  ): Promise<void> => {
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setError('');
+    setUploading((prev) => ({ ...prev, [imageType]: true }));
+    setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
+
+    try {
+      // Generate structured file path
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = `products/${params.id}/${fileName}`;
+
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => ({
+          ...prev,
+          [imageType]: Math.min(prev[imageType] + 10, 90),
+        }));
+      }, 100);
+
+      // Upload file to Supabase Storage
+      await uploadFile('gift-items', filePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+      // Get public URL
+      const publicUrl = await getPublicUrl('gift-items', filePath);
+
+      // Clear progress interval
+      clearInterval(progressInterval);
+      setUploadProgress((prev) => ({ ...prev, [imageType]: 100 }));
+
+      // Update form data with new URL
+      const fieldName = imageType === 'thumbnail' ? 'thumbnail_url' : 'primary_image_url';
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: publicUrl,
+      }));
+
+      // Set preview
+      setPreviews((prev) => ({
+        ...prev,
+        [imageType]: publicUrl,
+      }));
+
+      // Reset progress after a delay
+      setTimeout(() => {
+        setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
+      }, 1000);
+    } catch (error) {
+      console.error(`Upload ${imageType} error:`, error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : `Failed to upload ${imageType} image`
+      );
+      setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
+    } finally {
+      setUploading((prev) => ({ ...prev, [imageType]: false }));
+    }
+  };
+
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    imageType: 'thumbnail' | 'primary'
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, imageType);
+    }
+    // Reset input value to allow re-uploading the same file
+    e.target.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -347,14 +470,17 @@ export default function EditProductPage() {
                 />
               </div>
 
-              {/* Image URLs */}
-              <div className="space-y-4">
+              {/* Image URLs with Upload */}
+              <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Images</h3>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Thumbnail URL
+                {/* Thumbnail Image */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Thumbnail Image
                   </label>
+                  
+                  {/* URL Input */}
                   <Input
                     type="url"
                     name="thumbnail_url"
@@ -362,12 +488,77 @@ export default function EditProductPage() {
                     onChange={handleInputChange}
                     placeholder="https://example.com/thumbnail.jpg"
                   />
+                  
+                  {/* Upload Section */}
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      id="thumbnail-upload"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={(e) => handleFileSelect(e, 'thumbnail')}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="thumbnail-upload"
+                      className={`cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
+                        uploading.thumbnail ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {uploading.thumbnail ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          Upload Thumbnail
+                        </>
+                      )}
+                    </label>
+                    
+                    {/* Upload Progress */}
+                    {uploadProgress.thumbnail > 0 && uploadProgress.thumbnail < 100 && (
+                      <div className="flex-1 max-w-xs">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress.thumbnail}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-1">{uploadProgress.thumbnail}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  {previews.thumbnail && (
+                    <div className="mt-3">
+                      <img
+                        src={previews.thumbnail}
+                        alt="Thumbnail preview"
+                        className="w-32 h-32 object-cover border border-gray-300 dark:border-gray-600 rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Upload PNG, JPG, JPEG, or WebP (max 5MB) or enter URL manually
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Primary Image URL
+                {/* Primary Image */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Primary Image
                   </label>
+                  
+                  {/* URL Input */}
                   <Input
                     type="url"
                     name="primary_image_url"
@@ -375,6 +566,68 @@ export default function EditProductPage() {
                     onChange={handleInputChange}
                     placeholder="https://example.com/primary.jpg"
                   />
+                  
+                  {/* Upload Section */}
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      id="primary-upload"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={(e) => handleFileSelect(e, 'primary')}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="primary-upload"
+                      className={`cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
+                        uploading.primary ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      {uploading.primary ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          Upload Primary Image
+                        </>
+                      )}
+                    </label>
+                    
+                    {/* Upload Progress */}
+                    {uploadProgress.primary > 0 && uploadProgress.primary < 100 && (
+                      <div className="flex-1 max-w-xs">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress.primary}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-1">{uploadProgress.primary}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  {previews.primary && (
+                    <div className="mt-3">
+                      <img
+                        src={previews.primary}
+                        alt="Primary image preview"
+                        className="w-32 h-32 object-cover border border-gray-300 dark:border-gray-600 rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Upload PNG, JPG, JPEG, or WebP (max 5MB) or enter URL manually
+                  </p>
                 </div>
               </div>
 
