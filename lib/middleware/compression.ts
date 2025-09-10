@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deflate, gzip, brotliCompress } from 'zlib';
+import { deflate, gzip, brotliCompress, constants as zlibConstants } from 'zlib';
 import { promisify } from 'util';
 
 const deflateAsync = promisify(deflate);
@@ -28,10 +28,10 @@ class CompressionManager {
         'audio/',
         'application/zip',
         'application/gzip',
-        'application/x-brotli'
+        'application/x-brotli',
       ],
       includeTypes: [],
-      brotliQuality: 6
+      brotliQuality: 6,
     };
 
     Object.assign(this.defaultOptions, options);
@@ -62,37 +62,39 @@ class CompressionManager {
 
     // Check include list (if specified, only compress these types)
     if (opts.includeTypes.length > 0) {
-      return opts.includeTypes.some(type => contentType.startsWith(type));
+      return opts.includeTypes.some((type) => contentType.startsWith(type));
     }
 
     // Check exclude list
-    if (opts.excludeTypes.some(type => contentType.startsWith(type))) {
+    if (opts.excludeTypes.some((type) => contentType.startsWith(type))) {
       return false;
     }
 
     // Default: compress text-based content
-    return contentType.startsWith('text/') ||
-           contentType.startsWith('application/json') ||
-           contentType.startsWith('application/javascript') ||
-           contentType.startsWith('application/xml') ||
-           contentType.includes('svg');
+    return (
+      contentType.startsWith('text/') ||
+      contentType.startsWith('application/json') ||
+      contentType.startsWith('application/javascript') ||
+      contentType.startsWith('application/xml') ||
+      contentType.includes('svg')
+    );
   }
 
   getBestEncoding(acceptEncoding: string | null): 'br' | 'gzip' | 'deflate' | null {
     if (!acceptEncoding) return null;
 
     const encodings = acceptEncoding.toLowerCase();
-    
+
     // Prefer Brotli for modern browsers
     if (encodings.includes('br')) {
       return 'br';
     }
-    
+
     // Fallback to gzip
     if (encodings.includes('gzip')) {
       return 'gzip';
     }
-    
+
     // Last resort: deflate
     if (encodings.includes('deflate')) {
       return 'deflate';
@@ -112,25 +114,25 @@ class CompressionManager {
       case 'br':
         return await brotliAsync(buffer, {
           params: {
-            [require('zlib').constants.BROTLI_PARAM_QUALITY]: opts.brotliQuality,
-            [require('zlib').constants.BROTLI_PARAM_SIZE_HINT]: buffer.length
-          }
+            [zlibConstants.BROTLI_PARAM_QUALITY]: opts.brotliQuality,
+            [zlibConstants.BROTLI_PARAM_SIZE_HINT]: buffer.length,
+          },
         });
-      
+
       case 'gzip':
         return await gzipAsync(buffer, {
           level: opts.level,
           windowBits: 15,
-          memLevel: 8
+          memLevel: 8,
         });
-      
+
       case 'deflate':
         return await deflateAsync(buffer, {
           level: opts.level,
           windowBits: 15,
-          memLevel: 8
+          memLevel: 8,
         });
-      
+
       default:
         return buffer;
     }
@@ -179,13 +181,13 @@ class CompressionManager {
           ...Object.fromEntries(response.headers.entries()),
           'Content-Encoding': encoding,
           'Content-Length': compressedBuffer.length.toString(),
-          'Vary': response.headers.get('vary') 
+          Vary: response.headers.get('vary')
             ? `${response.headers.get('vary')}, Accept-Encoding`
             : 'Accept-Encoding',
           'X-Compression-Ratio': `${compressionRatio.toFixed(1)}%`,
           'X-Original-Size': buffer.length.toString(),
-          'X-Compressed-Size': compressedBuffer.length.toString()
-        }
+          'X-Compressed-Size': compressedBuffer.length.toString(),
+        },
       });
 
       return compressedResponse;
@@ -203,19 +205,17 @@ class CompressionManager {
     return {
       supported: ['br', 'gzip', 'deflate'],
       defaultLevel: this.defaultOptions.level,
-      threshold: this.defaultOptions.threshold
+      threshold: this.defaultOptions.threshold,
     };
   }
 }
 
 // Compression middleware wrapper
 export function withCompression(options: CompressionOptions = {}) {
-  return function compressionMiddleware(
-    handler: (request: NextRequest) => Promise<NextResponse>
-  ) {
+  return function compressionMiddleware(handler: (request: NextRequest) => Promise<NextResponse>) {
     return async function compressedHandler(request: NextRequest): Promise<NextResponse> {
       const response = await handler(request);
-      
+
       // Skip compression for certain status codes
       if (response.status < 200 || response.status >= 300) {
         return response;
@@ -236,7 +236,7 @@ export const CompressionPresets = {
     level: 9,
     brotliQuality: 11,
     threshold: 512,
-    includeTypes: ['text/', 'application/javascript', 'application/json']
+    includeTypes: ['text/', 'application/javascript', 'application/json'],
   } as CompressionOptions,
 
   // Balanced compression for API responses
@@ -244,7 +244,7 @@ export const CompressionPresets = {
     level: 6,
     brotliQuality: 6,
     threshold: 1024,
-    includeTypes: ['application/json', 'text/']
+    includeTypes: ['application/json', 'text/'],
   } as CompressionOptions,
 
   // Light compression for real-time content
@@ -252,13 +252,13 @@ export const CompressionPresets = {
     level: 1,
     brotliQuality: 1,
     threshold: 2048,
-    includeTypes: ['application/json']
+    includeTypes: ['application/json'],
   } as CompressionOptions,
 
   // No compression
   none: {
-    threshold: Infinity
-  } as CompressionOptions
+    threshold: Infinity,
+  } as CompressionOptions,
 };
 
 // Utility function for manual compression
@@ -285,11 +285,11 @@ export function analyzeResponseSize(response: NextResponse): {
   const contentLength = parseInt(response.headers.get('content-length') || '0');
   const contentType = response.headers.get('content-type');
   const compression = CompressionManager.getInstance();
-  
+
   return {
     contentLength,
     contentType,
     shouldCompress: compression.shouldCompress(contentType, contentLength),
-    recommendedEncoding: 'br'
+    recommendedEncoding: 'br',
   };
 }

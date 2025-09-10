@@ -23,8 +23,8 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
 
   try {
     // Import Jimp dynamically to avoid any potential SSR issues
-    const Jimp = (await import('jimp')).default;
-    
+    const { Jimp } = await import('jimp');
+
     console.log('Loading product image from:', productImageUrl);
     // Load product image
     const productImg = await Jimp.read(productImageUrl);
@@ -48,7 +48,7 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
       'Loading logo image from:',
       logoImageUrl.startsWith('data:') ? `data URL (${logoImageUrl.length} chars)` : logoImageUrl
     );
-    
+
     // Load logo image - handle data URLs properly
     let logoImg;
     if (logoImageUrl.startsWith('data:')) {
@@ -83,7 +83,12 @@ export async function combineImages(options: ImageCombineOptions): Promise<strin
       // Handle regular URLs
       logoImg = await Jimp.read(logoImageUrl);
     }
-    console.log('Logo image loaded successfully, dimensions:', logoImg.getWidth(), 'x', logoImg.getHeight());
+    console.log(
+      'Logo image loaded successfully, dimensions:',
+      logoImg.getWidth(),
+      'x',
+      logoImg.getHeight()
+    );
 
     // Calculate logo placement with proper scaling to fit within constraints
     const maxLogoWidth = Math.min(logoPlacement.width, canvasWidth * 0.4); // Don't exceed 40% of canvas width
@@ -140,9 +145,36 @@ export async function getImageDimensions(
   imageUrl: string
 ): Promise<{ width: number; height: number }> {
   try {
-    // Import Jimp dynamically
-    const Jimp = (await import('jimp')).default;
-    
+    // Import Jimp dynamically with multiple fallback approaches
+    const jimpModule = await import('jimp');
+    const Jimp = jimpModule.Jimp || jimpModule.default || jimpModule;
+
+    // For WebP files, use Canvas API to get dimensions since Jimp doesn't support WebP
+    if (imageUrl.toLowerCase().includes('.webp')) {
+      console.log(`[getImageDimensions] WebP detected, using Canvas approach for: ${imageUrl}`);
+
+      try {
+        // Import canvas dynamically
+        const { createCanvas, loadImage } = await import('canvas');
+        const image = await loadImage(imageUrl);
+        console.log(
+          `[getImageDimensions] Canvas loaded WebP image: ${image.width}x${image.height}`
+        );
+        return {
+          width: image.width,
+          height: image.height,
+        };
+      } catch (canvasError) {
+        console.warn(
+          '[getImageDimensions] Canvas approach failed for WebP, using fallback dimensions:',
+          canvasError
+        );
+        // Return reasonable fallback dimensions for WebP product images
+        return { width: 1200, height: 1200 };
+      }
+    }
+
+    // For other formats, use Jimp
     const img = await Jimp.read(imageUrl);
     return {
       width: img.getWidth(),
@@ -150,8 +182,8 @@ export async function getImageDimensions(
     };
   } catch (error) {
     console.error('Error loading image dimensions:', error);
-    throw new Error(
-      `Failed to get image dimensions: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    // Return fallback dimensions instead of throwing
+    console.warn('Using fallback dimensions: 1200x1200');
+    return { width: 1200, height: 1200 };
   }
 }

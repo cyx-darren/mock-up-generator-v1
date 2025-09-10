@@ -1,0 +1,20 @@
+
+          <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="400" fill="#f0f0f0" stroke="#ccc" stroke-width="2"/>
+            <text x="200" y="180" text-anchor="middle" fill="#666" font-family="Arial" font-size="16">
+              Mockup Preview Unavailable
+            </text>
+            <text x="200" y="200" text-anchor="middle" fill="#666" font-family="Arial" font-size="12">
+              WebP product image format
+            </text>
+            <text x="200" y="220" text-anchor="middle" fill="#666" font-family="Arial" font-size="12">
+              not supported in current setup
+            </text>
+            <text x="200" y="260" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
+              Product: A4 Canvas Tote Bag
+            </text>
+            <text x="200" y="275" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
+              Placement: horizontal
+            </text>
+          </svg>
+        

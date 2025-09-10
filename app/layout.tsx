@@ -25,12 +25,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
     ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
-    ]
-  }
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 export default function RootLayout({
@@ -45,19 +43,25 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//images.unsplash.com" />
         <link rel="dns-prefetch" href="//supabase.co" />
-        
+
         {/* Preconnect to critical external resources */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
+
         {/* Resource hints for critical assets */}
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link
+          rel="preload"
+          href="/fonts/inter-var.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link rel="preload" href="/_next/static/css/app.css" as="style" />
-        
+
         {/* Prefetch likely navigation targets */}
         <link rel="prefetch" href="/catalog" />
         <link rel="prefetch" href="/api/products" />
-        
+
         {/* Service Worker registration script */}
         <script
           dangerouslySetInnerHTML={{
@@ -73,28 +77,7 @@ export default function RootLayout({
                     });
                 });
               }
-            `
-          }}
-        />
-        
-        {/* Performance monitoring */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Critical resource timing
-              window.addEventListener('load', function() {
-                if ('performance' in window) {
-                  const timing = performance.timing;
-                  const loadTime = timing.loadEventEnd - timing.navigationStart;
-                  console.log('Page load time:', loadTime + 'ms');
-                  
-                  // Report to analytics if needed
-                  if (loadTime > 3000) {
-                    console.warn('Slow page load detected:', loadTime + 'ms');
-                  }
-                }
-              });
-            `
+            `,
           }}
         />
       </head>
