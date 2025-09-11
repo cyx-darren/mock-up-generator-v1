@@ -682,17 +682,23 @@ function CreateMockupContent() {
         )}
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Column - Product Display */}
+          {/* Left Column - Product/Mockup Display */}
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Selected Product</CardTitle>
+                <CardTitle>{generatedMockup ? 'Generated Mockup' : 'Selected Product'}</CardTitle>
               </CardHeader>
               <CardBody>
                 {product && (
                   <div>
                     <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 overflow-hidden">
-                      {product.primary_image_url ? (
+                      {generatedMockup ? (
+                        <img
+                          src={generatedMockup}
+                          alt="Generated Mockup"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : product.primary_image_url ? (
                         <img
                           src={product.primary_image_url}
                           alt={product.name}
@@ -707,7 +713,9 @@ function CreateMockupContent() {
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       {product.name}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">{product.description}</p>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      {generatedMockup ? 'Customized with your logo' : product.description}
+                    </p>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">SKU: {product.sku}</span>
                       <span className="text-lg font-semibold text-blue-600">${product.price}</span>
@@ -716,24 +724,6 @@ function CreateMockupContent() {
                 )}
               </CardBody>
             </Card>
-
-            {/* Result Display */}
-            {generatedMockup && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Generated Mockup</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-                    <img
-                      src={generatedMockup}
-                      alt="Generated Mockup"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </CardBody>
-              </Card>
-            )}
           </div>
 
           {/* Right Column - Controls */}
@@ -923,21 +913,7 @@ function CreateMockupContent() {
                 </CardHeader>
                 <CardBody>
                   <div className="space-y-6">
-                    {/* Current Mockup Preview */}
-                    <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Current mockup:
-                      </p>
-                      <div className="aspect-square bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-                        <img
-                          src={generatedMockup}
-                          alt="Current Mockup"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Prompt Adjuster Component */}
+                    {/* Prompt Adjuster Component - no preview needed, it's shown in left column */}
                     <PromptAdjuster
                       onApplyChanges={handleApplyChanges}
                       loading={loading}
