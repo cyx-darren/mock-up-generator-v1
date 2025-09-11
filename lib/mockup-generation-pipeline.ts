@@ -70,6 +70,15 @@ export interface MockupGenerationRequest {
   customText?: string;
   brandColors?: string[];
   additionalRequirements?: string[];
+  adjustments?: {
+    scale: number;
+    rotation: number;
+    x: number;
+    y: number;
+    flipH: boolean;
+    flipV: boolean;
+    opacity: number;
+  };
 }
 
 export interface PreparedInput {
@@ -142,7 +151,8 @@ export class MockupGenerationPipeline {
           processedLogo.processedImageUrl || (processedLogo.file as string),
           appliedConstraints,
           undefined,
-          actualDimensions
+          actualDimensions,
+          request.adjustments
         );
         console.log('Mockup generation result:', mockupImageUrl ? 'Success' : 'Failed');
       } catch (combineImagesError) {
@@ -487,7 +497,16 @@ export class MockupGenerationPipeline {
     logoImageUrl: string,
     constraints: AppliedConstraints,
     productType?: string,
-    targetDimensions?: { width: number; height: number }
+    targetDimensions?: { width: number; height: number },
+    adjustments?: {
+      scale: number;
+      rotation: number;
+      x: number;
+      y: number;
+      flipH: boolean;
+      flipV: boolean;
+      opacity: number;
+    }
   ): Promise<string> {
     console.log('[combineImages] Starting image combination');
     console.log('[combineImages] Product type:', productType);
@@ -500,7 +519,8 @@ export class MockupGenerationPipeline {
         logoImageUrl,
         constraints,
         productType,
-        targetDimensions
+        targetDimensions,
+        adjustments
       );
     }
 
@@ -790,7 +810,16 @@ export class MockupGenerationPipeline {
     logoImageUrl: string,
     constraints: AppliedConstraints,
     productType?: string,
-    targetDimensions?: { width: number; height: number }
+    targetDimensions?: { width: number; height: number },
+    adjustments?: {
+      scale: number;
+      rotation: number;
+      x: number;
+      y: number;
+      flipH: boolean;
+      flipV: boolean;
+      opacity: number;
+    }
   ): Promise<string> {
     try {
       console.log('[generateAIMockup] Starting Canvas Compositing + AI Enhancement approach');
@@ -804,7 +833,8 @@ export class MockupGenerationPipeline {
         productImageUrl,
         logoImageUrl,
         constraints,
-        targetDimensions
+        targetDimensions,
+        adjustments
       );
       console.log('[generateAIMockup] Canvas composite created, length:', canvasComposite?.length);
 
@@ -836,7 +866,16 @@ export class MockupGenerationPipeline {
     productImageUrl: string,
     logoImageUrl: string,
     constraints: AppliedConstraints,
-    targetDimensions?: { width: number; height: number }
+    targetDimensions?: { width: number; height: number },
+    adjustments?: {
+      scale: number;
+      rotation: number;
+      x: number;
+      y: number;
+      flipH: boolean;
+      flipV: boolean;
+      opacity: number;
+    }
   ): Promise<string> {
     const { createCanvas, loadImage } = await import('canvas');
 

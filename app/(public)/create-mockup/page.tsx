@@ -113,6 +113,17 @@ function CreateMockupContent() {
   const [generatedMockup, setGeneratedMockup] = useState<string | null>(null);
   const [downloadFormats, setDownloadFormats] = useState<{ [key: string]: string }>({});
 
+  // Design adjustment state
+  const [designAdjustments, setDesignAdjustments] = useState({
+    scale: 1.0, // 0.5 to 1.5 (50% to 150%)
+    rotation: 0, // -180 to 180 degrees
+    x: 0.5, // 0 to 1 (relative position)
+    y: 0.5, // 0 to 1 (relative position)
+    flipH: false, // horizontal flip
+    flipV: false, // vertical flip
+    opacity: 1.0, // 0.5 to 1.0
+  });
+
   // Loading and error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -292,6 +303,41 @@ function CreateMockupContent() {
     }
   };
 
+  // Get current constraint for selected placement
+  const getCurrentConstraint = () => {
+    let constraint = constraints.find((c) => c.placement_type === selectedPlacement);
+    if (!constraint) {
+      constraint = createDefaultConstraint(product.id, selectedPlacement);
+    }
+    return constraint;
+  };
+
+  // Validate design adjustments against constraints
+  const validateAdjustments = (adjustments: typeof designAdjustments) => {
+    const constraint = getCurrentConstraint();
+    const warnings = [];
+
+    // Check if scale respects min/max logo dimensions
+    const baseSize = 200; // Assume base logo size
+    const scaledWidth = baseSize * adjustments.scale;
+    const scaledHeight = baseSize * adjustments.scale;
+
+    if (scaledWidth < constraint.min_logo_width) {
+      warnings.push(`Logo width too small (min: ${constraint.min_logo_width}px)`);
+    }
+    if (scaledWidth > constraint.max_logo_width) {
+      warnings.push(`Logo width too large (max: ${constraint.max_logo_width}px)`);
+    }
+    if (scaledHeight < constraint.min_logo_height) {
+      warnings.push(`Logo height too small (min: ${constraint.min_logo_height}px)`);
+    }
+    if (scaledHeight > constraint.max_logo_height) {
+      warnings.push(`Logo height too large (max: ${constraint.max_logo_height}px)`);
+    }
+
+    return warnings;
+  };
+
   // Generate mockup
   const generateMockup = async () => {
     if (!product || !processedLogo) return;
@@ -320,7 +366,7 @@ function CreateMockupContent() {
       if (cachedResult) {
         setProgress('Retrieved from cache!');
         setGeneratedMockup(cachedResult.result);
-        setCurrentStep(4);
+        setCurrentStep(5);
         return;
       }
 
@@ -347,6 +393,7 @@ function CreateMockupContent() {
             category: product.category,
           },
           placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
+          adjustments: designAdjustments,
         }),
       });
 
@@ -482,7 +529,7 @@ function CreateMockupContent() {
         </h1>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-12 max-w-3xl mx-auto">
+        <div className="flex items-center justify-between mb-12 max-w-4xl mx-auto">
           <Step
             number={1}
             title="Product Selected"
@@ -512,9 +559,18 @@ function CreateMockupContent() {
           />
           <Step
             number={4}
-            title="Download Mockup"
+            title="Adjust Design"
             active={currentStep >= 4}
             completed={currentStep > 4}
+          />
+          <div
+            className={`flex-1 h-1 mx-2 ${currentStep > 4 ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+          />
+          <Step
+            number={5}
+            title="Download Mockup"
+            active={currentStep >= 5}
+            completed={currentStep > 5}
           />
         </div>
 
@@ -755,16 +811,217 @@ function CreateMockupContent() {
               </Card>
             )}
 
-            {/* Step 4: Download */}
+            {/* Step 4: Adjust Design */}
             {currentStep === 4 && generatedMockup && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Step 4: Download Your Mockup</CardTitle>
+                  <CardTitle>Step 4: Adjust Design</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <div className="space-y-4">
+                    <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Preview with current settings:
+                      </p>
+                      <div className="aspect-square bg-white dark:bg-gray-900 rounded-lg overflow-hidden mb-4">
+                        <img
+                          src={generatedMockup}
+                          alt="Mockup Preview"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Logo Controls */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-700 dark:text-gray-300">
+                        Logo Adjustments
+                      </h4>
+
+                      {/* Constraint Warnings */}
+                      {(() => {
+                        const warnings = validateAdjustments(designAdjustments);
+                        return warnings.length > 0 ? (
+                          <Alert variant="warning">
+                            <div className="text-sm">
+                              <p className="font-medium mb-2">Design Constraints:</p>
+                              <ul className="space-y-1">
+                                {warnings.map((warning, index) => (
+                                  <li key={index} className="text-xs">
+                                    • {warning}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </Alert>
+                        ) : null;
+                      })()}
+
+                      {/* Scale Control */}
+                      <div>
+                        <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                          Scale: {Math.round(designAdjustments.scale * 100)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="1.5"
+                          step="0.05"
+                          value={designAdjustments.scale}
+                          onChange={(e) =>
+                            setDesignAdjustments((prev) => ({
+                              ...prev,
+                              scale: parseFloat(e.target.value),
+                            }))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Rotation Control */}
+                      <div>
+                        <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                          Rotation: {designAdjustments.rotation}°
+                        </label>
+                        <input
+                          type="range"
+                          min="-180"
+                          max="180"
+                          step="5"
+                          value={designAdjustments.rotation}
+                          onChange={(e) =>
+                            setDesignAdjustments((prev) => ({
+                              ...prev,
+                              rotation: parseInt(e.target.value),
+                            }))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Position Controls */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                            Horizontal Position
+                          </label>
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="0.9"
+                            step="0.05"
+                            value={designAdjustments.x}
+                            onChange={(e) =>
+                              setDesignAdjustments((prev) => ({
+                                ...prev,
+                                x: parseFloat(e.target.value),
+                              }))
+                            }
+                            className="w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                            Vertical Position
+                          </label>
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="0.9"
+                            step="0.05"
+                            value={designAdjustments.y}
+                            onChange={(e) =>
+                              setDesignAdjustments((prev) => ({
+                                ...prev,
+                                y: parseFloat(e.target.value),
+                              }))
+                            }
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Opacity Control */}
+                      <div>
+                        <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                          Opacity: {Math.round(designAdjustments.opacity * 100)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="0.5"
+                          max="1.0"
+                          step="0.05"
+                          value={designAdjustments.opacity}
+                          onChange={(e) =>
+                            setDesignAdjustments((prev) => ({
+                              ...prev,
+                              opacity: parseFloat(e.target.value),
+                            }))
+                          }
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Flip Controls */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <input
+                            type="checkbox"
+                            checked={designAdjustments.flipH}
+                            onChange={(e) =>
+                              setDesignAdjustments((prev) => ({ ...prev, flipH: e.target.checked }))
+                            }
+                            className="mr-3"
+                          />
+                          <span className="text-sm">Flip Horizontal</span>
+                        </label>
+                        <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <input
+                            type="checkbox"
+                            checked={designAdjustments.flipV}
+                            onChange={(e) =>
+                              setDesignAdjustments((prev) => ({ ...prev, flipV: e.target.checked }))
+                            }
+                            className="mr-3"
+                          />
+                          <span className="text-sm">Flip Vertical</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => setCurrentStep(3)}
+                        variant="secondary"
+                        className="flex-1"
+                      >
+                        Back to Placement
+                      </Button>
+                      <Button
+                        onClick={() => setCurrentStep(5)}
+                        className="flex-1"
+                        disabled={loading}
+                      >
+                        {validateAdjustments(designAdjustments).length > 0
+                          ? 'Continue Anyway'
+                          : 'Continue to Download'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+
+            {/* Step 5: Download */}
+            {currentStep === 5 && generatedMockup && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Step 5: Download Your Mockup</CardTitle>
                 </CardHeader>
                 <CardBody>
                   <div className="space-y-4">
                     <Alert variant="success">
-                      Your mockup is ready! Choose a format to download.
+                      Your customized mockup is ready! Choose a format to download.
                     </Alert>
 
                     <div className="grid grid-cols-3 gap-3">
