@@ -11,6 +11,7 @@ import { OutputEnhancer } from '@/lib/output-enhancement';
 import { FormatConverter } from '@/lib/format-conversion';
 import { QualityValidator } from '@/lib/quality-validation';
 import { ResultCache } from '@/lib/result-caching';
+import { PromptAdjuster, AdjustmentHistory } from '@/components/mockup/PromptAdjuster';
 
 // Types
 interface Product {
@@ -113,15 +114,19 @@ function CreateMockupContent() {
   const [generatedMockup, setGeneratedMockup] = useState<string | null>(null);
   const [downloadFormats, setDownloadFormats] = useState<{ [key: string]: string }>({});
 
-  // Design adjustment state
-  const [designAdjustments, setDesignAdjustments] = useState({
-    scale: 1.0, // 0.5 to 1.5 (50% to 150%)
-    rotation: 0, // -180 to 180 degrees
-    x: 0.5, // 0 to 1 (relative position)
-    y: 0.5, // 0 to 1 (relative position)
-    flipH: false, // horizontal flip
-    flipV: false, // vertical flip
-    opacity: 1.0, // 0.5 to 1.0
+  // Adjustment history state
+  const [adjustmentHistory, setAdjustmentHistory] = useState<AdjustmentHistory[]>([]);
+  const [originalMockup, setOriginalMockup] = useState<string | null>(null);
+
+  // Default design adjustments for compatibility
+  const [designAdjustments] = useState({
+    scale: 1.0,
+    rotation: 0,
+    x: 0.5,
+    y: 0.5,
+    flipH: false,
+    flipV: false,
+    opacity: 1.0,
   });
 
   // Loading and error states
@@ -313,7 +318,7 @@ function CreateMockupContent() {
   };
 
   // Validate design adjustments against constraints
-  const validateAdjustments = (adjustments: typeof designAdjustments) => {
+  const _validateAdjustments = (adjustments: typeof designAdjustments) => {
     const constraint = getCurrentConstraint();
     const warnings = [];
 
@@ -420,6 +425,7 @@ function CreateMockupContent() {
       });
 
       setGeneratedMockup(result.generatedImageUrl);
+      setOriginalMockup(result.generatedImageUrl);
       setCurrentStep(4);
 
       // Generate download formats
@@ -503,12 +509,98 @@ function CreateMockupContent() {
     document.body.removeChild(link);
   };
 
+  // Handle prompt adjustments
+  const handleApplyChanges = async (instruction: string, enhancedPrompt: string) => {
+    if (!product || !originalMockup) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setProgress('Applying your adjustments...');
+
+      // Call API to generate adjusted mockup
+      const response = await fetch('/api/generate-mockup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          logo: {
+            file: processedLogo,
+            processedImageUrl: processedLogo,
+            originalDimensions: { width: 200, height: 100 },
+            format: 'png',
+            hasTransparency: true,
+          },
+          product: {
+            id: product.id,
+            name: product.name,
+            imageUrl: product.primary_image_url || '',
+            category: product.category,
+          },
+          placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
+          adjustmentPrompt: `Same mockup as before but ${enhancedPrompt}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to apply adjustments');
+      }
+
+      const result = await response.json();
+      const newMockupUrl = result.result.generatedImageUrl;
+
+      if (!newMockupUrl) {
+        throw new Error('No adjusted mockup returned');
+      }
+
+      // Add to history
+      const historyItem: AdjustmentHistory = {
+        id: Date.now().toString(),
+        instruction,
+        enhancedPrompt,
+        mockupUrl: newMockupUrl,
+        timestamp: new Date(),
+      };
+
+      setAdjustmentHistory((prev) => [...prev, historyItem]);
+      setGeneratedMockup(newMockupUrl);
+
+      // Generate download formats for new mockup
+      await generateDownloadFormats(newMockupUrl);
+    } catch (err) {
+      console.error('Error applying adjustments:', err);
+      setError(err instanceof Error ? err.message : 'Failed to apply adjustments');
+    } finally {
+      setLoading(false);
+      setProgress('');
+    }
+  };
+
+  // Handle reverting to previous version
+  const handleRevertToVersion = (historyItem: AdjustmentHistory) => {
+    if (historyItem.id === 'original' && originalMockup) {
+      setGeneratedMockup(originalMockup);
+      setAdjustmentHistory([]);
+    } else {
+      setGeneratedMockup(historyItem.mockupUrl);
+      // Remove all history items after this one
+      const itemIndex = adjustmentHistory.findIndex((item) => item.id === historyItem.id);
+      if (itemIndex !== -1) {
+        setAdjustmentHistory((prev) => prev.slice(0, itemIndex + 1));
+      }
+    }
+  };
+
   // Reset and start over
   const startOver = () => {
     setCurrentStep(1);
     setUploadedFile(null);
     setProcessedLogo(null);
     setGeneratedMockup(null);
+    setOriginalMockup(null);
+    setAdjustmentHistory([]);
     setDownloadFormats({});
     setError(null);
   };
@@ -823,226 +915,37 @@ function CreateMockupContent() {
               </Card>
             )}
 
-            {/* Step 4: Adjust Design */}
+            {/* Step 4: Refine Mockup */}
             {currentStep === 4 && generatedMockup && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Step 4: Adjust Design</CardTitle>
+                  <CardTitle>Step 4: Refine Your Mockup</CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    {/* Current Mockup Preview */}
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Preview with current settings:
+                        Current mockup:
                       </p>
-                      <div className="aspect-square bg-white dark:bg-gray-900 rounded-lg overflow-hidden mb-4 relative">
-                        {/* Product Background */}
-                        {product?.primary_image_url && (
-                          <img
-                            src={product.primary_image_url}
-                            alt="Product"
-                            className="w-full h-full object-contain"
-                          />
-                        )}
-
-                        {/* Interactive Logo Overlay */}
-                        {processedLogo && (
-                          <div
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              transform: `translate(${(designAdjustments.x - 0.5) * 200}px, ${(designAdjustments.y - 0.5) * 200}px)`,
-                            }}
-                          >
-                            <div
-                              className="absolute"
-                              style={{
-                                top: '50%',
-                                left: '50%',
-                                transform: `
-                                  translate(-50%, -50%)
-                                  scale(${designAdjustments.scale})
-                                  rotate(${designAdjustments.rotation}deg)
-                                  scaleX(${designAdjustments.flipH ? -1 : 1})
-                                  scaleY(${designAdjustments.flipV ? -1 : 1})
-                                `,
-                                opacity: designAdjustments.opacity,
-                                maxWidth: '200px',
-                                maxHeight: '200px',
-                                transition: 'all 0.1s ease-out',
-                              }}
-                            >
-                              <img
-                                src={processedLogo}
-                                alt="Logo Preview"
-                                className="max-w-full max-h-full object-contain"
-                                style={{
-                                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
+                      <div className="aspect-square bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+                        <img
+                          src={generatedMockup}
+                          alt="Current Mockup"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                     </div>
 
-                    {/* Logo Controls */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700 dark:text-gray-300">
-                        Logo Adjustments
-                      </h4>
+                    {/* Prompt Adjuster Component */}
+                    <PromptAdjuster
+                      onApplyChanges={handleApplyChanges}
+                      loading={loading}
+                      history={adjustmentHistory}
+                      onRevertToVersion={handleRevertToVersion}
+                    />
 
-                      {/* Constraint Warnings */}
-                      {(() => {
-                        const warnings = validateAdjustments(designAdjustments);
-                        return warnings.length > 0 ? (
-                          <Alert variant="warning">
-                            <div className="text-sm">
-                              <p className="font-medium mb-2">Design Constraints:</p>
-                              <ul className="space-y-1">
-                                {warnings.map((warning, index) => (
-                                  <li key={index} className="text-xs">
-                                    • {warning}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </Alert>
-                        ) : null;
-                      })()}
-
-                      {/* Scale Control */}
-                      <div>
-                        <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
-                          Scale: {Math.round(designAdjustments.scale * 100)}%
-                        </label>
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="1.5"
-                          step="0.05"
-                          value={designAdjustments.scale}
-                          onChange={(e) =>
-                            setDesignAdjustments((prev) => ({
-                              ...prev,
-                              scale: parseFloat(e.target.value),
-                            }))
-                          }
-                          className="w-full"
-                        />
-                      </div>
-
-                      {/* Rotation Control */}
-                      <div>
-                        <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
-                          Rotation: {designAdjustments.rotation}°
-                        </label>
-                        <input
-                          type="range"
-                          min="-180"
-                          max="180"
-                          step="5"
-                          value={designAdjustments.rotation}
-                          onChange={(e) =>
-                            setDesignAdjustments((prev) => ({
-                              ...prev,
-                              rotation: parseInt(e.target.value),
-                            }))
-                          }
-                          className="w-full"
-                        />
-                      </div>
-
-                      {/* Position Controls */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
-                            Horizontal Position
-                          </label>
-                          <input
-                            type="range"
-                            min="0.1"
-                            max="0.9"
-                            step="0.05"
-                            value={designAdjustments.x}
-                            onChange={(e) =>
-                              setDesignAdjustments((prev) => ({
-                                ...prev,
-                                x: parseFloat(e.target.value),
-                              }))
-                            }
-                            className="w-full"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
-                            Vertical Position
-                          </label>
-                          <input
-                            type="range"
-                            min="0.1"
-                            max="0.9"
-                            step="0.05"
-                            value={designAdjustments.y}
-                            onChange={(e) =>
-                              setDesignAdjustments((prev) => ({
-                                ...prev,
-                                y: parseFloat(e.target.value),
-                              }))
-                            }
-                            className="w-full"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Opacity Control */}
-                      <div>
-                        <label className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
-                          Opacity: {Math.round(designAdjustments.opacity * 100)}%
-                        </label>
-                        <input
-                          type="range"
-                          min="0.5"
-                          max="1.0"
-                          step="0.05"
-                          value={designAdjustments.opacity}
-                          onChange={(e) =>
-                            setDesignAdjustments((prev) => ({
-                              ...prev,
-                              opacity: parseFloat(e.target.value),
-                            }))
-                          }
-                          className="w-full"
-                        />
-                      </div>
-
-                      {/* Flip Controls */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <input
-                            type="checkbox"
-                            checked={designAdjustments.flipH}
-                            onChange={(e) =>
-                              setDesignAdjustments((prev) => ({ ...prev, flipH: e.target.checked }))
-                            }
-                            className="mr-3"
-                          />
-                          <span className="text-sm">Flip Horizontal</span>
-                        </label>
-                        <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <input
-                            type="checkbox"
-                            checked={designAdjustments.flipV}
-                            onChange={(e) =>
-                              setDesignAdjustments((prev) => ({ ...prev, flipV: e.target.checked }))
-                            }
-                            className="mr-3"
-                          />
-                          <span className="text-sm">Flip Vertical</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
+                    {/* Navigation Buttons */}
                     <div className="border-t pt-4">
                       <div className="flex gap-3">
                         <Button
@@ -1053,27 +956,13 @@ function CreateMockupContent() {
                           Back to Placement
                         </Button>
                         <Button
-                          onClick={generateMockup}
-                          variant="outline"
-                          disabled={loading}
-                          className="flex-1"
-                        >
-                          {loading ? 'Updating...' : 'Update Mockup'}
-                        </Button>
-                        <Button
                           onClick={() => setCurrentStep(5)}
                           className="flex-1"
                           disabled={loading}
                         >
-                          {validateAdjustments(designAdjustments).length > 0
-                            ? 'Continue Anyway'
-                            : 'Continue to Download'}
+                          Continue to Download
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-500 text-center mt-2">
-                        Preview shows real-time changes. Click &quot;Update Mockup&quot; to generate
-                        final version with adjustments.
-                      </p>
                     </div>
                   </div>
                 </CardBody>

@@ -4,7 +4,7 @@ import { MockupGenerationPipeline } from '@/lib/mockup-generation-pipeline';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { logo, product, placementType, adjustments } = body;
+    const { logo, product, placementType, adjustments, adjustmentPrompt } = body;
 
     if (!logo || !product || !placementType) {
       return NextResponse.json(
@@ -19,28 +19,44 @@ export async function POST(request: NextRequest) {
       productCategory: product.category,
       placementType,
       adjustments: adjustments || 'default',
+      adjustmentPrompt: adjustmentPrompt || 'none',
     });
 
     // Create pipeline instance
     const pipeline = new MockupGenerationPipeline();
 
-    // Generate mockup with server-side constraint loading and adjustments
-    const result = await pipeline.generateMockup({
+    // Handle adjustment prompts for AI-powered modifications
+    const mockupRequest = {
       logo,
       product,
       placementType,
       qualityLevel: 'enhanced', // Default quality level
       stylePreferences: {}, // Default empty style preferences
-      adjustments: adjustments || {
-        scale: 1.0,
-        rotation: 0,
-        x: 0.5,
-        y: 0.5,
-        flipH: false,
-        flipV: false,
-        opacity: 1.0,
-      },
-    });
+      adjustments:
+        typeof adjustments === 'string'
+          ? undefined
+          : adjustments || {
+              scale: 1.0,
+              rotation: 0,
+              x: 0.5,
+              y: 0.5,
+              flipH: false,
+              flipV: false,
+              opacity: 1.0,
+            },
+    };
+
+    // If adjustments is a string (adjustment prompt), add it to additional requirements
+    if (typeof adjustments === 'string' && adjustments) {
+      mockupRequest.additionalRequirements = [adjustments];
+    }
+    if (adjustmentPrompt) {
+      mockupRequest.additionalRequirements = mockupRequest.additionalRequirements || [];
+      mockupRequest.additionalRequirements.push(adjustmentPrompt);
+    }
+
+    // Generate mockup with server-side constraint loading and adjustments
+    const result = await pipeline.generateMockup(mockupRequest);
 
     return NextResponse.json({
       success: true,
