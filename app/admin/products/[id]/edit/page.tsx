@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { uploadFile, getPublicUrl } from '@/lib/supabase-client';
 
 interface Product {
   id: string;
@@ -44,16 +43,19 @@ export default function EditProductPage() {
     tags: '',
     thumbnail_url: '',
     primary_image_url: '',
+    additional_images: [] as string[],
   });
 
   const [uploadProgress, setUploadProgress] = useState({
     thumbnail: 0,
     primary: 0,
+    additional: 0,
   });
 
   const [uploading, setUploading] = useState({
     thumbnail: false,
     primary: false,
+    additional: false,
   });
 
   const [previews, setPreviews] = useState({
@@ -61,43 +63,7 @@ export default function EditProductPage() {
     primary: '',
   });
 
-  // Check if user has permission to edit products
-  if (!can('canEditProducts')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardBody>
-            <Alert
-              type="error"
-              message={`You don't have permission to edit products. Current role: ${user?.role || 'No role'}`}
-            />
-            <div className="mt-4">
-              <Link href="/admin/dashboard">
-                <Button variant="outline">Back to Dashboard</Button>
-              </Link>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
-
-  // Fetch product data
-  useEffect(() => {
-    if (params.id) {
-      fetchProduct();
-    }
-  }, [params.id]);
-
-  // Update previews when URLs change
-  useEffect(() => {
-    setPreviews({
-      thumbnail: formData.thumbnail_url,
-      primary: formData.primary_image_url,
-    });
-  }, [formData.thumbnail_url, formData.primary_image_url]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setFetching(true);
       const response = await fetch(`/api/admin/products/${params.id}`);
@@ -125,6 +91,9 @@ export default function EditProductPage() {
         tags: Array.isArray(productData.tags) ? productData.tags.join(', ') : '',
         thumbnail_url: productData.thumbnail_url || '',
         primary_image_url: productData.primary_image_url || '',
+        additional_images: Array.isArray(productData.additional_images)
+          ? productData.additional_images
+          : [],
       });
     } catch (error) {
       console.error('Fetch product error:', error);
@@ -132,7 +101,22 @@ export default function EditProductPage() {
     } finally {
       setFetching(false);
     }
-  };
+  }, [params.id]);
+
+  // Fetch product data
+  useEffect(() => {
+    if (params.id) {
+      fetchProduct();
+    }
+  }, [params.id, fetchProduct]);
+
+  // Update previews when URLs change
+  useEffect(() => {
+    setPreviews({
+      thumbnail: formData.thumbnail_url,
+      primary: formData.primary_image_url,
+    });
+  }, [formData.thumbnail_url, formData.primary_image_url]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -161,7 +145,7 @@ export default function EditProductPage() {
 
   const handleImageUpload = async (
     file: File,
-    imageType: 'thumbnail' | 'primary'
+    imageType: 'thumbnail' | 'primary' | 'additional'
   ): Promise<void> => {
     const validationError = validateImageFile(file);
     if (validationError) {
@@ -173,58 +157,78 @@ export default function EditProductPage() {
     setUploading((prev) => ({ ...prev, [imageType]: true }));
     setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
 
-    try {
-      // Generate structured file path
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const filePath = `products/${params.id}/${fileName}`;
+    let progressInterval: NodeJS.Timeout;
 
+    try {
       // Simulate upload progress
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setUploadProgress((prev) => ({
           ...prev,
           [imageType]: Math.min(prev[imageType] + 10, 90),
         }));
       }, 100);
 
-      // Upload file to Supabase Storage
-      await uploadFile('gift-items', filePath, file, {
-        contentType: file.type,
-        upsert: false,
+      // Create FormData for the upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload using the API route
+      const response = await fetch('/api/upload?bucket=gift-items', {
+        method: 'POST',
+        body: formData,
       });
 
-      // Get public URL
-      const publicUrl = await getPublicUrl('gift-items', filePath);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const uploadResult = await response.json();
+      const publicUrl = uploadResult.url;
 
       // Clear progress interval
       clearInterval(progressInterval);
       setUploadProgress((prev) => ({ ...prev, [imageType]: 100 }));
 
       // Update form data with new URL
-      const fieldName = imageType === 'thumbnail' ? 'thumbnail_url' : 'primary_image_url';
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: publicUrl,
-      }));
+      if (imageType === 'additional') {
+        setFormData((prev) => ({
+          ...prev,
+          additional_images: [...prev.additional_images, publicUrl],
+        }));
+      } else {
+        const fieldName = imageType === 'thumbnail' ? 'thumbnail_url' : 'primary_image_url';
+        setFormData((prev) => ({
+          ...prev,
+          [fieldName]: publicUrl,
+        }));
 
-      // Set preview
-      setPreviews((prev) => ({
-        ...prev,
-        [imageType]: publicUrl,
-      }));
+        // Set preview
+        setPreviews((prev) => ({
+          ...prev,
+          [imageType]: publicUrl,
+        }));
+      }
 
       // Reset progress after a delay
       setTimeout(() => {
         setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
       }, 1000);
     } catch (error) {
+      clearInterval(progressInterval);
       console.error(`Upload ${imageType} error:`, error);
-      setError(
+      console.error('File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      const errorMessage =
         error instanceof Error
-          ? error.message
-          : `Failed to upload ${imageType} image`
-      );
+          ? `Upload failed: ${error.message}`
+          : `Failed to upload ${imageType} image`;
+
+      setError(errorMessage);
       setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
     } finally {
       setUploading((prev) => ({ ...prev, [imageType]: false }));
@@ -242,6 +246,56 @@ export default function EditProductPage() {
     // Reset input value to allow re-uploading the same file
     e.target.value = '';
   };
+
+  const handleAdditionalImagesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxImages = 5;
+    const remainingSlots = maxImages - formData.additional_images.length;
+    const filesToUpload = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      setError(
+        `You can only upload ${remainingSlots} more image(s). Maximum ${maxImages} additional images allowed.`
+      );
+    } else {
+      setError('');
+    }
+
+    filesToUpload.forEach((file) => {
+      handleImageUpload(file, 'additional');
+    });
+
+    // Reset input value
+    e.target.value = '';
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      additional_images: prev.additional_images.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Check if user has permission to edit products
+  if (!can('canEditProducts')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <CardBody>
+            <Alert
+              type="error"
+              message={`You don't have permission to edit products. Current role: ${user?.role || 'No role'}`}
+            />
+            <div className="mt-4">
+              <Link href="/admin/dashboard">
+                <Button variant="outline">Back to Dashboard</Button>
+              </Link>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -479,7 +533,7 @@ export default function EditProductPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Thumbnail Image
                   </label>
-                  
+
                   {/* URL Input */}
                   <Input
                     type="url"
@@ -488,7 +542,7 @@ export default function EditProductPage() {
                     onChange={handleInputChange}
                     placeholder="https://example.com/thumbnail.jpg"
                   />
-                  
+
                   {/* Upload Section */}
                   <div className="flex items-center space-x-4">
                     <input
@@ -511,14 +565,24 @@ export default function EditProductPage() {
                         </>
                       ) : (
                         <>
-                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          <svg
+                            className="h-4 w-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
                           </svg>
                           Upload Thumbnail
                         </>
                       )}
                     </label>
-                    
+
                     {/* Upload Progress */}
                     {uploadProgress.thumbnail > 0 && uploadProgress.thumbnail < 100 && (
                       <div className="flex-1 max-w-xs">
@@ -528,7 +592,9 @@ export default function EditProductPage() {
                             style={{ width: `${uploadProgress.thumbnail}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs text-gray-500 mt-1">{uploadProgress.thumbnail}%</span>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {uploadProgress.thumbnail}%
+                        </span>
                       </div>
                     )}
                   </div>
@@ -557,7 +623,7 @@ export default function EditProductPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Primary Image
                   </label>
-                  
+
                   {/* URL Input */}
                   <Input
                     type="url"
@@ -566,7 +632,7 @@ export default function EditProductPage() {
                     onChange={handleInputChange}
                     placeholder="https://example.com/primary.jpg"
                   />
-                  
+
                   {/* Upload Section */}
                   <div className="flex items-center space-x-4">
                     <input
@@ -589,14 +655,24 @@ export default function EditProductPage() {
                         </>
                       ) : (
                         <>
-                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          <svg
+                            className="h-4 w-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
                           </svg>
                           Upload Primary Image
                         </>
                       )}
                     </label>
-                    
+
                     {/* Upload Progress */}
                     {uploadProgress.primary > 0 && uploadProgress.primary < 100 && (
                       <div className="flex-1 max-w-xs">
@@ -606,7 +682,9 @@ export default function EditProductPage() {
                             style={{ width: `${uploadProgress.primary}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs text-gray-500 mt-1">{uploadProgress.primary}%</span>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {uploadProgress.primary}%
+                        </span>
                       </div>
                     )}
                   </div>
@@ -627,6 +705,109 @@ export default function EditProductPage() {
 
                   <p className="text-xs text-gray-500">
                     Upload PNG, JPG, JPEG, or WebP (max 5MB) or enter URL manually
+                  </p>
+                </div>
+
+                {/* Additional Images */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Additional Images (Optional)
+                  </label>
+
+                  {/* Upload Section */}
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      id="additional-upload"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      multiple
+                      onChange={handleAdditionalImagesSelect}
+                      className="hidden"
+                      disabled={formData.additional_images.length >= 5}
+                    />
+                    <label
+                      htmlFor="additional-upload"
+                      className={`cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
+                        uploading.additional || formData.additional_images.length >= 5
+                          ? 'opacity-50 cursor-not-allowed'
+                          : ''
+                      }`}
+                    >
+                      {uploading.additional ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="h-4 w-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
+                          {formData.additional_images.length >= 5
+                            ? 'Max Images Reached'
+                            : 'Add Additional Images'}
+                        </>
+                      )}
+                    </label>
+
+                    {/* Upload Progress */}
+                    {uploadProgress.additional > 0 && uploadProgress.additional < 100 && (
+                      <div className="flex-1 max-w-xs">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress.additional}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {uploadProgress.additional}%
+                        </span>
+                      </div>
+                    )}
+
+                    <span className="text-sm text-gray-500">
+                      {formData.additional_images.length}/5 images
+                    </span>
+                  </div>
+
+                  {/* Additional Images Grid */}
+                  {formData.additional_images.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
+                      {formData.additional_images.map((imageUrl, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={imageUrl}
+                            alt={`Additional image ${index + 1}`}
+                            className="w-full h-24 object-cover border border-gray-300 dark:border-gray-600 rounded-lg"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeAdditionalImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                            title="Remove image"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Upload up to 5 additional images (PNG, JPG, JPEG, WebP, max 5MB each)
                   </p>
                 </div>
               </div>

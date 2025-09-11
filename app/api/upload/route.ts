@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,25 +29,40 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Create unique filename
+    // Create unique filename with better sanitization
     const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filename = `${timestamp}-${originalName}`;
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const baseName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+    const sanitizedName = baseName
+      .replace(/[^a-zA-Z0-9-_]/g, '_') // Replace special chars with underscore
+      .replace(/_+/g, '_') // Replace multiple underscores with single one
+      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+    const filename = `${timestamp}-${sanitizedName}.${fileExtension.toLowerCase()}`;
 
-    // Define upload directory
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'constraints');
+    // Get bucket name from query parameter or default to 'gift-items'
+    const url = new URL(request.url);
+    const bucket = url.searchParams.get('bucket') || 'gift-items';
 
-    // Create directory if it doesn't exist
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    // Upload to Supabase Storage
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available');
     }
 
-    // Save file
-    const filepath = path.join(uploadDir, filename);
-    await writeFile(filepath, buffer);
+    const { data, error } = await supabaseAdmin.storage.from(bucket).upload(filename, buffer, {
+      contentType: file.type,
+      cacheControl: '3600',
+      upsert: false,
+    });
 
-    // Return the URL for the uploaded file
-    const fileUrl = `/uploads/constraints/${filename}`;
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw new Error(`Supabase upload failed: ${error.message}`);
+    }
+
+    // Get the public URL
+    const { data: urlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(filename);
+
+    const fileUrl = urlData.publicUrl;
 
     return NextResponse.json({
       success: true,
