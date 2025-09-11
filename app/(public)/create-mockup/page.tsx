@@ -183,11 +183,20 @@ function CreateMockupContent() {
     loadProduct();
   }, [productId, router]);
 
+  // Drag and drop state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragCounter, setDragCounter] = useState(0);
+
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    processFile(file);
+  };
+
+  // Process uploaded file (shared logic for both upload and drop)
+  const processFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file');
       return;
@@ -200,7 +209,47 @@ function CreateMockupContent() {
 
     setUploadedFile(file);
     setError(null);
-  };
+  }, []);
+
+  // Handle drag events
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter((prev) => prev + 1);
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragCounter((prev) => {
+      const newCounter = prev - 1;
+      if (newCounter === 0) {
+        setIsDragging(false);
+      }
+      return newCounter;
+    });
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      setDragCounter(0);
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        processFile(files[0]); // Only take the first file
+      }
+    },
+    [processFile]
+  );
 
   // Process logo (remove background)
   const processLogo = async () => {
@@ -549,7 +598,17 @@ function CreateMockupContent() {
                 </CardHeader>
                 <CardBody>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
+                        isDragging
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-105'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                      }`}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
                       <input
                         type="file"
                         accept="image/*"
@@ -560,19 +619,35 @@ function CreateMockupContent() {
                       <label htmlFor="logo-upload" className="cursor-pointer block">
                         {uploadedFile ? (
                           <div>
-                            <div className="text-green-600 mb-2">✓</div>
-                            <p className="text-gray-900 dark:text-gray-100">{uploadedFile.name}</p>
-                            <p className="text-sm text-gray-500 mt-2">Click to change file</p>
+                            <div className="text-green-600 mb-2 text-4xl">✓</div>
+                            <p className="text-gray-900 dark:text-gray-100 font-medium">
+                              {uploadedFile.name}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-2">
+                              Click to change file or drag a new one
+                            </p>
                           </div>
                         ) : (
                           <div>
-                            <div className="text-4xl text-gray-400 mb-2">📁</div>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              Click to upload your logo
-                            </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                              PNG, JPG, WebP, or HEIC up to 10MB
-                            </p>
+                            {isDragging ? (
+                              <div>
+                                <div className="text-4xl text-blue-500 mb-2">⬇️</div>
+                                <p className="text-blue-600 dark:text-blue-400 font-medium">
+                                  Drop your logo here
+                                </p>
+                                <p className="text-sm text-blue-500 mt-2">Release to upload</p>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="text-4xl text-gray-400 mb-2">🎨</div>
+                                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                                  Drag & drop your logo or click to upload
+                                </p>
+                                <p className="text-sm text-gray-500 mt-2">
+                                  PNG, JPG, WebP, or HEIC up to 10MB
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </label>
