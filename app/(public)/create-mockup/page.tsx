@@ -132,7 +132,7 @@ function CreateMockupContent() {
   // Services
   const [enhancer, setEnhancer] = useState<OutputEnhancer | null>(null);
   const [converter] = useState(() => new FormatConverter());
-  const [validator] = useState(() => new QualityValidator());
+  const [_validator] = useState(() => new QualityValidator());
   const [cache] = useState(() => new ResultCache());
 
   // Initialize enhancer on client
@@ -196,7 +196,7 @@ function CreateMockupContent() {
 
   // Drag and drop state
   const [isDragging, setIsDragging] = useState(false);
-  const [dragCounter, setDragCounter] = useState(0);
+  const [_dragCounter, setDragCounter] = useState(0);
 
   // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -754,7 +754,11 @@ function CreateMockupContent() {
                             name="placement"
                             value="horizontal"
                             checked={selectedPlacement === 'horizontal'}
-                            onChange={(e) => setSelectedPlacement(e.target.value as any)}
+                            onChange={(e) =>
+                              setSelectedPlacement(
+                                e.target.value as 'horizontal' | 'vertical' | 'all_over'
+                              )
+                            }
                             className="mr-3"
                           />
                           <div>
@@ -773,7 +777,11 @@ function CreateMockupContent() {
                             name="placement"
                             value="vertical"
                             checked={selectedPlacement === 'vertical'}
-                            onChange={(e) => setSelectedPlacement(e.target.value as any)}
+                            onChange={(e) =>
+                              setSelectedPlacement(
+                                e.target.value as 'horizontal' | 'vertical' | 'all_over'
+                              )
+                            }
                             className="mr-3"
                           />
                           <div>
@@ -792,7 +800,11 @@ function CreateMockupContent() {
                             name="placement"
                             value="all_over"
                             checked={selectedPlacement === 'all_over'}
-                            onChange={(e) => setSelectedPlacement(e.target.value as any)}
+                            onChange={(e) =>
+                              setSelectedPlacement(
+                                e.target.value as 'horizontal' | 'vertical' | 'all_over'
+                              )
+                            }
                             className="mr-3"
                           />
                           <div>
@@ -823,12 +835,53 @@ function CreateMockupContent() {
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         Preview with current settings:
                       </p>
-                      <div className="aspect-square bg-white dark:bg-gray-900 rounded-lg overflow-hidden mb-4">
-                        <img
-                          src={generatedMockup}
-                          alt="Mockup Preview"
-                          className="w-full h-full object-contain"
-                        />
+                      <div className="aspect-square bg-white dark:bg-gray-900 rounded-lg overflow-hidden mb-4 relative">
+                        {/* Product Background */}
+                        {product?.primary_image_url && (
+                          <img
+                            src={product.primary_image_url}
+                            alt="Product"
+                            className="w-full h-full object-contain"
+                          />
+                        )}
+
+                        {/* Interactive Logo Overlay */}
+                        {processedLogo && (
+                          <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              transform: `translate(${(designAdjustments.x - 0.5) * 200}px, ${(designAdjustments.y - 0.5) * 200}px)`,
+                            }}
+                          >
+                            <div
+                              className="absolute"
+                              style={{
+                                top: '50%',
+                                left: '50%',
+                                transform: `
+                                  translate(-50%, -50%)
+                                  scale(${designAdjustments.scale})
+                                  rotate(${designAdjustments.rotation}deg)
+                                  scaleX(${designAdjustments.flipH ? -1 : 1})
+                                  scaleY(${designAdjustments.flipV ? -1 : 1})
+                                `,
+                                opacity: designAdjustments.opacity,
+                                maxWidth: '200px',
+                                maxHeight: '200px',
+                                transition: 'all 0.1s ease-out',
+                              }}
+                            >
+                              <img
+                                src={processedLogo}
+                                alt="Logo Preview"
+                                className="max-w-full max-h-full object-contain"
+                                style={{
+                                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -989,23 +1042,38 @@ function CreateMockupContent() {
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={() => setCurrentStep(3)}
-                        variant="secondary"
-                        className="flex-1"
-                      >
-                        Back to Placement
-                      </Button>
-                      <Button
-                        onClick={() => setCurrentStep(5)}
-                        className="flex-1"
-                        disabled={loading}
-                      >
-                        {validateAdjustments(designAdjustments).length > 0
-                          ? 'Continue Anyway'
-                          : 'Continue to Download'}
-                      </Button>
+                    {/* Action Buttons */}
+                    <div className="border-t pt-4">
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => setCurrentStep(3)}
+                          variant="secondary"
+                          className="flex-1"
+                        >
+                          Back to Placement
+                        </Button>
+                        <Button
+                          onClick={generateMockup}
+                          variant="outline"
+                          disabled={loading}
+                          className="flex-1"
+                        >
+                          {loading ? 'Updating...' : 'Update Mockup'}
+                        </Button>
+                        <Button
+                          onClick={() => setCurrentStep(5)}
+                          className="flex-1"
+                          disabled={loading}
+                        >
+                          {validateAdjustments(designAdjustments).length > 0
+                            ? 'Continue Anyway'
+                            : 'Continue to Download'}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500 text-center mt-2">
+                        Preview shows real-time changes. Click &quot;Update Mockup&quot; to generate
+                        final version with adjustments.
+                      </p>
                     </div>
                   </div>
                 </CardBody>
