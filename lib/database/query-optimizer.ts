@@ -3,10 +3,38 @@ import { Database } from '@/types/database';
 
 interface QueryCache {
   [key: string]: {
-    data: any;
+    data: unknown;
     timestamp: number;
     expiry: number;
   };
+}
+
+interface CategoryStats {
+  category?: string;
+  status: string;
+}
+
+interface ConstraintStats {
+  is_validated: boolean;
+}
+
+interface ProductData {
+  id: string;
+  name?: string;
+  created_at?: string;
+}
+
+interface StatisticsData {
+  productStats?: unknown;
+  categoryStats?: CategoryStats[];
+  constraintStats?: ConstraintStats[];
+  recentActivity?: ProductData[];
+}
+
+interface CategoryBreakdown {
+  total: number;
+  active: number;
+  inactive: number;
 }
 
 class QueryOptimizer {
@@ -235,24 +263,26 @@ class QueryOptimizer {
     return result;
   }
 
-  private processStatisticsData(data: any) {
+  private processStatisticsData(data: StatisticsData) {
     // Efficiently process statistics data
-    const categoryMap = new Map();
-    data.categoryStats?.forEach((item: any) => {
+    const categoryMap = new Map<string, CategoryBreakdown>();
+    data.categoryStats?.forEach((item: CategoryStats) => {
       const category = item.category || 'uncategorized';
       if (!categoryMap.has(category)) {
         categoryMap.set(category, { total: 0, active: 0, inactive: 0 });
       }
-      const stats = categoryMap.get(category);
+      const stats = categoryMap.get(category)!;
       stats.total++;
       if (item.status === 'active') stats.active++;
       else stats.inactive++;
     });
 
     const total = data.categoryStats?.length || 0;
-    const active = data.categoryStats?.filter((p: any) => p.status === 'active').length || 0;
-    const inactive = data.categoryStats?.filter((p: any) => p.status === 'inactive').length || 0;
-    
+    const active =
+      data.categoryStats?.filter((p: CategoryStats) => p.status === 'active').length || 0;
+    const inactive =
+      data.categoryStats?.filter((p: CategoryStats) => p.status === 'inactive').length || 0;
+
     // Calculate trends (mock calculation for now - can be enhanced with historical data)
     const trends = {
       totalChange: Math.floor(Math.random() * 20) - 10, // Random change between -10 and +10
@@ -276,30 +306,31 @@ class QueryOptimizer {
         count: categoryMap.size,
         breakdown: Object.fromEntries(categoryMap),
         mostPopular: Array.from(categoryMap.entries())
-          .sort(([, a], [, b]) => (b as any).total - (a as any).total)
+          .sort(([, a], [, b]) => b.total - a.total)
           .slice(0, 5)
-          .map(([name, stats]) => ({ name, ...(stats as any) })),
+          .map(([name, stats]) => ({ name, ...stats })),
       },
       constraints: {
         total: data.constraintStats?.length || 0,
-        validated: data.constraintStats?.filter((c: any) => c.is_validated).length || 0,
+        validated: data.constraintStats?.filter((c: ConstraintStats) => c.is_validated).length || 0,
       },
       recentActivity: data.recentActivity || [],
-      popularProducts: data.recentActivity?.slice(0, 10).map((product: any) => ({
-        id: product.id,
-        name: product.name || 'Unknown Product',
-        sku: product.id.slice(0, 8).toUpperCase(),
-        category: 'general',
-        thumbnailUrl: null,
-        createdAt: product.created_at || new Date().toISOString(),
-        popularityScore: Math.floor(Math.random() * 100) + 1,
-      })) || [],
+      popularProducts:
+        data.recentActivity?.slice(0, 10).map((product: ProductData) => ({
+          id: product.id,
+          name: product.name || 'Unknown Product',
+          sku: product.id.slice(0, 8).toUpperCase(),
+          category: 'general',
+          thumbnailUrl: null,
+          createdAt: product.created_at || new Date().toISOString(),
+          popularityScore: Math.floor(Math.random() * 100) + 1,
+        })) || [],
       lastUpdated: new Date().toISOString(),
     };
   }
 
   // Cache management
-  private getFromCache(key: string, customExpiry?: number): any | null {
+  private getFromCache(key: string, customExpiry?: number): unknown | null {
     const cached = this.cache[key];
     if (!cached) return null;
 
@@ -314,7 +345,7 @@ class QueryOptimizer {
     return cached.data;
   }
 
-  private setCache(key: string, data: any, duration: number): void {
+  private setCache(key: string, data: unknown, duration: number): void {
     this.cache[key] = {
       data,
       timestamp: Date.now(),
