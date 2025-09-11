@@ -109,6 +109,7 @@ function CreateMockupContent() {
   const [selectedPlacement, setSelectedPlacement] = useState<
     'horizontal' | 'vertical' | 'all_over'
   >('horizontal');
+  const [currentConstraint, setCurrentConstraint] = useState<Constraint | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [processedLogo, setProcessedLogo] = useState<string | null>(null);
   const [generatedMockup, setGeneratedMockup] = useState<string | null>(null);
@@ -186,6 +187,22 @@ function CreateMockupContent() {
           setSelectedPlacement('vertical');
         } else if (data.product.all_over_enabled) {
           setSelectedPlacement('all_over');
+        }
+
+        // Set current constraint for default placement
+        if (data.constraints && data.constraints.length > 0) {
+          const defaultConstraint = data.constraints.find(
+            (c: Constraint) =>
+              c.placement_type ===
+              (data.product.horizontal_enabled
+                ? 'horizontal'
+                : data.product.vertical_enabled
+                  ? 'vertical'
+                  : 'all_over')
+          );
+          if (defaultConstraint) {
+            setCurrentConstraint(defaultConstraint);
+          }
         }
       } catch (err) {
         console.error('Error loading product:', err);
@@ -314,6 +331,7 @@ function CreateMockupContent() {
     if (!constraint) {
       constraint = createDefaultConstraint(product.id, selectedPlacement);
     }
+    setCurrentConstraint(constraint);
     return constraint;
   };
 
@@ -724,6 +742,96 @@ function CreateMockupContent() {
                 )}
               </CardBody>
             </Card>
+
+            {/* Constraint Display - Show when mockup is generated */}
+            {generatedMockup && currentConstraint && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Placement Constraints</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <div className="space-y-4">
+                    {/* Constraint Image if available */}
+                    {currentConstraint.constraint_image_url && (
+                      <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-4">
+                        <img
+                          src={currentConstraint.constraint_image_url}
+                          alt="Constraint Zones"
+                          className="w-full h-full object-contain"
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                          Green areas show safe logo placement zones
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Constraint Details */}
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <h5 className="font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Current Limits ({selectedPlacement})
+                      </h5>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Min Size:</span>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {currentConstraint.min_logo_width || 50}x
+                            {currentConstraint.min_logo_height || 50}px
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Max Size:</span>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {currentConstraint.max_logo_width || 500}x
+                            {currentConstraint.max_logo_height || 500}px
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            Default Position:
+                          </span>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            X: {currentConstraint.default_position_x || 'Center'}, Y:{' '}
+                            {currentConstraint.default_position_y || 'Center'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Safe Area:</span>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {currentConstraint.detected_area_percentage
+                              ? `${currentConstraint.detected_area_percentage}% of product`
+                              : 'Full placement'}
+                          </p>
+                        </div>
+                      </div>
+                      {currentConstraint.guidelines && (
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                          <span className="text-gray-500 dark:text-gray-400 text-sm">
+                            Guidelines:
+                          </span>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                            {currentConstraint.guidelines}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Validation Status */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Constraint Status:</span>
+                      <span
+                        className={`font-medium ${
+                          currentConstraint.is_validated
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-yellow-600 dark:text-yellow-400'
+                        }`}
+                      >
+                        {currentConstraint.is_validated ? '✓ Validated' : '⚠ Default'}
+                      </span>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Controls */}
@@ -836,11 +944,18 @@ function CreateMockupContent() {
                             name="placement"
                             value="horizontal"
                             checked={selectedPlacement === 'horizontal'}
-                            onChange={(e) =>
-                              setSelectedPlacement(
-                                e.target.value as 'horizontal' | 'vertical' | 'all_over'
-                              )
-                            }
+                            onChange={(e) => {
+                              const newPlacement = e.target.value as
+                                | 'horizontal'
+                                | 'vertical'
+                                | 'all_over';
+                              setSelectedPlacement(newPlacement);
+                              // Update current constraint
+                              const constraint =
+                                constraints.find((c) => c.placement_type === newPlacement) ||
+                                createDefaultConstraint(product.id, newPlacement);
+                              setCurrentConstraint(constraint);
+                            }}
                             className="mr-3"
                           />
                           <div>
@@ -859,11 +974,18 @@ function CreateMockupContent() {
                             name="placement"
                             value="vertical"
                             checked={selectedPlacement === 'vertical'}
-                            onChange={(e) =>
-                              setSelectedPlacement(
-                                e.target.value as 'horizontal' | 'vertical' | 'all_over'
-                              )
-                            }
+                            onChange={(e) => {
+                              const newPlacement = e.target.value as
+                                | 'horizontal'
+                                | 'vertical'
+                                | 'all_over';
+                              setSelectedPlacement(newPlacement);
+                              // Update current constraint
+                              const constraint =
+                                constraints.find((c) => c.placement_type === newPlacement) ||
+                                createDefaultConstraint(product.id, newPlacement);
+                              setCurrentConstraint(constraint);
+                            }}
                             className="mr-3"
                           />
                           <div>
@@ -882,11 +1004,18 @@ function CreateMockupContent() {
                             name="placement"
                             value="all_over"
                             checked={selectedPlacement === 'all_over'}
-                            onChange={(e) =>
-                              setSelectedPlacement(
-                                e.target.value as 'horizontal' | 'vertical' | 'all_over'
-                              )
-                            }
+                            onChange={(e) => {
+                              const newPlacement = e.target.value as
+                                | 'horizontal'
+                                | 'vertical'
+                                | 'all_over';
+                              setSelectedPlacement(newPlacement);
+                              // Update current constraint
+                              const constraint =
+                                constraints.find((c) => c.placement_type === newPlacement) ||
+                                createDefaultConstraint(product.id, newPlacement);
+                              setCurrentConstraint(constraint);
+                            }}
                             className="mr-3"
                           />
                           <div>
