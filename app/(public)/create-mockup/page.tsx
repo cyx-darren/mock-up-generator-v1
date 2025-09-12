@@ -110,6 +110,7 @@ function CreateMockupContent() {
     'horizontal' | 'vertical' | 'all_over'
   >('horizontal');
   const [currentConstraint, setCurrentConstraint] = useState<Constraint | null>(null);
+  const [showConstraintOverlay, setShowConstraintOverlay] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [processedLogo, setProcessedLogo] = useState<string | null>(null);
   const [generatedMockup, setGeneratedMockup] = useState<string | null>(null);
@@ -134,6 +135,7 @@ function CreateMockupContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>('');
+  const [progressPercentage, setProgressPercentage] = useState<number>(0);
 
   // Services
   const [enhancer, setEnhancer] = useState<OutputEnhancer | null>(null);
@@ -368,6 +370,7 @@ function CreateMockupContent() {
     try {
       setLoading(true);
       setError(null);
+      setProgressPercentage(0);
 
       // Find selected constraint or create a default one
       let constraint = constraints.find((c) => c.placement_type === selectedPlacement);
@@ -375,6 +378,7 @@ function CreateMockupContent() {
         // Create default constraint for missing placement type
         constraint = createDefaultConstraint(product.id, selectedPlacement);
         setProgress(`Using default ${selectedPlacement} placement settings...`);
+        setProgressPercentage(10);
       }
 
       // Check cache first
@@ -385,9 +389,13 @@ function CreateMockupContent() {
         constraintVersion: constraint.id,
       });
 
+      setProgress('Checking cache...');
+      setProgressPercentage(20);
+
       const cachedResult = await cache.get(cacheKey);
       if (cachedResult) {
         setProgress('Retrieved from cache!');
+        setProgressPercentage(100);
         setGeneratedMockup(cachedResult.result);
         setCurrentStep(5);
         return;
@@ -395,6 +403,17 @@ function CreateMockupContent() {
 
       // Generate mockup via API
       setProgress('Preparing your mockup...');
+      setProgressPercentage(30);
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgressPercentage((prev) => {
+          if (prev < 85) {
+            return prev + Math.random() * 15;
+          }
+          return prev;
+        });
+      }, 500);
 
       const apiResponse = await fetch('/api/generate-mockup', {
         method: 'POST',
@@ -428,6 +447,10 @@ function CreateMockupContent() {
       const apiResult = await apiResponse.json();
       const result = apiResult.result;
 
+      clearInterval(progressInterval);
+      setProgressPercentage(90);
+      setProgress('Finalizing mockup...');
+
       if (!result.generatedImageUrl) {
         throw new Error('No image URL returned from pipeline');
       }
@@ -444,16 +467,30 @@ function CreateMockupContent() {
 
       setGeneratedMockup(result.generatedImageUrl);
       setOriginalMockup(result.generatedImageUrl);
-      setCurrentStep(4);
+      setProgressPercentage(100);
+      setProgress('Mockup generated successfully!');
+
+      setTimeout(() => {
+        setCurrentStep(4);
+        setProgressPercentage(0);
+        setProgress('');
+      }, 500);
 
       // Generate download formats
       await generateDownloadFormats(result.generatedImageUrl);
     } catch (err) {
       console.error('Error generating mockup:', err);
       setError('Failed to generate mockup. Please try again.');
+      if (typeof progressInterval !== 'undefined') {
+        clearInterval(progressInterval);
+      }
+      setProgressPercentage(0);
     } finally {
       setLoading(false);
-      setProgress('');
+      if (progressPercentage !== 100) {
+        setProgress('');
+        setProgressPercentage(0);
+      }
     }
   };
 
@@ -535,6 +572,17 @@ function CreateMockupContent() {
       setLoading(true);
       setError(null);
       setProgress('Applying your adjustments...');
+      setProgressPercentage(0);
+
+      // Simulate progress for adjustment
+      const adjustProgressInterval = setInterval(() => {
+        setProgressPercentage((prev) => {
+          if (prev < 90) {
+            return prev + Math.random() * 20;
+          }
+          return prev;
+        });
+      }, 600);
 
       // Call API to generate adjusted mockup
       const response = await fetch('/api/generate-mockup', {
@@ -569,6 +617,10 @@ function CreateMockupContent() {
       const result = await response.json();
       const newMockupUrl = result.result.generatedImageUrl;
 
+      clearInterval(adjustProgressInterval);
+      setProgressPercentage(95);
+      setProgress('Finalizing adjustments...');
+
       if (!newMockupUrl) {
         throw new Error('No adjusted mockup returned');
       }
@@ -585,14 +637,29 @@ function CreateMockupContent() {
       setAdjustmentHistory((prev) => [...prev, historyItem]);
       setGeneratedMockup(newMockupUrl);
 
+      setProgressPercentage(100);
+      setProgress('Adjustments applied successfully!');
+
       // Generate download formats for new mockup
       await generateDownloadFormats(newMockupUrl);
+
+      setTimeout(() => {
+        setProgressPercentage(0);
+        setProgress('');
+      }, 1000);
     } catch (err) {
       console.error('Error applying adjustments:', err);
       setError(err instanceof Error ? err.message : 'Failed to apply adjustments');
+      if (typeof adjustProgressInterval !== 'undefined') {
+        clearInterval(adjustProgressInterval);
+      }
+      setProgressPercentage(0);
     } finally {
       setLoading(false);
-      setProgress('');
+      if (progressPercentage !== 100) {
+        setProgress('');
+        setProgressPercentage(0);
+      }
     }
   };
 
@@ -692,9 +759,24 @@ function CreateMockupContent() {
 
         {loading && progress && (
           <Alert variant="info" className="mb-6">
-            <div className="flex items-center">
-              <Spinner className="mr-3" />
-              {progress}
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <Spinner className="mr-3" />
+                <span className="font-medium">{progress}</span>
+              </div>
+              {progressPercentage > 0 && (
+                <div className="w-full">
+                  <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    {Math.round(progressPercentage)}% complete
+                  </p>
+                </div>
+              )}
             </div>
           </Alert>
         )}
@@ -709,13 +791,29 @@ function CreateMockupContent() {
               <CardBody>
                 {product && (
                   <div>
-                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 overflow-hidden">
+                    <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 overflow-hidden relative">
                       {generatedMockup ? (
-                        <img
-                          src={generatedMockup}
-                          alt="Generated Mockup"
-                          className="w-full h-full object-contain"
-                        />
+                        <>
+                          <img
+                            src={generatedMockup}
+                            alt="Generated Mockup"
+                            className="w-full h-full object-contain"
+                          />
+                          {/* Constraint Overlay - only show when toggled on */}
+                          {showConstraintOverlay && currentConstraint?.constraint_image_url && (
+                            <div className="absolute inset-0 pointer-events-none">
+                              <img
+                                src={currentConstraint.constraint_image_url}
+                                alt="Constraint Zones"
+                                className="w-full h-full object-contain"
+                                style={{
+                                  opacity: 0.5,
+                                  mixBlendMode: 'normal',
+                                }}
+                              />
+                            </div>
+                          )}
+                        </>
                       ) : product.primary_image_url ? (
                         <img
                           src={product.primary_image_url}
@@ -743,25 +841,37 @@ function CreateMockupContent() {
               </CardBody>
             </Card>
 
-            {/* Constraint Display - Show when mockup is generated */}
+            {/* Constraint Info with Toggle */}
             {generatedMockup && currentConstraint && (
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle>Placement Constraints</CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <div className="space-y-4">
-                    {/* Constraint Image if available */}
+                  <div className="space-y-3">
+                    {/* Toggle for constraint overlay */}
                     {currentConstraint.constraint_image_url && (
-                      <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden mb-4">
-                        <img
-                          src={currentConstraint.constraint_image_url}
-                          alt="Constraint Zones"
-                          className="w-full h-full object-contain"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                          Green areas show safe logo placement zones
-                        </p>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Show Constraint Zones
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Green overlay shows safe placement areas
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setShowConstraintOverlay(!showConstraintOverlay)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            showConstraintOverlay ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              showConstraintOverlay ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
                       </div>
                     )}
 
@@ -1027,7 +1137,14 @@ function CreateMockupContent() {
                     </div>
 
                     <Button onClick={generateMockup} disabled={loading} className="w-full">
-                      {loading ? 'Generating...' : 'Generate Mockup'}
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <Spinner className="mr-2" size="sm" />
+                          <span>Generating...</span>
+                        </div>
+                      ) : (
+                        'Generate Mockup'
+                      )}
                     </Button>
                   </div>
                 </CardBody>

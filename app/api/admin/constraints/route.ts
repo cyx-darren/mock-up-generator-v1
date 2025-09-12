@@ -68,38 +68,66 @@ export async function POST(request: NextRequest) {
       .eq('placement_type', placementType)
       .single();
 
-    if (existingConstraint) {
-      return NextResponse.json(
-        { error: 'Constraint already exists for this placement type. Use PUT to update.' },
-        { status: 409 }
-      );
-    }
+    let constraint, constraintError;
 
-    // Create the constraint
-    const { data: constraint, error: constraintError } = await supabase
-      .from('placement_constraints')
-      .insert({
-        item_id: productId,
-        placement_type: placementType,
-        constraint_image_url: constraintImageUrl,
-        detected_area_pixels: detectedAreaPixels,
-        detected_area_percentage: detectedAreaPercentage,
-        min_logo_width: minLogoWidth,
-        min_logo_height: minLogoHeight,
-        max_logo_width: maxLogoWidth,
-        max_logo_height: maxLogoHeight,
-        default_x_position: defaultXPosition,
-        default_y_position: defaultYPosition,
-        guidelines_text: guidelinesText,
-        pattern_settings: patternSettings,
-        is_validated: detectedAreaPixels > 0,
-      })
-      .select()
-      .single();
+    if (existingConstraint) {
+      // Update existing constraint
+      const { data: updatedConstraint, error: updateError } = await supabase
+        .from('placement_constraints')
+        .update({
+          constraint_image_url: constraintImageUrl,
+          detected_area_pixels: detectedAreaPixels,
+          detected_area_percentage: detectedAreaPercentage,
+          min_logo_width: minLogoWidth,
+          min_logo_height: minLogoHeight,
+          max_logo_width: maxLogoWidth,
+          max_logo_height: maxLogoHeight,
+          default_x_position: defaultXPosition,
+          default_y_position: defaultYPosition,
+          guidelines_text: guidelinesText,
+          pattern_settings: patternSettings,
+          is_validated: detectedAreaPixels > 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingConstraint.id)
+        .select()
+        .single();
+
+      constraint = updatedConstraint;
+      constraintError = updateError;
+    } else {
+      // Create new constraint
+      const { data: newConstraint, error: insertError } = await supabase
+        .from('placement_constraints')
+        .insert({
+          item_id: productId,
+          placement_type: placementType,
+          constraint_image_url: constraintImageUrl,
+          detected_area_pixels: detectedAreaPixels,
+          detected_area_percentage: detectedAreaPercentage,
+          min_logo_width: minLogoWidth,
+          min_logo_height: minLogoHeight,
+          max_logo_width: maxLogoWidth,
+          max_logo_height: maxLogoHeight,
+          default_x_position: defaultXPosition,
+          default_y_position: defaultYPosition,
+          guidelines_text: guidelinesText,
+          pattern_settings: patternSettings,
+          is_validated: detectedAreaPixels > 0,
+        })
+        .select()
+        .single();
+
+      constraint = newConstraint;
+      constraintError = insertError;
+    }
 
     if (constraintError) {
       console.error('Database error:', constraintError);
-      return NextResponse.json({ error: 'Failed to create constraint' }, { status: 500 });
+      return NextResponse.json(
+        { error: `Failed to ${existingConstraint ? 'update' : 'create'} constraint` },
+        { status: 500 }
+      );
     }
 
     // Update the product to enable the placement type
@@ -122,7 +150,7 @@ export async function POST(request: NextRequest) {
     // Log the action
     await supabase.from('audit_log').insert({
       admin_user_id: session.user.id,
-      action: 'CREATE',
+      action: existingConstraint ? 'UPDATE' : 'CREATE',
       entity_type: 'placement_constraint',
       entity_id: constraint.id,
       new_values: constraint,
@@ -133,7 +161,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       constraint,
-      message: 'Constraint created successfully',
+      message: `Constraint ${existingConstraint ? 'updated' : 'created'} successfully`,
+      action: existingConstraint ? 'updated' : 'created',
     });
   } catch (error) {
     console.error('Create constraint error:', error);
