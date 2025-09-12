@@ -368,9 +368,14 @@ function CreateMockupContent() {
     if (!product || !processedLogo) return;
 
     try {
+      // Immediately show progress UI
       setLoading(true);
       setError(null);
+      setProgress('Initializing mockup generation...');
       setProgressPercentage(0);
+
+      // Small delay to ensure UI updates
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Find selected constraint or create a default one
       let constraint = constraints.find((c) => c.placement_type === selectedPlacement);
@@ -379,6 +384,7 @@ function CreateMockupContent() {
         constraint = createDefaultConstraint(product.id, selectedPlacement);
         setProgress(`Using default ${selectedPlacement} placement settings...`);
         setProgressPercentage(10);
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Check cache first
@@ -391,29 +397,32 @@ function CreateMockupContent() {
 
       setProgress('Checking cache...');
       setProgressPercentage(20);
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const cachedResult = await cache.get(cacheKey);
       if (cachedResult) {
         setProgress('Retrieved from cache!');
         setProgressPercentage(100);
+        await new Promise((resolve) => setTimeout(resolve, 500));
         setGeneratedMockup(cachedResult.result);
-        setCurrentStep(5);
+        setCurrentStep(4);
         return;
       }
 
       // Generate mockup via API
       setProgress('Preparing your mockup...');
       setProgressPercentage(30);
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setProgressPercentage((prev) => {
           if (prev < 85) {
-            return prev + Math.random() * 15;
+            return prev + Math.random() * 10;
           }
           return prev;
         });
-      }, 500);
+      }, 800);
 
       const apiResponse = await fetch('/api/generate-mockup', {
         method: 'POST',
@@ -484,13 +493,10 @@ function CreateMockupContent() {
       if (typeof progressInterval !== 'undefined') {
         clearInterval(progressInterval);
       }
-      setProgressPercentage(0);
     } finally {
       setLoading(false);
-      if (progressPercentage !== 100) {
-        setProgress('');
-        setProgressPercentage(0);
-      }
+      setProgress('');
+      setProgressPercentage(0);
     }
   };
 
@@ -569,20 +575,24 @@ function CreateMockupContent() {
     if (!product || !originalMockup) return;
 
     try {
+      // Immediately show progress UI
       setLoading(true);
       setError(null);
       setProgress('Applying your adjustments...');
       setProgressPercentage(0);
 
+      // Small delay to ensure UI updates
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Simulate progress for adjustment
       const adjustProgressInterval = setInterval(() => {
         setProgressPercentage((prev) => {
-          if (prev < 90) {
-            return prev + Math.random() * 20;
+          if (prev < 85) {
+            return prev + Math.random() * 15;
           }
           return prev;
         });
-      }, 600);
+      }, 800);
 
       // Call API to generate adjusted mockup
       const response = await fetch('/api/generate-mockup', {
@@ -757,28 +767,48 @@ function CreateMockupContent() {
           </Alert>
         )}
 
+        {/* Progress Modal Overlay */}
         {loading && progress && (
-          <Alert variant="info" className="mb-6">
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <Spinner className="mr-3" />
-                <span className="font-medium">{progress}</span>
-              </div>
-              {progressPercentage > 0 && (
-                <div className="w-full">
-                  <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${Math.min(progressPercentage, 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    {Math.round(progressPercentage)}% complete
-                  </p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black bg-opacity-50" />
+
+            {/* Progress Modal */}
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+              <div className="text-center">
+                {/* Spinner */}
+                <div className="flex justify-center mb-4">
+                  <Spinner size="lg" className="w-12 h-12" />
                 </div>
-              )}
+
+                {/* Progress Text */}
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  Creating Your Mockup
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">{progress}</p>
+
+                {/* Progress Bar */}
+                {progressPercentage > 0 && (
+                  <div className="space-y-3">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {Math.round(progressPercentage)}% complete
+                    </p>
+                  </div>
+                )}
+
+                {/* Estimated time */}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                  This usually takes 10-30 seconds
+                </p>
+              </div>
             </div>
-          </Alert>
+          </div>
         )}
 
         <div className="grid lg:grid-cols-2 gap-8">
