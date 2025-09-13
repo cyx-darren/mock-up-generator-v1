@@ -91,7 +91,8 @@ class QueryOptimizer {
         all_over_enabled
       `
       )
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .eq('status', 'active');
 
     // Apply filters with proper indexing
     if (options.category && options.category !== 'all') {

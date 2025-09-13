@@ -133,7 +133,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
 
   // Handle bulk delete
   const handleBulkDelete = async () => {
-    if (!can('products.delete')) {
+    if (!can('canDeleteProducts')) {
       setError("You don't have permission to delete products");
       return;
     }
@@ -164,7 +164,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
 
   // Handle product deletion
   const handleDelete = async (productId: string) => {
-    if (!can('products.delete')) {
+    if (!can('canDeleteProducts')) {
       setError("You don't have permission to delete products");
       return;
     }
@@ -354,7 +354,7 @@ export function ProductListManager({ refreshTrigger = 0 }: ProductListManagerPro
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              {selectedProducts.length > 0 && can('products.delete') && (
+              {selectedProducts.length > 0 && can('canDeleteProducts') && (
                 <Button variant="danger" onClick={handleBulkDelete}>
                   Delete Selected ({selectedProducts.length})
                 </Button>
