@@ -34,6 +34,11 @@ export async function POST(request: NextRequest) {
       guidelinesText,
       patternSettings = {},
       isEnabled = true,
+      // New green area coordinates
+      detectedAreaX,
+      detectedAreaY,
+      detectedAreaWidth,
+      detectedAreaHeight,
     } = body;
 
     // Validate required fields
@@ -78,6 +83,10 @@ export async function POST(request: NextRequest) {
           constraint_image_url: constraintImageUrl,
           detected_area_pixels: detectedAreaPixels,
           detected_area_percentage: detectedAreaPercentage,
+          detected_area_x: detectedAreaX,
+          detected_area_y: detectedAreaY,
+          detected_area_width: detectedAreaWidth,
+          detected_area_height: detectedAreaHeight,
           min_logo_width: minLogoWidth,
           min_logo_height: minLogoHeight,
           max_logo_width: maxLogoWidth,
@@ -105,6 +114,10 @@ export async function POST(request: NextRequest) {
           constraint_image_url: constraintImageUrl,
           detected_area_pixels: detectedAreaPixels,
           detected_area_percentage: detectedAreaPercentage,
+          detected_area_x: detectedAreaX,
+          detected_area_y: detectedAreaY,
+          detected_area_width: detectedAreaWidth,
+          detected_area_height: detectedAreaHeight,
           min_logo_width: minLogoWidth,
           min_logo_height: minLogoHeight,
           max_logo_width: maxLogoWidth,

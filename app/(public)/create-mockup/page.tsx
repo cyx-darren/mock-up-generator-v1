@@ -360,6 +360,48 @@ function CreateMockupContent() {
       warnings.push(`Logo height too large (max: ${constraint.max_logo_height}px)`);
     }
 
+    // Check if logo fits within the detected green constraint area
+    if (constraint.detected_area_width && constraint.detected_area_height) {
+      const constraintAreaWidth = constraint.detected_area_width;
+      const constraintAreaHeight = constraint.detected_area_height;
+      const padding = 10; // Small padding from green area edges
+
+      if (scaledWidth > constraintAreaWidth - padding) {
+        warnings.push(
+          `Logo width exceeds constraint area (max within green zone: ${constraintAreaWidth - padding}px)`
+        );
+      }
+      if (scaledHeight > constraintAreaHeight - padding) {
+        warnings.push(
+          `Logo height exceeds constraint area (max within green zone: ${constraintAreaHeight - padding}px)`
+        );
+      }
+
+      // Calculate position bounds considering the scaled logo size
+      const logoX = adjustments.x;
+      const logoY = adjustments.y;
+      const halfLogoWidth = scaledWidth / 2;
+      const halfLogoHeight = scaledHeight / 2;
+
+      const constraintMinX = constraint.detected_area_x;
+      const constraintMinY = constraint.detected_area_y;
+      const constraintMaxX = constraint.detected_area_x + constraintAreaWidth;
+      const constraintMaxY = constraint.detected_area_y + constraintAreaHeight;
+
+      if (logoX - halfLogoWidth < constraintMinX) {
+        warnings.push(`Logo extends outside left edge of constraint area`);
+      }
+      if (logoX + halfLogoWidth > constraintMaxX) {
+        warnings.push(`Logo extends outside right edge of constraint area`);
+      }
+      if (logoY - halfLogoHeight < constraintMinY) {
+        warnings.push(`Logo extends outside top edge of constraint area`);
+      }
+      if (logoY + halfLogoHeight > constraintMaxY) {
+        warnings.push(`Logo extends outside bottom edge of constraint area`);
+      }
+    }
+
     return warnings;
   };
 

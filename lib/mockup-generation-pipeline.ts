@@ -355,6 +355,7 @@ export class MockupGenerationPipeline {
             y: constraint.default_y / imageHeight,
           },
           appliedAt: new Date(),
+          constraintData: constraint, // Store the full constraint data for AI prompt use
         },
       };
 
@@ -386,11 +387,11 @@ export class MockupGenerationPipeline {
         console.log('Server-side: using constraint defaults instead of image processing');
         console.log('Constraint data received:', constraint);
 
-        // Use actual constraint data from database with proper field names
-        const logoX = constraint?.default_x || 300;
-        const logoY = constraint?.default_y || 400;
-        const logoWidth = constraint?.max_logo_width || 150;
-        const logoHeight = constraint?.max_logo_height || 150;
+        // Use green area coordinates if available, otherwise fallback to defaults
+        const logoX = constraint?.detected_area_x || constraint?.default_x || 300;
+        const logoY = constraint?.detected_area_y || constraint?.default_y || 400;
+        const logoWidth = constraint?.detected_area_width || constraint?.max_logo_width || 150;
+        const logoHeight = constraint?.detected_area_height || constraint?.max_logo_height || 150;
 
         console.log('Using constraint placement:', { logoX, logoY, logoWidth, logoHeight });
 
@@ -520,7 +521,8 @@ export class MockupGenerationPipeline {
         constraints,
         productType,
         targetDimensions,
-        adjustments
+        adjustments,
+        constraints.metadata?.constraintData
       );
     }
 
@@ -819,7 +821,8 @@ export class MockupGenerationPipeline {
       flipH: boolean;
       flipV: boolean;
       opacity: number;
-    }
+    },
+    constraintData?: any
   ): Promise<string> {
     try {
       console.log('[generateAIMockup] Starting Canvas Compositing + AI Enhancement approach');
@@ -842,7 +845,8 @@ export class MockupGenerationPipeline {
       const enhancedImage = await this.enhanceCompositeWithAI(
         canvasComposite,
         productType,
-        targetDimensions
+        targetDimensions,
+        constraintData
       );
       console.log('[generateAIMockup] Enhanced image received, length:', enhancedImage?.length);
 
@@ -1004,7 +1008,8 @@ export class MockupGenerationPipeline {
   private async enhanceCompositeWithAI(
     compositeImageUrl: string,
     productType?: string,
-    targetDimensions?: { width: number; height: number }
+    targetDimensions?: { width: number; height: number },
+    constraintData?: any
   ): Promise<string> {
     try {
       console.log('[enhanceCompositeWithAI] Starting AI enhancement');
@@ -1025,6 +1030,17 @@ export class MockupGenerationPipeline {
 
       console.log('[enhanceCompositeWithAI] Target dimensions:', targetDimensions);
 
+      // Create constraint-specific instructions if available
+      const constraintInstructions =
+        constraintData?.detected_area_x !== undefined
+          ? `\n\nCONSTRAINT PLACEMENT:
+- The logo is positioned within a specific constraint area at coordinates (${constraintData.detected_area_x}, ${constraintData.detected_area_y})
+- The constraint area dimensions are ${constraintData.detected_area_width}x${constraintData.detected_area_height} pixels
+- This represents the valid placement zone where the logo should be positioned
+- Maintain the logo placement within this exact boundary area
+- Do not move the logo outside the defined constraint zone`
+          : '';
+
       // Enhancement prompt - NO SHADOWS, keep logo FLAT, preserve original dimensions
       const enhancementPrompt = `Enhance this ${productDescription} mockup with the logo as a FLAT print:
 
@@ -1043,7 +1059,7 @@ CRITICAL REQUIREMENTS:
 - NO artistic embellishments or effects
 - Maintain the exact product image and dimensions (${dimensionsText})
 - Keep all other elements unchanged
-- DO NOT resize, crop, or change aspect ratio
+- DO NOT resize, crop, or change aspect ratio${constraintInstructions}
 
 Output: The same image with logo as a clean, flat surface print, maintaining exact original dimensions.`;
 
@@ -1326,13 +1342,18 @@ Output: The same image with logo as a clean, flat surface print, maintaining exa
    */
   private async createDirectCompositionPrompt(
     constraints: AppliedConstraints,
-    targetDimensions: { width: number; height: number }
+    targetDimensions: { width: number; height: number },
+    constraintData?: any
   ): Promise<string> {
     const placementType = constraints.metadata.placementType;
     const position = constraints.position;
 
-    // Create placement description based on constraints
-    const placementDescription = this.createPlacementDescription(placementType, position);
+    // Create placement description based on constraints - include specific coordinates if available
+    const placementDescription = this.createPlacementDescription(
+      placementType,
+      position,
+      constraintData
+    );
 
     const prompt = `Create a HIGH-RESOLUTION, PROFESSIONAL product mockup image by compositing the provided images.
 
@@ -1518,7 +1539,8 @@ The result should be the original ${productType} with a professionally applied M
    */
   private createPlacementDescription(
     placementType: string,
-    position: { x: number; y: number }
+    position: { x: number; y: number },
+    constraintData?: any
   ): string {
     const descriptions = {
       horizontal: `horizontally centered on the main surface of the product`,
@@ -1531,12 +1553,25 @@ The result should be the original ${productType} with a professionally applied M
     let baseDescription =
       descriptions[placementType as keyof typeof descriptions] || descriptions['center'];
 
-    // Add position-specific details based on normalized coordinates
-    if (position.x < 0.3) baseDescription += ', positioned towards the left side';
-    else if (position.x > 0.7) baseDescription += ', positioned towards the right side';
+    // If we have specific constraint coordinates, use them for precise placement instructions
+    if (
+      constraintData?.detected_area_x !== undefined &&
+      constraintData?.detected_area_y !== undefined
+    ) {
+      const constraintX = constraintData.detected_area_x;
+      const constraintY = constraintData.detected_area_y;
+      const constraintWidth = constraintData.detected_area_width;
+      const constraintHeight = constraintData.detected_area_height;
 
-    if (position.y < 0.3) baseDescription += ', in the upper area';
-    else if (position.y > 0.7) baseDescription += ', in the lower area';
+      baseDescription = `within the defined placement area located at coordinates (${constraintX}, ${constraintY}) with dimensions ${constraintWidth}x${constraintHeight} pixels. This area represents the exact green constraint zone where the logo must be placed. Position the logo ONLY within this specific rectangular area - do not place it outside these boundaries`;
+    } else {
+      // Fallback to position-specific details based on normalized coordinates
+      if (position.x < 0.3) baseDescription += ', positioned towards the left side';
+      else if (position.x > 0.7) baseDescription += ', positioned towards the right side';
+
+      if (position.y < 0.3) baseDescription += ', in the upper area';
+      else if (position.y > 0.7) baseDescription += ', in the lower area';
+    }
 
     return baseDescription;
   }
