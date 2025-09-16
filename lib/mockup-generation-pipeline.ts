@@ -902,19 +902,28 @@ CRITICAL INSTRUCTIONS:
 - Size the logo appropriately to fit nicely within the green constraints
 ${
   adjustmentInstruction
-    ? `\nUSER ADJUSTMENT REQUEST: ${adjustmentInstruction}
-- Apply this adjustment while keeping the logo strictly within the green area
-- If they want it "bigger" - make it fill more of the green area
-- If they want it "as big as possible" - make it fill the entire green area
-- If they want it "smaller" - reduce its size within the green area`
+    ? `\nUSER ADJUSTMENT REQUEST: "${adjustmentInstruction}"
+
+IMPORTANT CONTEXT FOR ADJUSTMENTS:
+- "bottom of constraint" = bottom edge of the GREEN AREA in Image 3 (Constraint Guide)
+- "top of constraint" = top edge of the GREEN AREA in Image 3
+- "left" = left side of the GREEN AREA shown in the constraint guide
+- "right" = right side of the GREEN AREA shown in the constraint guide
+- "bigger" = expand the logo within GREEN AREA boundaries
+- "maximum size" = fill the entire GREEN AREA completely
+- "move it lower" = move toward the bottom of the GREEN AREA
+- "move it higher" = move toward the top of the GREEN AREA
+- All positions and sizes are relative to the GREEN AREA, not the entire product
+- Apply this adjustment while keeping the logo strictly within the green boundaries`
     : ''
 }
 
 Generate a professional mockup by:
 1. Using the Product Image as the base
-2. Placing the Logo Image ONLY within the green area shown in the Constraint Guide
+2. Placing the Logo Image ONLY within the green area shown in the Constraint Guide (Image 3)
 3. Making it look realistic with proper shadows, perspective, and blending
 4. Ensuring the logo appears naturally printed/embedded on the product surface
+5. Following the adjustment request exactly while respecting green area boundaries
 
 The green area represents the printable/brandable zone - respect these boundaries absolutely.
 

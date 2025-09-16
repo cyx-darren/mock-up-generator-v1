@@ -120,6 +120,9 @@ function CreateMockupContent() {
   const [adjustmentHistory, setAdjustmentHistory] = useState<AdjustmentHistory[]>([]);
   const [originalMockup, setOriginalMockup] = useState<string | null>(null);
 
+  // Mockup navigation state
+  const [currentMockupIndex, setCurrentMockupIndex] = useState(0);
+
   // Default design adjustments for compatibility
   const [designAdjustments] = useState({
     scale: 1.0,
@@ -447,6 +450,8 @@ function CreateMockupContent() {
         setProgressPercentage(100);
         await new Promise((resolve) => setTimeout(resolve, 500));
         setGeneratedMockup(cachedResult.result);
+        setOriginalMockup(cachedResult.result);
+        setCurrentMockupIndex(0);
         setCurrentStep(4);
         return;
       }
@@ -518,6 +523,7 @@ function CreateMockupContent() {
 
       setGeneratedMockup(result.generatedImageUrl);
       setOriginalMockup(result.generatedImageUrl);
+      setCurrentMockupIndex(0);
       setProgressPercentage(100);
       setProgress('Mockup generated successfully!');
 
@@ -636,7 +642,7 @@ function CreateMockupContent() {
         });
       }, 800);
 
-      // Call API to generate adjusted mockup
+      // Call API to generate adjusted mockup using the SAME structure as initial generation
       const response = await fetch('/api/generate-mockup', {
         method: 'POST',
         headers: {
@@ -657,7 +663,9 @@ function CreateMockupContent() {
             category: product.category,
           },
           placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
-          adjustmentPrompt: `Same mockup as before but ${enhancedPrompt}`,
+          adjustments: designAdjustments, // Use same adjustments structure as initial generation
+          additionalRequirements: [enhancedPrompt], // Pass user instruction as additional requirement
+          regenerate: true, // Flag to indicate this is a regeneration with constraint context
         }),
       });
 
@@ -688,6 +696,8 @@ function CreateMockupContent() {
 
       setAdjustmentHistory((prev) => [...prev, historyItem]);
       setGeneratedMockup(newMockupUrl);
+      // Update navigation index to point to the latest mockup
+      setCurrentMockupIndex((prev) => prev + 1);
 
       setProgressPercentage(100);
       setProgress('Adjustments applied successfully!');
@@ -720,13 +730,48 @@ function CreateMockupContent() {
     if (historyItem.id === 'original' && originalMockup) {
       setGeneratedMockup(originalMockup);
       setAdjustmentHistory([]);
+      setCurrentMockupIndex(0);
     } else {
       setGeneratedMockup(historyItem.mockupUrl);
       // Remove all history items after this one
       const itemIndex = adjustmentHistory.findIndex((item) => item.id === historyItem.id);
       if (itemIndex !== -1) {
         setAdjustmentHistory((prev) => prev.slice(0, itemIndex + 1));
+        setCurrentMockupIndex(itemIndex + 1); // +1 because original is at index 0
       }
+    }
+  };
+
+  // Mockup navigation helpers
+  const getAllMockups = () => {
+    const mockups = [];
+    if (originalMockup) {
+      mockups.push({
+        id: 'original',
+        instruction: 'Original',
+        enhancedPrompt: '',
+        mockupUrl: originalMockup,
+        timestamp: new Date(),
+      });
+    }
+    return [...mockups, ...adjustmentHistory];
+  };
+
+  const navigateToPreviousMockup = () => {
+    const allMockups = getAllMockups();
+    if (currentMockupIndex > 0) {
+      const newIndex = currentMockupIndex - 1;
+      setCurrentMockupIndex(newIndex);
+      setGeneratedMockup(allMockups[newIndex].mockupUrl);
+    }
+  };
+
+  const navigateToNextMockup = () => {
+    const allMockups = getAllMockups();
+    if (currentMockupIndex < allMockups.length - 1) {
+      const newIndex = currentMockupIndex + 1;
+      setCurrentMockupIndex(newIndex);
+      setGeneratedMockup(allMockups[newIndex].mockupUrl);
     }
   };
 
@@ -738,6 +783,7 @@ function CreateMockupContent() {
     setGeneratedMockup(null);
     setOriginalMockup(null);
     setAdjustmentHistory([]);
+    setCurrentMockupIndex(0);
     setDownloadFormats({});
     setError(null);
   };
@@ -858,7 +904,16 @@ function CreateMockupContent() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>{generatedMockup ? 'Generated Mockup' : 'Selected Product'}</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>{generatedMockup ? 'Generated Mockup' : 'Selected Product'}</span>
+                  {generatedMockup && getAllMockups().length > 1 && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span>
+                        {currentMockupIndex + 1} of {getAllMockups().length}
+                      </span>
+                    </div>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardBody>
                 {product && (
@@ -884,6 +939,53 @@ function CreateMockupContent() {
                                 }}
                               />
                             </div>
+                          )}
+                          {/* Navigation arrows - only show if there are multiple mockups */}
+                          {getAllMockups().length > 1 && (
+                            <>
+                              {/* Left arrow */}
+                              <button
+                                onClick={navigateToPreviousMockup}
+                                disabled={currentMockupIndex === 0}
+                                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110"
+                                title="Previous mockup"
+                              >
+                                <svg
+                                  className="w-5 h-5 text-gray-700"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15 19l-7-7 7-7"
+                                  />
+                                </svg>
+                              </button>
+                              {/* Right arrow */}
+                              <button
+                                onClick={navigateToNextMockup}
+                                disabled={currentMockupIndex === getAllMockups().length - 1}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110"
+                                title="Next mockup"
+                              >
+                                <svg
+                                  className="w-5 h-5 text-gray-700"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </button>
+                            </>
                           )}
                         </>
                       ) : product.primary_image_url ? (
