@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest, { params }: { params: { image: string } }) {
-  const { image } = params;
+export async function GET(request: NextRequest, context: { params: Promise<{ image: string }> }) {
+  const { image } = await context.params;
 
   // Create a simple colored rectangle as placeholder
   const width = 400;
