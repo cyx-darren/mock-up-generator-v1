@@ -179,7 +179,7 @@ export default function EditProductPage() {
     setUploading((prev) => ({ ...prev, [imageType]: true }));
     setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
 
-    let progressInterval: NodeJS.Timeout;
+    let progressInterval: NodeJS.Timeout | undefined;
 
     try {
       // Simulate upload progress
@@ -240,7 +240,9 @@ export default function EditProductPage() {
         setUploadProgress((prev) => ({ ...prev, [imageType]: 0 }));
       }, 1000);
     } catch (error) {
-      clearInterval(progressInterval);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       console.error(`Upload ${imageType} error:`, error);
       console.error('File details:', {
         name: file.name,
