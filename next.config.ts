@@ -3,7 +3,7 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   // Bundle optimization
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled due to critters module issue on Vercel
     optimizePackageImports: ['lucide-react', 'date-fns', 'sharp'],
   },
 
