@@ -1107,6 +1107,20 @@ function CreateMockupContent() {
                           } else if (view === 'back' && generatedMockups.back) {
                             setGeneratedMockup(generatedMockups.back);
                           }
+
+                          // Update constraint based on current view (front vs back)
+                          const sideConstraint = constraints.find(
+                            (c) => c.placement_type === selectedPlacement && c.side === view
+                          );
+                          if (sideConstraint) {
+                            setCurrentConstraint(sideConstraint);
+                          } else {
+                            // Fallback to any constraint for the placement type if no side-specific constraint found
+                            const fallbackConstraint =
+                              constraints.find((c) => c.placement_type === selectedPlacement) ||
+                              createDefaultConstraint(product.id, selectedPlacement, view);
+                            setCurrentConstraint(fallbackConstraint);
+                          }
                         }}
                         hasBackView={product.has_back_printing}
                         frontMockup={generatedMockups.front}
