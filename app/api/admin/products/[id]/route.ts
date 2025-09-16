@@ -179,10 +179,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const changes: any = {};
     Object.keys(updates).forEach((key) => {
       if (key === 'updated_by' || key === 'updated_at') return;
-      if (JSON.stringify(existingProduct[key]) !== JSON.stringify(updates[key])) {
+      if (JSON.stringify((existingProduct as any)[key]) !== JSON.stringify((updates as any)[key])) {
         changes[key] = {
-          from: existingProduct[key],
-          to: updates[key],
+          from: (existingProduct as any)[key],
+          to: (updates as any)[key],
         };
       }
     });
