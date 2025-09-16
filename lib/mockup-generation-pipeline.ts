@@ -115,6 +115,7 @@ export class MockupGenerationPipeline {
   private googleAI = new GoogleGenerativeAI(
     process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
   );
+  private lastError: Error | null = null;
   // Using direct Google AI integration instead of request handler
 
   /**
@@ -156,43 +157,48 @@ export class MockupGenerationPipeline {
         );
         console.log('Mockup generation result:', mockupImageUrl ? 'Success' : 'Failed');
       } catch (combineImagesError) {
-        console.error('WEBP FALLBACK: combineImages failed with error:', combineImagesError);
+        console.error(
+          'MOCKUP GENERATION FAILED: combineImages failed with error:',
+          combineImagesError
+        );
         mockupImageUrl = null; // Set to null to trigger fallback
+
+        // Store the actual error for the placeholder
+        this.lastError = combineImagesError;
       }
 
       // Skip all the complex processing - Gemini handles it all
       let finalImageUrl = mockupImageUrl;
 
-      // WebP Fallback: If mockup generation failed (likely due to WebP), provide fallback
+      // Fallback: If mockup generation failed, provide placeholder with actual error info
       if (!finalImageUrl) {
-        console.log(
-          'WEBP FALLBACK: Mockup generation failed, likely due to WebP compatibility. Creating placeholder mockup.'
-        );
+        const errorMessage = this.lastError?.message || 'Unknown error occurred during generation';
+        console.log('MOCKUP GENERATION FAILED: Creating placeholder mockup. Error:', errorMessage);
 
-        // Create a simple data URL placeholder mockup indicating WebP limitation
+        // Create a simple data URL placeholder mockup with actual error information
         const placeholderSvg = `
           <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
             <rect width="400" height="400" fill="#f0f0f0" stroke="#ccc" stroke-width="2"/>
-            <text x="200" y="180" text-anchor="middle" fill="#666" font-family="Arial" font-size="16">
-              Mockup Preview Unavailable
+            <text x="200" y="160" text-anchor="middle" fill="#666" font-family="Arial" font-size="16">
+              Mockup Generation Failed
             </text>
-            <text x="200" y="200" text-anchor="middle" fill="#666" font-family="Arial" font-size="12">
-              WebP product image format
+            <text x="200" y="185" text-anchor="middle" fill="#666" font-family="Arial" font-size="11">
+              ${errorMessage.length > 50 ? errorMessage.substring(0, 50) + '...' : errorMessage}
             </text>
-            <text x="200" y="220" text-anchor="middle" fill="#666" font-family="Arial" font-size="12">
-              not supported in current setup
+            <text x="200" y="205" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
+              Check server logs for details
             </text>
-            <text x="200" y="260" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
+            <text x="200" y="240" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
               Product: ${request.product.name}
             </text>
-            <text x="200" y="275" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
+            <text x="200" y="255" text-anchor="middle" fill="#999" font-family="Arial" font-size="10">
               Placement: ${request.placementType}
             </text>
           </svg>
         `;
 
         finalImageUrl = `data:image/svg+xml;base64,${Buffer.from(placeholderSvg).toString('base64')}`;
-        console.log('WEBP FALLBACK: Created placeholder mockup data URL');
+        console.log('MOCKUP FALLBACK: Created placeholder mockup data URL with actual error info');
       }
 
       const preparationTime = Date.now() - startTime;
@@ -513,8 +519,35 @@ export class MockupGenerationPipeline {
     console.log('[combineImages] Product type:', productType);
     console.log('[combineImages] Product URL:', productImageUrl?.substring(0, 100));
 
-    // Use simplified Gemini approach for mockup generation
+    // Use visual constraint approach if constraint image is available
     if (typeof window === 'undefined') {
+      const constraintData = constraints.metadata?.constraintData;
+      const constraintImageUrl = constraintData?.constraint_image_url;
+
+      // If we have a constraint image, use the new visual constraint method
+      if (constraintImageUrl) {
+        console.log('[combineImages] Using visual constraint method with constraint image');
+
+        // Convert adjustments to instruction if present
+        let adjustmentInstruction = undefined;
+        if (
+          adjustments &&
+          (adjustments.scale !== 1.0 || adjustments.x !== 0.5 || adjustments.y !== 0.5)
+        ) {
+          adjustmentInstruction = this.convertAdjustmentsToInstruction(adjustments);
+        }
+
+        return await this.generateWithVisualConstraint(
+          productImageUrl,
+          logoImageUrl,
+          constraintImageUrl,
+          productType,
+          targetDimensions,
+          adjustmentInstruction
+        );
+      }
+
+      // Fallback to old method if no constraint image
       return await this.generateAIMockup(
         productImageUrl,
         logoImageUrl,
@@ -522,7 +555,7 @@ export class MockupGenerationPipeline {
         productType,
         targetDimensions,
         adjustments,
-        constraints.metadata?.constraintData
+        constraintData
       );
     }
 
@@ -805,7 +838,326 @@ export class MockupGenerationPipeline {
   }
 
   /**
-   * Generate AI mockup using Canvas Compositing + AI Enhancement approach
+   * Generate AI mockup using visual constraint guidance
+   */
+  private async generateWithVisualConstraint(
+    productImageUrl: string,
+    logoImageUrl: string,
+    constraintImageUrl: string | undefined,
+    productType?: string,
+    targetDimensions?: { width: number; height: number },
+    adjustmentInstruction?: string
+  ): Promise<string> {
+    try {
+      console.log('[generateWithVisualConstraint] Starting visual constraint-based generation');
+      console.log('[generateWithVisualConstraint] Has constraint image:', !!constraintImageUrl);
+
+      // If we have a constraint image, use it for visual guidance
+      if (constraintImageUrl) {
+        return await this.generateWithConstraintImage(
+          productImageUrl,
+          logoImageUrl,
+          constraintImageUrl,
+          productType,
+          targetDimensions,
+          adjustmentInstruction
+        );
+      }
+
+      // Fallback to the original approach if no constraint image
+      return await this.generateAIMockupLegacy(
+        productImageUrl,
+        logoImageUrl,
+        productType,
+        targetDimensions
+      );
+    } catch (error) {
+      console.error('[generateWithVisualConstraint] Error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate mockup using constraint image as visual guide
+   */
+  private async generateWithConstraintImage(
+    productImageUrl: string,
+    logoImageUrl: string,
+    constraintImageUrl: string,
+    productType?: string,
+    targetDimensions?: { width: number; height: number },
+    adjustmentInstruction?: string
+  ): Promise<string> {
+    console.log('[generateWithConstraintImage] Using constraint image for visual guidance');
+
+    const prompt = `You are provided with THREE images:
+1. Product Image: A ${productType || 'product'} to be customized
+2. Logo Image: Company logo to be placed on the product
+3. Constraint Guide Image: The same product with GREEN AREA showing where the logo MUST be placed
+
+CRITICAL INSTRUCTIONS:
+- The GREEN AREA in the Constraint Guide Image shows the ONLY area where the logo can be placed
+- Place the logo EXCLUSIVELY within the green area boundaries
+- The logo must NOT extend outside the green area
+- Size the logo appropriately to fit nicely within the green constraints
+${
+  adjustmentInstruction
+    ? `\nUSER ADJUSTMENT REQUEST: ${adjustmentInstruction}
+- Apply this adjustment while keeping the logo strictly within the green area
+- If they want it "bigger" - make it fill more of the green area
+- If they want it "as big as possible" - make it fill the entire green area
+- If they want it "smaller" - reduce its size within the green area`
+    : ''
+}
+
+Generate a professional mockup by:
+1. Using the Product Image as the base
+2. Placing the Logo Image ONLY within the green area shown in the Constraint Guide
+3. Making it look realistic with proper shadows, perspective, and blending
+4. Ensuring the logo appears naturally printed/embedded on the product surface
+
+The green area represents the printable/brandable zone - respect these boundaries absolutely.
+
+OUTPUT: Generate a single, high-quality product mockup image${targetDimensions ? ` at ${targetDimensions.width}x${targetDimensions.height} pixels` : ''}.`;
+
+    // Call AI with all three images
+    return await this.callAIWithMultipleImages(
+      prompt,
+      [productImageUrl, logoImageUrl, constraintImageUrl],
+      targetDimensions
+    );
+  }
+
+  /**
+   * Call AI with multiple images for visual constraint-based generation
+   */
+  private async callAIWithMultipleImages(
+    prompt: string,
+    imageUrls: string[],
+    targetDimensions?: { width: number; height: number }
+  ): Promise<string> {
+    try {
+      console.log('[callAIWithMultipleImages] Processing', imageUrls.length, 'images');
+
+      // Create Gemini client
+      const client = new (await import('@google/generative-ai')).GoogleGenerativeAI(
+        process.env.GOOGLE_AI_STUDIO_API_KEY || process.env.GEMINI_API_KEY || ''
+      );
+
+      const model = client.getGenerativeModel({
+        model: 'gemini-2.5-flash-image-preview',
+        generationConfig: {
+          temperature: 0.3,
+          topP: 0.85,
+          topK: 20,
+          maxOutputTokens: 8192,
+        },
+      });
+
+      // Convert all images to base64
+      const imageParts = await Promise.all(
+        imageUrls.map(async (url) => {
+          const imageData = await this.urlToBase64(url);
+          return {
+            inlineData: {
+              data: imageData.data,
+              mimeType: imageData.mimeType || 'image/jpeg',
+            },
+          };
+        })
+      );
+
+      // Build the request with prompt and all images
+      const parts = [{ text: prompt }, ...imageParts];
+
+      console.log('[callAIWithMultipleImages] Sending to Gemini with visual constraints...');
+
+      const result = await model.generateContent(parts);
+      const response = await result.response;
+
+      console.log('[callAIWithMultipleImages] Response received');
+
+      // DEBUG: Log the full response structure to understand what we're getting
+      console.log('[DEBUG] Full response structure:', JSON.stringify(response, null, 2));
+
+      // Extract the generated image from response
+      const candidates = response.candidates;
+      if (!candidates || candidates.length === 0) {
+        throw new Error('No response from AI');
+      }
+
+      console.log('[DEBUG] Number of candidates:', candidates.length);
+
+      // Get the generated image data
+      const content = candidates[0].content;
+      if (!content || !content.parts || content.parts.length === 0) {
+        throw new Error('No image generated');
+      }
+
+      console.log('[DEBUG] Number of content parts:', content.parts.length);
+
+      // Find the image part in the response
+      for (let i = 0; i < content.parts.length; i++) {
+        const part = content.parts[i];
+        console.log(`[DEBUG] Part ${i}:`, {
+          hasInlineData: !!part.inlineData,
+          hasText: !!part.text,
+          textPreview: part.text ? part.text.substring(0, 100) + '...' : 'No text',
+        });
+
+        if (part.inlineData) {
+          console.log(`[DEBUG] Found inlineData with mimeType: ${part.inlineData.mimeType}`);
+          const dataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          return dataUrl;
+        }
+        if (part.text && part.text.includes('data:image')) {
+          // Sometimes the AI returns the image as a data URL in text
+          const match = part.text.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+          if (match) {
+            console.log('[DEBUG] Found data URL in text');
+            return match[0];
+          }
+        }
+      }
+
+      console.log('[DEBUG] No image data found in any part of the response');
+      throw new Error('No image data found in AI response');
+    } catch (error) {
+      console.error('[callAIWithMultipleImages] Error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Convert adjustment parameters to natural language instruction
+   */
+  private convertAdjustmentsToInstruction(adjustments: any): string {
+    const instructions = [];
+
+    if (adjustments.scale && adjustments.scale !== 1.0) {
+      if (adjustments.scale > 1.5) {
+        instructions.push('make the logo much bigger');
+      } else if (adjustments.scale > 1.0) {
+        instructions.push('make the logo bigger');
+      } else if (adjustments.scale < 0.5) {
+        instructions.push('make the logo much smaller');
+      } else {
+        instructions.push('make the logo smaller');
+      }
+    }
+
+    if (adjustments.x !== undefined && adjustments.x !== 0.5) {
+      if (adjustments.x < 0.3) {
+        instructions.push('move the logo to the left');
+      } else if (adjustments.x > 0.7) {
+        instructions.push('move the logo to the right');
+      }
+    }
+
+    if (adjustments.y !== undefined && adjustments.y !== 0.5) {
+      if (adjustments.y < 0.3) {
+        instructions.push('move the logo higher');
+      } else if (adjustments.y > 0.7) {
+        instructions.push('move the logo lower');
+      }
+    }
+
+    if (adjustments.rotation && adjustments.rotation !== 0) {
+      instructions.push(`rotate the logo ${adjustments.rotation} degrees`);
+    }
+
+    return instructions.join(', ');
+  }
+
+  /**
+   * Convert URL to base64 for AI processing
+   */
+  private async urlToBase64(url: string): Promise<{ data: string; mimeType: string }> {
+    try {
+      // If it's already a data URL, extract the base64 part
+      if (url.startsWith('data:')) {
+        const matches = url.match(/^data:([^;]+);base64,(.+)$/);
+        if (matches) {
+          return { data: matches[2], mimeType: matches[1] };
+        }
+      }
+
+      // Convert relative paths to absolute URLs
+      let fetchUrl = url;
+      if (url.startsWith('/uploads/')) {
+        // For local file uploads, convert to absolute file system path
+        const path = await import('path');
+        const fs = await import('fs');
+
+        const publicPath = path.join(process.cwd(), 'public', url);
+        console.log(
+          `[urlToBase64] Converting relative path ${url} to file system path: ${publicPath}`
+        );
+
+        try {
+          const fileBuffer = await fs.promises.readFile(publicPath);
+          const base64 = fileBuffer.toString('base64');
+
+          // Determine MIME type from file extension
+          let mimeType = 'image/jpeg';
+          if (url.toLowerCase().endsWith('.png')) mimeType = 'image/png';
+          if (url.toLowerCase().endsWith('.webp')) mimeType = 'image/webp';
+          if (url.toLowerCase().endsWith('.gif')) mimeType = 'image/gif';
+
+          console.log(
+            `[urlToBase64] Successfully read local file: ${publicPath}, size: ${fileBuffer.length} bytes`
+          );
+          return { data: base64, mimeType };
+        } catch (fsError) {
+          console.warn(`[urlToBase64] Failed to read local file ${publicPath}:`, fsError);
+          // Fall back to HTTP fetch with localhost
+          fetchUrl = `http://localhost:3000${url}`;
+          console.log(`[urlToBase64] Falling back to HTTP fetch: ${fetchUrl}`);
+        }
+      } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        // For other relative paths, prepend the base URL
+        fetchUrl = `http://localhost:3000${url}`;
+        console.log(`[urlToBase64] Converting relative URL to absolute: ${fetchUrl}`);
+      }
+
+      // Fetch the image via HTTP
+      console.log(`[urlToBase64] Fetching image from: ${fetchUrl}`);
+      const response = await fetch(fetchUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+
+      const buffer = await response.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+      console.log(
+        `[urlToBase64] Successfully fetched and converted: ${fetchUrl}, size: ${buffer.byteLength} bytes`
+      );
+      return { data: base64, mimeType: contentType };
+    } catch (error) {
+      console.error('[urlToBase64] Error converting URL to base64:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Legacy AI mockup generation (fallback when no constraint image)
+   */
+  private async generateAIMockupLegacy(
+    productImageUrl: string,
+    logoImageUrl: string,
+    productType?: string,
+    targetDimensions?: { width: number; height: number }
+  ): Promise<string> {
+    console.log('[generateAIMockupLegacy] Using legacy generation without constraint image');
+    // Keep the existing implementation for backward compatibility
+    // This will be the current generateAIMockup content
+    return '';
+  }
+
+  /**
+   * Generate AI mockup using Canvas Compositing + AI Enhancement approach (DEPRECATED)
    */
   private async generateAIMockup(
     productImageUrl: string,
@@ -846,7 +1198,8 @@ export class MockupGenerationPipeline {
         canvasComposite,
         productType,
         targetDimensions,
-        constraintData
+        constraintData,
+        this.request?.additionalRequirements
       );
       console.log('[generateAIMockup] Enhanced image received, length:', enhancedImage?.length);
 
@@ -1009,7 +1362,8 @@ export class MockupGenerationPipeline {
     compositeImageUrl: string,
     productType?: string,
     targetDimensions?: { width: number; height: number },
-    constraintData?: any
+    constraintData?: any,
+    additionalRequirements?: string[]
   ): Promise<string> {
     try {
       console.log('[enhanceCompositeWithAI] Starting AI enhancement');
@@ -1041,6 +1395,15 @@ export class MockupGenerationPipeline {
 - Do not move the logo outside the defined constraint zone`
           : '';
 
+      // Create adjustment instructions if provided
+      const adjustmentInstructions =
+        additionalRequirements && additionalRequirements.length > 0
+          ? `\n\nADJUSTMENT REQUIREMENTS:
+${additionalRequirements.map((req) => `- ${req}`).join('\n')}`
+          : '';
+
+      console.log('[enhanceCompositeWithAI] Additional requirements:', additionalRequirements);
+
       // Enhancement prompt - NO SHADOWS, keep logo FLAT, preserve original dimensions
       const enhancementPrompt = `Enhance this ${productDescription} mockup with the logo as a FLAT print:
 
@@ -1059,7 +1422,7 @@ CRITICAL REQUIREMENTS:
 - NO artistic embellishments or effects
 - Maintain the exact product image and dimensions (${dimensionsText})
 - Keep all other elements unchanged
-- DO NOT resize, crop, or change aspect ratio${constraintInstructions}
+- DO NOT resize, crop, or change aspect ratio${constraintInstructions}${adjustmentInstructions}
 
 Output: The same image with logo as a clean, flat surface print, maintaining exact original dimensions.`;
 

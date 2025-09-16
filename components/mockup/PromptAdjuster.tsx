@@ -43,7 +43,7 @@ export function PromptAdjuster({
   const enhancePrompt = (userInstruction: string): string => {
     const lowercaseInstruction = userInstruction.toLowerCase();
 
-    // Handle constraint-aware size adjustments
+    // Handle constraint-aware size adjustments with visual constraint reference
     if (lowercaseInstruction.includes('bigger') || lowercaseInstruction.includes('larger')) {
       if (
         lowercaseInstruction.includes('as big as possible') ||
@@ -51,9 +51,9 @@ export function PromptAdjuster({
         lowercaseInstruction.includes('maximum') ||
         lowercaseInstruction.includes('max size')
       ) {
-        return 'scale the logo to the maximum size that fits within the green constraint area, using the full width and height available while maintaining aspect ratio and leaving minimal padding from the constraint boundaries';
+        return 'Make the logo as large as possible to fill the entire GREEN AREA shown in the constraint image. The logo should expand to use the full width and height of the green zone while maintaining its aspect ratio. Do not place any part of the logo outside the green boundaries.';
       }
-      return 'increase the logo size by 50% while ensuring it stays within the constraint area boundaries';
+      return 'Increase the logo size significantly (make it 50% bigger) while keeping it entirely within the GREEN AREA shown in the constraint image. The logo must not extend outside the green boundaries.';
     }
 
     if (lowercaseInstruction.includes('smaller') || lowercaseInstruction.includes('reduce')) {
@@ -63,31 +63,39 @@ export function PromptAdjuster({
         lowercaseInstruction.includes('minimum') ||
         lowercaseInstruction.includes('min size')
       ) {
-        return 'scale the logo to the minimum readable size within the constraint area';
+        return 'Make the logo as small as possible while still being clearly visible, keeping it centered within the GREEN AREA shown in the constraint image.';
       }
-      return 'decrease the logo size by 30% while maintaining visibility';
+      return 'Reduce the logo size by 30% while keeping it within the GREEN AREA shown in the constraint image.';
     }
 
-    // Smart prompt enhancement mapping for other adjustments
+    // Smart prompt enhancement mapping for other adjustments with visual constraint reference
     const enhancements: Record<string, string> = {
-      left: 'position the logo towards the left side of the constraint area',
-      right: 'position the logo towards the right side of the constraint area',
-      'move it to the left': 'position the logo towards the left side of the constraint area',
-      'move it to the right': 'position the logo towards the right side of the constraint area',
-      'move it higher': 'position the logo higher within the constraint area',
-      'move it lower': 'position the logo lower within the constraint area',
-      up: 'position the logo higher within the constraint area',
-      down: 'position the logo lower within the constraint area',
-      'center it perfectly': 'position the logo at the exact center of the constraint area',
-      center: 'position the logo at the center of the constraint area',
-      'rotate it clockwise': 'rotate the logo 15 degrees clockwise',
-      'rotate it counter-clockwise': 'rotate the logo 15 degrees counter-clockwise',
+      left: 'Move the logo to the LEFT side of the GREEN AREA shown in the constraint image',
+      right: 'Move the logo to the RIGHT side of the GREEN AREA shown in the constraint image',
+      'move it to the left':
+        'Move the logo to the LEFT side of the GREEN AREA shown in the constraint image',
+      'move it to the right':
+        'Move the logo to the RIGHT side of the GREEN AREA shown in the constraint image',
+      'move it higher':
+        'Move the logo to the TOP part of the GREEN AREA shown in the constraint image',
+      'move it lower':
+        'Move the logo to the BOTTOM part of the GREEN AREA shown in the constraint image',
+      up: 'Move the logo to the TOP part of the GREEN AREA shown in the constraint image',
+      down: 'Move the logo to the BOTTOM part of the GREEN AREA shown in the constraint image',
+      'center it perfectly':
+        'Position the logo at the EXACT CENTER of the GREEN AREA shown in the constraint image',
+      center: 'Position the logo at the CENTER of the GREEN AREA shown in the constraint image',
+      'rotate it clockwise': 'Rotate the logo 15 degrees clockwise within the GREEN AREA',
+      'rotate it counter-clockwise':
+        'Rotate the logo 15 degrees counter-clockwise within the GREEN AREA',
       'more prominent':
-        'make the logo more prominent and eye-catching while respecting constraint boundaries',
-      'more subtle': 'make the logo blend more naturally with the product surface',
-      subtle: 'make the logo blend more naturally with the product surface',
+        'Make the logo more prominent and eye-catching while keeping it entirely within the GREEN AREA shown in the constraint image',
+      'more subtle':
+        'Make the logo blend more naturally with the product surface while staying within the GREEN AREA',
+      subtle:
+        'Make the logo blend more naturally with the product surface while staying within the GREEN AREA',
       prominent:
-        'make the logo more prominent and eye-catching while respecting constraint boundaries',
+        'Make the logo more prominent and eye-catching while keeping it entirely within the GREEN AREA shown in the constraint image',
     };
 
     // Check for exact matches first
@@ -102,8 +110,8 @@ export function PromptAdjuster({
       }
     }
 
-    // Return enhanced instruction that mentions constraint awareness
-    return `${userInstruction} while ensuring the logo stays within the defined constraint area`;
+    // Return enhanced instruction that references the visual constraint
+    return `${userInstruction} - IMPORTANT: Keep the logo entirely within the GREEN AREA shown in the constraint image. The green zone represents the allowed placement area.`;
   };
 
   const handleQuickPrompt = (promptInstruction: string) => {

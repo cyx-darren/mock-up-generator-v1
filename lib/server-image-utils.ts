@@ -145,10 +145,6 @@ export async function getImageDimensions(
   imageUrl: string
 ): Promise<{ width: number; height: number }> {
   try {
-    // Import Jimp dynamically with multiple fallback approaches
-    const jimpModule = await import('jimp');
-    const Jimp = jimpModule.Jimp || jimpModule.default || jimpModule;
-
     // For WebP files, use Canvas API to get dimensions since Jimp doesn't support WebP
     if (imageUrl.toLowerCase().includes('.webp')) {
       console.log(`[getImageDimensions] WebP detected, using Canvas approach for: ${imageUrl}`);
@@ -174,12 +170,42 @@ export async function getImageDimensions(
       }
     }
 
-    // For other formats, use Jimp
-    const img = await Jimp.read(imageUrl);
-    return {
-      width: img.getWidth(),
-      height: img.getHeight(),
-    };
+    // Try Canvas first as it's more reliable, then fall back to Jimp
+    try {
+      const { createCanvas, loadImage } = await import('canvas');
+      const image = await loadImage(imageUrl);
+      console.log(`[getImageDimensions] Canvas loaded image: ${image.width}x${image.height}`);
+      return {
+        width: image.width,
+        height: image.height,
+      };
+    } catch (canvasError) {
+      console.warn('[getImageDimensions] Canvas approach failed, trying Jimp:', canvasError);
+
+      // Fallback to Jimp
+      try {
+        const jimpModule = await import('jimp');
+        const Jimp = jimpModule.Jimp || jimpModule.default || jimpModule;
+
+        if (!Jimp || typeof Jimp.read !== 'function') {
+          throw new Error('Jimp not properly loaded');
+        }
+
+        const img = await Jimp.read(imageUrl);
+
+        if (!img || typeof img.getWidth !== 'function' || typeof img.getHeight !== 'function') {
+          throw new Error('Jimp image object invalid');
+        }
+
+        return {
+          width: img.getWidth(),
+          height: img.getHeight(),
+        };
+      } catch (jimpError) {
+        console.warn('[getImageDimensions] Jimp also failed:', jimpError);
+        throw jimpError;
+      }
+    }
   } catch (error) {
     console.error('Error loading image dimensions:', error);
     // Return fallback dimensions instead of throwing
