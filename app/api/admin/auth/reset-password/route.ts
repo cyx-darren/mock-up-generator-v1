@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       // Check if new password is same as current password
-      const bcrypt = require('bcryptjs');
+      const bcrypt = await import('bcryptjs');
       const isSamePassword = await bcrypt.compare(password, user.password_hash);
 
       if (isSamePassword) {
