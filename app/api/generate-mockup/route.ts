@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         backLogo,
         product,
         placementType,
+        side: 'both',
         qualityLevel: 'enhanced' as const,
         stylePreferences: {},
         adjustments: typeof adjustments === 'string' ? undefined : adjustments,

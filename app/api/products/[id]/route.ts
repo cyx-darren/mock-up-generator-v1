@@ -37,7 +37,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Temporarily add dual-sided support for testing (for ALL products)
     product.has_back_printing = true;
-    product.back_image_url = product.primary_image_url || product.base_image_url;
+    // Use the actual back_image_url from database, fallback to primary/base image only if no back image exists
+    if (!product.back_image_url) {
+      product.back_image_url = product.primary_image_url || product.base_image_url;
+    }
 
     // Return product with constraints
     return NextResponse.json({

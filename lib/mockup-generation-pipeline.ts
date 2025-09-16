@@ -9,6 +9,7 @@ import {
   GeneratedPrompt,
 } from './prompt-engineering';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { supabaseAdmin } from './supabase';
 // Removed AI request handler - using direct Google AI integration
 
 // Applied constraints interface for the pipeline
@@ -2162,16 +2163,41 @@ The result should be the original ${productType} with a professionally applied M
     side: 'front' | 'back'
   ): Promise<any> {
     try {
-      // Temporary fix: Use the existing constraint file for all products/sides
-      // This should be replaced with actual database query
+      console.log(
+        `[getConstraintForSide] Querying for productId: ${productId}, placementType: ${placementType}, side: ${side}`
+      );
+
+      const { data: constraint, error } = await supabaseAdmin
+        .from('placement_constraints')
+        .select('*')
+        .eq('item_id', productId)
+        .eq('placement_type', placementType)
+        .eq('side', side)
+        .single();
+
+      if (error) {
+        console.warn(`[getConstraintForSide] Database error for ${side} side:`, error);
+        return null;
+      }
+
+      if (!constraint) {
+        console.warn(`[getConstraintForSide] No constraint found for ${side} side`);
+        return null;
+      }
+
+      console.log(
+        `[getConstraintForSide] Found constraint for ${side} side:`,
+        constraint.constraint_image_url
+      );
+
       return {
-        constraint_image_url: `/uploads/constraints/1757413997559-a4_canvasbag_cream_constraints.png`,
-        min_logo_width: 50,
-        max_logo_width: 500,
-        min_logo_height: 50,
-        max_logo_height: 500,
-        default_x_position: 100,
-        default_y_position: 100,
+        constraint_image_url: constraint.constraint_image_url,
+        min_logo_width: constraint.min_logo_width || 50,
+        max_logo_width: constraint.max_logo_width || 500,
+        min_logo_height: constraint.min_logo_height || 50,
+        max_logo_height: constraint.max_logo_height || 500,
+        default_x_position: constraint.default_x_position || 100,
+        default_y_position: constraint.default_y_position || 100,
       };
     } catch (error) {
       console.error(`[getConstraintForSide] Error loading constraint for ${side} side:`, error);

@@ -707,7 +707,22 @@ function CreateMockupContent() {
       }, 500);
 
       // Generate download formats
-      await generateDownloadFormats(result.generatedImageUrl);
+      if (selectedSides === 'both') {
+        // For dual-sided, generate formats for the current front view
+        const currentImageUrl = result.front;
+        if (currentImageUrl) {
+          await generateDownloadFormats(currentImageUrl);
+        }
+      } else {
+        // For single-sided, use appropriate image URL
+        const imageUrl =
+          selectedSides === 'front'
+            ? result.generatedImageUrl || result.front
+            : result.back || result.generatedImageUrl;
+        if (imageUrl) {
+          await generateDownloadFormats(imageUrl);
+        }
+      }
     } catch (err) {
       console.error('Error generating mockup:', err);
       setError('Failed to generate mockup. Please try again.');
@@ -754,21 +769,21 @@ function CreateMockupContent() {
         format: 'png',
         quality: 100,
       });
-      formats.png = pngResult.dataUrl;
+      formats.png = pngResult.base64Data;
 
       // JPEG
       const jpegResult = await converter.convertFormat(imageData, {
         format: 'jpeg',
         quality: 90,
       });
-      formats.jpeg = jpegResult.dataUrl;
+      formats.jpeg = jpegResult.base64Data;
 
       // WebP
       const webpResult = await converter.convertFormat(imageData, {
         format: 'webp',
         quality: 90,
       });
-      formats.webp = webpResult.dataUrl;
+      formats.webp = webpResult.base64Data;
 
       setDownloadFormats(formats);
     } catch (err) {
