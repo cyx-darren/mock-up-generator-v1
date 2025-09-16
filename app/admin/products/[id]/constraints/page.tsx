@@ -19,11 +19,13 @@ interface Product {
   horizontalEnabled: boolean;
   verticalEnabled: boolean;
   allOverEnabled: boolean;
+  has_back_printing?: boolean;
 }
 
 interface PlacementConstraint {
   id: string;
   placementType: 'horizontal' | 'vertical' | 'all_over';
+  side?: 'front' | 'back';
   constraintImageUrl: string;
   detectedAreaPixels?: number;
   detectedAreaPercentage?: number;
@@ -52,34 +54,7 @@ export default function ProductConstraintsPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [constraints, setConstraints] = useState<PlacementConstraint[]>([]);
   const [activeTab, setActiveTab] = useState<'horizontal' | 'vertical' | 'all_over'>('horizontal');
-
-  // Check permissions
-  if (!can('canEditProducts')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardBody>
-            <Alert
-              type="error"
-              message={`You don't have permission to configure constraints. Current role: ${user?.role || 'No role'}`}
-            />
-            <div className="mt-4">
-              <Link href="/admin/dashboard">
-                <Button variant="outline">Back to Dashboard</Button>
-              </Link>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
-
-  // Fetch product and constraint data
-  useEffect(() => {
-    if (params.id) {
-      fetchProductAndConstraints();
-    }
-  }, [params.id]);
+  const [activeSide, setActiveSide] = useState<'front' | 'back'>('front');
 
   const fetchProductAndConstraints = async () => {
     try {
@@ -103,7 +78,32 @@ export default function ProductConstraintsPage() {
       const constraintsResponse = await fetch(`/api/admin/products/${params.id}/constraints`);
       if (constraintsResponse.ok) {
         const constraintsData = await constraintsResponse.json();
-        setConstraints(constraintsData.constraints || []);
+        // Transform snake_case API response to camelCase for component props
+        const transformedConstraints = (constraintsData.constraints || []).map(
+          (constraint: any) => ({
+            id: constraint.id,
+            placementType: constraint.placement_type,
+            side: constraint.side,
+            constraintImageUrl: constraint.constraint_image_url,
+            detectedAreaPixels: constraint.detected_area_pixels,
+            detectedAreaPercentage: constraint.detected_area_percentage,
+            minLogoWidth: constraint.min_logo_width,
+            minLogoHeight: constraint.min_logo_height,
+            maxLogoWidth: constraint.max_logo_width,
+            maxLogoHeight: constraint.max_logo_height,
+            defaultXPosition: constraint.default_x_position,
+            defaultYPosition: constraint.default_y_position,
+            patternRepeatX: constraint.pattern_repeat_x,
+            patternRepeatY: constraint.pattern_repeat_y,
+            minPatternWidth: constraint.min_pattern_width,
+            minPatternHeight: constraint.min_pattern_height,
+            maxPatternWidth: constraint.max_pattern_width,
+            maxPatternHeight: constraint.max_pattern_height,
+            patternSpacing: constraint.pattern_spacing,
+            guidelinesText: constraint.guidelines_text,
+          })
+        );
+        setConstraints(transformedConstraints);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -113,10 +113,46 @@ export default function ProductConstraintsPage() {
     }
   };
 
+  // Fetch product and constraint data
+  useEffect(() => {
+    if (params.id) {
+      fetchProductAndConstraints();
+    }
+  }, [params.id]);
+
+  // Check permissions
+  if (!can('canEditProducts')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <CardBody>
+            <Alert
+              type="error"
+              message={`You don't have permission to configure constraints. Current role: ${user?.role || 'No role'}`}
+            />
+            <div className="mt-4">
+              <Link href="/admin/dashboard">
+                <Button variant="outline">Back to Dashboard</Button>
+              </Link>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
   const handleConstraintSave = async (constraintData: any) => {
     try {
+      // Add side information for dual-sided products
+      const constraintWithSide = {
+        ...constraintData,
+        side: product?.has_back_printing ? activeSide : 'front',
+      };
+
       const existingConstraint = constraints.find(
-        (c) => c.placementType === constraintData.placementType
+        (c) =>
+          c.placementType === constraintData.placementType &&
+          (product?.has_back_printing ? c.side === activeSide : true)
       );
       const method = existingConstraint ? 'PUT' : 'POST';
       const url = existingConstraint
@@ -128,7 +164,7 @@ export default function ProductConstraintsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(constraintData),
+        body: JSON.stringify(constraintWithSide),
       });
 
       if (!response.ok) {
@@ -144,6 +180,9 @@ export default function ProductConstraintsPage() {
   };
 
   const getConstraintByType = (type: 'horizontal' | 'vertical' | 'all_over') => {
+    if (product?.has_back_printing) {
+      return constraints.find((c) => c.placementType === type && c.side === activeSide);
+    }
     return constraints.find((c) => c.placementType === type);
   };
 
@@ -191,6 +230,11 @@ export default function ProductConstraintsPage() {
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Configure logo placement constraints for {product.name}
+                {product.has_back_printing && (
+                  <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    Dual-Sided Product
+                  </span>
+                )}
               </p>
               <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 SKU: {product.sku} • Category: {product.category}
@@ -207,20 +251,61 @@ export default function ProductConstraintsPage() {
           </div>
         </div>
 
+        {/* Side Navigation (for dual-sided products) */}
+        {product.has_back_printing && (
+          <div className="mb-6">
+            <div className="border-b border-gray-200 dark:border-gray-700">
+              <nav className="flex space-x-8" aria-label="Product Sides">
+                <button
+                  onClick={() => setActiveSide('front')}
+                  className={`${
+                    activeSide === 'front'
+                      ? 'border-green-500 text-green-600 dark:text-green-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg transition-colors flex items-center`}
+                >
+                  <span className="mr-2">🔍</span>
+                  Front Side Constraints
+                </button>
+                <button
+                  onClick={() => setActiveSide('back')}
+                  className={`${
+                    activeSide === 'back'
+                      ? 'border-green-500 text-green-600 dark:text-green-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg transition-colors flex items-center`}
+                >
+                  <span className="mr-2">🔄</span>
+                  Back Side Constraints
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {product.has_back_printing ? (
+                <>Constraints for {activeSide === 'front' ? 'Front' : 'Back'} Side</>
+              ) : (
+                'Placement Types'
+              )}
+            </h2>
+          </div>
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('horizontal')}
               className={`${
                 activeTab === 'horizontal'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
               } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
               Horizontal Placement
               {product.horizontalEnabled && (
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   Enabled
                 </span>
               )}
@@ -229,13 +314,13 @@ export default function ProductConstraintsPage() {
               onClick={() => setActiveTab('vertical')}
               className={`${
                 activeTab === 'vertical'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
               } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
               Vertical Placement
               {product.verticalEnabled && (
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   Enabled
                 </span>
               )}
@@ -244,13 +329,13 @@ export default function ProductConstraintsPage() {
               onClick={() => setActiveTab('all_over')}
               className={`${
                 activeTab === 'all_over'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
               } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors`}
             >
               All-Over Print
               {product.allOverEnabled && (
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   Enabled
                 </span>
               )}
