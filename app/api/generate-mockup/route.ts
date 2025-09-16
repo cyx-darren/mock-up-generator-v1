@@ -4,20 +4,66 @@ import { MockupGenerationPipeline } from '@/lib/mockup-generation-pipeline';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { logo, product, placementType, adjustments, adjustmentPrompt } = body;
+    const {
+      logo,
+      frontLogo,
+      backLogo,
+      product,
+      placementType,
+      side = 'front',
+      adjustments,
+      adjustmentPrompt,
+    } = body;
 
-    if (!logo || !product || !placementType) {
-      return NextResponse.json(
-        { error: 'Missing required fields: logo, product, placementType' },
-        { status: 400 }
-      );
+    // Handle both legacy single-sided and new dual-sided requests
+    const hasLegacyLogo = !!logo;
+    const hasFrontLogo = !!frontLogo;
+    const hasBackLogo = !!backLogo;
+
+    // Validation for different request types
+    if (side === 'both') {
+      // Dual-sided request - need both logos
+      if (!hasFrontLogo || !hasBackLogo || !product || !placementType) {
+        return NextResponse.json(
+          {
+            error:
+              'For dual-sided generation: Missing required fields: frontLogo, backLogo, product, placementType',
+          },
+          { status: 400 }
+        );
+      }
+    } else if (side === 'back') {
+      // Back-only request
+      if (!(hasBackLogo || hasLegacyLogo) || !product || !placementType) {
+        return NextResponse.json(
+          {
+            error:
+              'For back-side generation: Missing required fields: backLogo (or logo), product, placementType',
+          },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Front-only request (default/legacy)
+      if (!(hasFrontLogo || hasLegacyLogo) || !product || !placementType) {
+        return NextResponse.json(
+          {
+            error:
+              'For front-side generation: Missing required fields: frontLogo (or logo), product, placementType',
+          },
+          { status: 400 }
+        );
+      }
     }
 
     console.log('Request data:', {
-      logoFile: typeof logo.file,
+      logoFile: hasLegacyLogo ? typeof logo.file : 'none',
+      frontLogoFile: hasFrontLogo ? typeof frontLogo.file : 'none',
+      backLogoFile: hasBackLogo ? typeof backLogo.file : 'none',
       productId: product.id,
       productCategory: product.category,
       placementType,
+      side,
       adjustments: adjustments || 'default',
       adjustmentPrompt: adjustmentPrompt || 'none',
     });
@@ -25,13 +71,49 @@ export async function POST(request: NextRequest) {
     // Create pipeline instance
     const pipeline = new MockupGenerationPipeline();
 
-    // Handle adjustment prompts for AI-powered modifications
+    // Handle dual-sided generation
+    if (side === 'both') {
+      const dualSidedRequest = {
+        frontLogo,
+        backLogo,
+        product,
+        placementType,
+        qualityLevel: 'enhanced' as const,
+        stylePreferences: {},
+        adjustments: typeof adjustments === 'string' ? undefined : adjustments,
+      };
+
+      // Add adjustment prompts
+      if (typeof adjustments === 'string' && adjustments) {
+        dualSidedRequest.additionalRequirements = [adjustments];
+      }
+      if (adjustmentPrompt) {
+        dualSidedRequest.additionalRequirements = dualSidedRequest.additionalRequirements || [];
+        dualSidedRequest.additionalRequirements.push(adjustmentPrompt);
+      }
+
+      const result = await pipeline.generateDualSidedMockup(dualSidedRequest);
+
+      return NextResponse.json({
+        success: true,
+        result: {
+          front: result.frontImageUrl,
+          back: result.backImageUrl,
+          side: 'both',
+        },
+      });
+    }
+
+    // Handle single-sided generation (front or back)
+    const effectiveLogo = side === 'back' ? backLogo || logo : frontLogo || logo;
+
     const mockupRequest = {
-      logo,
+      logo: effectiveLogo,
       product,
       placementType,
-      qualityLevel: 'enhanced', // Default quality level
-      stylePreferences: {}, // Default empty style preferences
+      side,
+      qualityLevel: 'enhanced' as const,
+      stylePreferences: {},
       adjustments:
         typeof adjustments === 'string'
           ? undefined
@@ -55,12 +137,13 @@ export async function POST(request: NextRequest) {
       mockupRequest.additionalRequirements.push(adjustmentPrompt);
     }
 
-    // Generate mockup with server-side constraint loading and adjustments
+    // Generate single-sided mockup
     const result = await pipeline.generateMockup(mockupRequest);
 
     return NextResponse.json({
       success: true,
       result,
+      side,
     });
   } catch (error) {
     console.error('Mockup generation error:', error);

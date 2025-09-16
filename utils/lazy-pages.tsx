@@ -8,7 +8,9 @@ const LazyCatalogPage = lazy(() => import('../app/(public)/catalog/page'));
 const LazyCreateMockupPage = lazy(() => import('../app/(public)/create-mockup/page'));
 const LazyAdminDashboard = lazy(() => import('../app/admin/dashboard/page'));
 const LazyAdminProductsEdit = lazy(() => import('../app/admin/products/[id]/edit/page'));
-const LazyAdminProductsConstraints = lazy(() => import('../app/admin/products/[id]/constraints/page'));
+const LazyAdminProductsConstraints = lazy(
+  () => import('../app/admin/products/[id]/constraints/page')
+);
 
 // Higher-order component for page-level lazy loading
 export function withPageLazyLoading<T extends object>(
@@ -20,7 +22,7 @@ export function withPageLazyLoading<T extends object>(
       <LazyPage {...props} />
     </Suspense>
   );
-  
+
   WrappedPage.displayName = `withPageLazyLoading(${LazyPage.displayName || 'Page'})`;
   return WrappedPage;
 }
@@ -45,7 +47,7 @@ export const preloadRoute = {
 export function preloadCriticalRoutes() {
   // Preload catalog page on app start
   preloadRoute.catalog();
-  
+
   // Preload create mockup page for logged in users
   if (typeof window !== 'undefined' && window.localStorage.getItem('auth-token')) {
     preloadRoute.createMockup();
@@ -55,7 +57,7 @@ export function preloadCriticalRoutes() {
 // Progressive loading based on viewport visibility
 export function useProgressiveLoading(threshold = 0.1) {
   if (typeof window === 'undefined') return;
-  
+
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {

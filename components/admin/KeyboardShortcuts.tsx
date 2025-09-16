@@ -21,7 +21,7 @@ export function KeyboardShortcuts({
   onCommandPalette,
   onNewProduct,
   onSave,
-  onBulkEdit
+  onBulkEdit,
 }: KeyboardShortcutsProps) {
   const router = useRouter();
 
@@ -32,25 +32,25 @@ export function KeyboardShortcuts({
       key: 'cmd+k',
       description: 'Open command palette',
       category: 'navigation',
-      action: () => onCommandPalette?.()
+      action: () => onCommandPalette?.(),
     },
     {
       key: 'g d',
       description: 'Go to dashboard',
       category: 'navigation',
-      action: () => router.push('/admin/dashboard')
+      action: () => router.push('/admin/dashboard'),
     },
     {
       key: 'g p',
       description: 'Go to products',
       category: 'navigation',
-      action: () => router.push('/admin/dashboard?tab=products')
+      action: () => router.push('/admin/dashboard?tab=products'),
     },
     {
       key: 'g b',
       description: 'Go to bulk import',
       category: 'navigation',
-      action: () => router.push('/admin/dashboard?tab=bulk-import')
+      action: () => router.push('/admin/dashboard?tab=bulk-import'),
     },
 
     // Actions
@@ -58,19 +58,19 @@ export function KeyboardShortcuts({
       key: 'cmd+n',
       description: 'Create new product',
       category: 'actions',
-      action: () => onNewProduct?.() || router.push('/admin/products/new')
+      action: () => onNewProduct?.() || router.push('/admin/products/new'),
     },
     {
       key: 'cmd+s',
       description: 'Save current form',
       category: 'actions',
-      action: () => onSave?.()
+      action: () => onSave?.(),
     },
     {
       key: 'cmd+shift+e',
       description: 'Open bulk edit',
       category: 'actions',
-      action: () => onBulkEdit?.()
+      action: () => onBulkEdit?.(),
     },
     {
       key: 'cmd+shift+d',
@@ -79,7 +79,7 @@ export function KeyboardShortcuts({
       action: () => {
         // Duplicate logic would be handled by parent component
         console.log('Duplicate action triggered');
-      }
+      },
     },
 
     // Editing
@@ -87,13 +87,13 @@ export function KeyboardShortcuts({
       key: 'cmd+z',
       description: 'Undo last action',
       category: 'editing',
-      action: () => document.execCommand('undo')
+      action: () => document.execCommand('undo'),
     },
     {
       key: 'cmd+shift+z',
       description: 'Redo last action',
       category: 'editing',
-      action: () => document.execCommand('redo')
+      action: () => document.execCommand('redo'),
     },
     {
       key: 'cmd+a',
@@ -102,7 +102,7 @@ export function KeyboardShortcuts({
       action: () => {
         // Select all logic would be handled by parent component
         console.log('Select all action triggered');
-      }
+      },
     },
 
     // General
@@ -113,7 +113,7 @@ export function KeyboardShortcuts({
       action: () => {
         // Cancel/close logic handled by parent
         console.log('Escape action triggered');
-      }
+      },
     },
     {
       key: '?',
@@ -122,41 +122,44 @@ export function KeyboardShortcuts({
       action: () => {
         // Show shortcuts modal
         console.log('Show shortcuts help');
-      }
-    }
+      },
+    },
   ];
 
   // Handle keyboard events
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const target = event.target as HTMLElement;
-    
-    // Don't trigger shortcuts when typing in inputs
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-      // Only allow certain shortcuts in inputs
-      const allowedInInputs = ['cmd+k', 'cmd+s', 'escape'];
-      const key = getKeyString(event);
-      if (!allowedInInputs.includes(key)) {
-        return;
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Don't trigger shortcuts when typing in inputs
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        // Only allow certain shortcuts in inputs
+        const allowedInInputs = ['cmd+k', 'cmd+s', 'escape'];
+        const key = getKeyString(event);
+        if (!allowedInInputs.includes(key)) {
+          return;
+        }
       }
-    }
 
-    const keyString = getKeyString(event);
-    const shortcut = shortcuts.find(s => s.key === keyString);
+      const keyString = getKeyString(event);
+      const shortcut = shortcuts.find((s) => s.key === keyString);
 
-    if (shortcut) {
-      event.preventDefault();
-      shortcut.action();
-    }
-  }, [shortcuts]);
+      if (shortcut) {
+        event.preventDefault();
+        shortcut.action();
+      }
+    },
+    [shortcuts]
+  );
 
   // Helper function to get key string
   const getKeyString = (event: KeyboardEvent): string => {
     const parts: string[] = [];
-    
+
     if (event.metaKey || event.ctrlKey) parts.push('cmd');
     if (event.shiftKey) parts.push('shift');
     if (event.altKey) parts.push('alt');
-    
+
     // Handle special keys
     const key = event.key.toLowerCase();
     switch (key) {
@@ -213,27 +216,39 @@ export function KeyboardShortcuts({
 // Shortcuts help modal component
 export function ShortcutsHelpModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const shortcuts = [
-    { category: 'Navigation', items: [
-      { key: '⌘K', description: 'Open command palette' },
-      { key: 'G D', description: 'Go to dashboard' },
-      { key: 'G P', description: 'Go to products' },
-      { key: 'G B', description: 'Go to bulk import' }
-    ]},
-    { category: 'Actions', items: [
-      { key: '⌘N', description: 'Create new product' },
-      { key: '⌘S', description: 'Save current form' },
-      { key: '⌘⇧E', description: 'Open bulk edit' },
-      { key: '⌘⇧D', description: 'Duplicate current item' }
-    ]},
-    { category: 'Editing', items: [
-      { key: '⌘Z', description: 'Undo last action' },
-      { key: '⌘⇧Z', description: 'Redo last action' },
-      { key: '⌘A', description: 'Select all items' }
-    ]},
-    { category: 'General', items: [
-      { key: 'ESC', description: 'Close modal/cancel' },
-      { key: '?', description: 'Show keyboard shortcuts' }
-    ]}
+    {
+      category: 'Navigation',
+      items: [
+        { key: '⌘K', description: 'Open command palette' },
+        { key: 'G D', description: 'Go to dashboard' },
+        { key: 'G P', description: 'Go to products' },
+        { key: 'G B', description: 'Go to bulk import' },
+      ],
+    },
+    {
+      category: 'Actions',
+      items: [
+        { key: '⌘N', description: 'Create new product' },
+        { key: '⌘S', description: 'Save current form' },
+        { key: '⌘⇧E', description: 'Open bulk edit' },
+        { key: '⌘⇧D', description: 'Duplicate current item' },
+      ],
+    },
+    {
+      category: 'Editing',
+      items: [
+        { key: '⌘Z', description: 'Undo last action' },
+        { key: '⌘⇧Z', description: 'Redo last action' },
+        { key: '⌘A', description: 'Select all items' },
+      ],
+    },
+    {
+      category: 'General',
+      items: [
+        { key: 'ESC', description: 'Close modal/cancel' },
+        { key: '?', description: 'Show keyboard shortcuts' },
+      ],
+    },
   ];
 
   if (!isOpen) return null;
@@ -251,7 +266,12 @@ export function ShortcutsHelpModal({ isOpen, onClose }: { isOpen: boolean; onClo
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -287,7 +307,11 @@ export function ShortcutsHelpModal({ isOpen, onClose }: { isOpen: boolean; onClo
 
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Press <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-mono rounded">?</kbd> anytime to show this help
+              Press{' '}
+              <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-mono rounded">
+                ?
+              </kbd>{' '}
+              anytime to show this help
             </p>
           </div>
         </div>

@@ -5,20 +5,20 @@ import { ProductCardSkeleton } from '@/components/catalog/ProductCardSkeleton';
 
 // Lazy load catalog components
 const LazyProductGrid = lazy(() =>
-  import('../catalog/ProductGrid').then(module => ({
-    default: module.ProductGrid
+  import('../catalog/ProductGrid').then((module) => ({
+    default: module.ProductGrid,
   }))
 );
 
 const LazyProductCard = lazy(() =>
-  import('../catalog/ProductCard').then(module => ({
-    default: module.ProductCard
+  import('../catalog/ProductCard').then((module) => ({
+    default: module.ProductCard,
   }))
 );
 
 const LazyProductDetailModal = lazy(() =>
-  import('../catalog/ProductDetailModal').then(module => ({
-    default: module.ProductDetailModal
+  import('../catalog/ProductDetailModal').then((module) => ({
+    default: module.ProductDetailModal,
   }))
 );
 
@@ -32,7 +32,7 @@ function withCatalogLazyLoading<T extends object>(
       <LazyComponent {...props} />
     </Suspense>
   );
-  
+
   WrappedComponent.displayName = `withCatalogLazyLoading(${LazyComponent.displayName || 'CatalogComponent'})`;
   return WrappedComponent;
 }

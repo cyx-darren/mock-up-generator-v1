@@ -45,7 +45,7 @@ export function VisualConstraintEditor({
 }: VisualConstraintEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  
+
   const [constraints, setConstraints] = useState<ConstraintRegion[]>(existingConstraints);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -60,7 +60,7 @@ export function VisualConstraintEditor({
   useEffect(() => {
     const canvas = canvasRef.current;
     const image = imageRef.current;
-    
+
     if (canvas && imageUrl) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -72,7 +72,7 @@ export function VisualConstraintEditor({
         const canvasRect = canvas.getBoundingClientRect();
         const imageAspect = img.naturalWidth / img.naturalHeight;
         const canvasAspect = canvasRect.width / canvasRect.height;
-        
+
         let drawWidth, drawHeight;
         if (imageAspect > canvasAspect) {
           drawWidth = canvasRect.width;
@@ -84,14 +84,14 @@ export function VisualConstraintEditor({
 
         const scale = drawWidth / img.naturalWidth;
         setScaleFactor(scale);
-        
+
         const offsetX = (canvasRect.width - drawWidth) / 2;
         const offsetY = (canvasRect.height - drawHeight) / 2;
         setCanvasOffset({ x: offsetX, y: offsetY });
 
         canvas.width = canvasRect.width;
         canvas.height = canvasRect.height;
-        
+
         redrawCanvas();
       };
       img.src = imageUrl;
@@ -122,13 +122,13 @@ export function VisualConstraintEditor({
     }
 
     // Draw constraints
-    constraints.forEach(constraint => {
+    constraints.forEach((constraint) => {
       drawConstraint(ctx, constraint);
     });
 
     // Draw selection handles for selected constraint
     if (selectedConstraint) {
-      const constraint = constraints.find(c => c.id === selectedConstraint);
+      const constraint = constraints.find((c) => c.id === selectedConstraint);
       if (constraint) {
         drawSelectionHandles(ctx, constraint);
       }
@@ -138,7 +138,16 @@ export function VisualConstraintEditor({
     if (showMeasurement && mousePos) {
       drawMeasurement(ctx);
     }
-  }, [constraints, selectedConstraint, showGrid, showMeasurement, mousePos, scaleFactor, canvasOffset, gridSize]);
+  }, [
+    constraints,
+    selectedConstraint,
+    showGrid,
+    showMeasurement,
+    mousePos,
+    scaleFactor,
+    canvasOffset,
+    gridSize,
+  ]);
 
   // Draw grid
   const drawGrid = (ctx: CanvasRenderingContext2D) => {
@@ -150,12 +159,12 @@ export function VisualConstraintEditor({
     ctx.setLineDash([2, 2]);
 
     const scaledGridSize = gridSize * scaleFactor;
-    
+
     // Vertical lines
     for (let x = canvasOffset.x; x < canvas.width; x += scaledGridSize) {
       ctx.beginPath();
       ctx.moveTo(x, canvasOffset.y);
-      ctx.lineTo(x, canvasOffset.y + (dimensions.height * scaleFactor));
+      ctx.lineTo(x, canvasOffset.y + dimensions.height * scaleFactor);
       ctx.stroke();
     }
 
@@ -163,7 +172,7 @@ export function VisualConstraintEditor({
     for (let y = canvasOffset.y; y < canvas.height; y += scaledGridSize) {
       ctx.beginPath();
       ctx.moveTo(canvasOffset.x, y);
-      ctx.lineTo(canvasOffset.x + (dimensions.width * scaleFactor), y);
+      ctx.lineTo(canvasOffset.x + dimensions.width * scaleFactor, y);
       ctx.stroke();
     }
 
@@ -178,7 +187,8 @@ export function VisualConstraintEditor({
     const height = constraint.height * scaleFactor;
 
     // Fill
-    ctx.fillStyle = constraint.type === 'allowed' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+    ctx.fillStyle =
+      constraint.type === 'allowed' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)';
     ctx.fillRect(x, y, width, height);
 
     // Border
@@ -198,17 +208,37 @@ export function VisualConstraintEditor({
 
     const handleSize = 8;
     const handles = [
-      { x: x - handleSize/2, y: y - handleSize/2, cursor: 'nw-resize', handle: 'nw' },
-      { x: x + width/2 - handleSize/2, y: y - handleSize/2, cursor: 'n-resize', handle: 'n' },
-      { x: x + width - handleSize/2, y: y - handleSize/2, cursor: 'ne-resize', handle: 'ne' },
-      { x: x + width - handleSize/2, y: y + height/2 - handleSize/2, cursor: 'e-resize', handle: 'e' },
-      { x: x + width - handleSize/2, y: y + height - handleSize/2, cursor: 'se-resize', handle: 'se' },
-      { x: x + width/2 - handleSize/2, y: y + height - handleSize/2, cursor: 's-resize', handle: 's' },
-      { x: x - handleSize/2, y: y + height - handleSize/2, cursor: 'sw-resize', handle: 'sw' },
-      { x: x - handleSize/2, y: y + height/2 - handleSize/2, cursor: 'w-resize', handle: 'w' },
+      { x: x - handleSize / 2, y: y - handleSize / 2, cursor: 'nw-resize', handle: 'nw' },
+      { x: x + width / 2 - handleSize / 2, y: y - handleSize / 2, cursor: 'n-resize', handle: 'n' },
+      { x: x + width - handleSize / 2, y: y - handleSize / 2, cursor: 'ne-resize', handle: 'ne' },
+      {
+        x: x + width - handleSize / 2,
+        y: y + height / 2 - handleSize / 2,
+        cursor: 'e-resize',
+        handle: 'e',
+      },
+      {
+        x: x + width - handleSize / 2,
+        y: y + height - handleSize / 2,
+        cursor: 'se-resize',
+        handle: 'se',
+      },
+      {
+        x: x + width / 2 - handleSize / 2,
+        y: y + height - handleSize / 2,
+        cursor: 's-resize',
+        handle: 's',
+      },
+      { x: x - handleSize / 2, y: y + height - handleSize / 2, cursor: 'sw-resize', handle: 'sw' },
+      {
+        x: x - handleSize / 2,
+        y: y + height / 2 - handleSize / 2,
+        cursor: 'w-resize',
+        handle: 'w',
+      },
     ];
 
-    handles.forEach(handle => {
+    handles.forEach((handle) => {
       ctx.fillStyle = '#3b82f6';
       ctx.fillRect(handle.x, handle.y, handleSize, handleSize);
       ctx.strokeStyle = '#ffffff';
@@ -220,8 +250,8 @@ export function VisualConstraintEditor({
   // Draw measurement
   const drawMeasurement = (ctx: CanvasRenderingContext2D) => {
     if (!selectedConstraint) return;
-    
-    const constraint = constraints.find(c => c.id === selectedConstraint);
+
+    const constraint = constraints.find((c) => c.id === selectedConstraint);
     if (!constraint) return;
 
     const x = canvasOffset.x + constraint.x * scaleFactor;
@@ -231,104 +261,117 @@ export function VisualConstraintEditor({
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.font = '12px monospace';
-    
+
     // Width measurement
     const widthText = `${constraint.width}px`;
     const widthMetrics = ctx.measureText(widthText);
-    ctx.fillRect(x + width/2 - widthMetrics.width/2 - 4, y - 25, widthMetrics.width + 8, 16);
+    ctx.fillRect(x + width / 2 - widthMetrics.width / 2 - 4, y - 25, widthMetrics.width + 8, 16);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(widthText, x + width/2 - widthMetrics.width/2, y - 12);
+    ctx.fillText(widthText, x + width / 2 - widthMetrics.width / 2, y - 12);
 
     // Height measurement
     ctx.save();
-    ctx.translate(x - 15, y + height/2);
-    ctx.rotate(-Math.PI/2);
+    ctx.translate(x - 15, y + height / 2);
+    ctx.rotate(-Math.PI / 2);
     const heightText = `${constraint.height}px`;
     const heightMetrics = ctx.measureText(heightText);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(-heightMetrics.width/2 - 4, -8, heightMetrics.width + 8, 16);
+    ctx.fillRect(-heightMetrics.width / 2 - 4, -8, heightMetrics.width + 8, 16);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(heightText, -heightMetrics.width/2, 4);
+    ctx.fillText(heightText, -heightMetrics.width / 2, 4);
     ctx.restore();
   };
 
   // Convert canvas coordinates to image coordinates
-  const canvasToImage = useCallback((canvasX: number, canvasY: number): Point => {
-    return {
-      x: Math.round((canvasX - canvasOffset.x) / scaleFactor),
-      y: Math.round((canvasY - canvasOffset.y) / scaleFactor)
-    };
-  }, [canvasOffset, scaleFactor]);
+  const canvasToImage = useCallback(
+    (canvasX: number, canvasY: number): Point => {
+      return {
+        x: Math.round((canvasX - canvasOffset.x) / scaleFactor),
+        y: Math.round((canvasY - canvasOffset.y) / scaleFactor),
+      };
+    },
+    [canvasOffset, scaleFactor]
+  );
 
   // Snap to grid if enabled
-  const snapPoint = useCallback((point: Point): Point => {
-    if (!snapToGrid) return point;
-    return {
-      x: Math.round(point.x / gridSize) * gridSize,
-      y: Math.round(point.y / gridSize) * gridSize
-    };
-  }, [snapToGrid, gridSize]);
+  const snapPoint = useCallback(
+    (point: Point): Point => {
+      if (!snapToGrid) return point;
+      return {
+        x: Math.round(point.x / gridSize) * gridSize,
+        y: Math.round(point.y / gridSize) * gridSize,
+      };
+    },
+    [snapToGrid, gridSize]
+  );
 
   // Handle mouse down
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
-    const imageCoords = canvasToImage(canvasX, canvasY);
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+      const imageCoords = canvasToImage(canvasX, canvasY);
 
-    // Check if clicking on resize handle
-    if (selectedConstraint) {
-      const constraint = constraints.find(c => c.id === selectedConstraint);
-      if (constraint) {
-        const handle = getResizeHandle(canvasX, canvasY, constraint);
-        if (handle) {
-          setIsResizing(true);
-          setResizeHandle(handle);
-          setDragStart({ x: canvasX, y: canvasY });
-          return;
+      // Check if clicking on resize handle
+      if (selectedConstraint) {
+        const constraint = constraints.find((c) => c.id === selectedConstraint);
+        if (constraint) {
+          const handle = getResizeHandle(canvasX, canvasY, constraint);
+          if (handle) {
+            setIsResizing(true);
+            setResizeHandle(handle);
+            setDragStart({ x: canvasX, y: canvasY });
+            return;
+          }
         }
       }
-    }
 
-    // Check if clicking on existing constraint
-    const clickedConstraint = constraints.find(constraint => {
-      return (
-        imageCoords.x >= constraint.x &&
-        imageCoords.x <= constraint.x + constraint.width &&
-        imageCoords.y >= constraint.y &&
-        imageCoords.y <= constraint.y + constraint.height
-      );
-    });
+      // Check if clicking on existing constraint
+      const clickedConstraint = constraints.find((constraint) => {
+        return (
+          imageCoords.x >= constraint.x &&
+          imageCoords.x <= constraint.x + constraint.width &&
+          imageCoords.y >= constraint.y &&
+          imageCoords.y <= constraint.y + constraint.height
+        );
+      });
 
-    if (clickedConstraint) {
-      setSelectedConstraint(clickedConstraint.id);
-      setIsDragging(true);
-      setDragStart({ x: canvasX, y: canvasY });
-    } else {
-      // Create new constraint
-      const newConstraint: ConstraintRegion = {
-        id: `constraint_${Date.now()}`,
-        x: snapPoint(imageCoords).x,
-        y: snapPoint(imageCoords).y,
-        width: 100,
-        height: 100,
-        type: 'allowed',
-        color: '#22c55e'
-      };
-      
-      setConstraints(prev => [...prev, newConstraint]);
-      setSelectedConstraint(newConstraint.id);
-      setIsResizing(true);
-      setResizeHandle('se');
-      setDragStart({ x: canvasX, y: canvasY });
-    }
-  }, [constraints, selectedConstraint, canvasToImage, snapPoint]);
+      if (clickedConstraint) {
+        setSelectedConstraint(clickedConstraint.id);
+        setIsDragging(true);
+        setDragStart({ x: canvasX, y: canvasY });
+      } else {
+        // Create new constraint
+        const newConstraint: ConstraintRegion = {
+          id: `constraint_${Date.now()}`,
+          x: snapPoint(imageCoords).x,
+          y: snapPoint(imageCoords).y,
+          width: 100,
+          height: 100,
+          type: 'allowed',
+          color: '#22c55e',
+        };
+
+        setConstraints((prev) => [...prev, newConstraint]);
+        setSelectedConstraint(newConstraint.id);
+        setIsResizing(true);
+        setResizeHandle('se');
+        setDragStart({ x: canvasX, y: canvasY });
+      }
+    },
+    [constraints, selectedConstraint, canvasToImage, snapPoint]
+  );
 
   // Get resize handle at coordinates
-  const getResizeHandle = (canvasX: number, canvasY: number, constraint: ConstraintRegion): string => {
+  const getResizeHandle = (
+    canvasX: number,
+    canvasY: number,
+    constraint: ConstraintRegion
+  ): string => {
     const x = canvasOffset.x + constraint.x * scaleFactor;
     const y = canvasOffset.y + constraint.y * scaleFactor;
     const width = constraint.width * scaleFactor;
@@ -338,20 +381,17 @@ export function VisualConstraintEditor({
 
     const handles = [
       { x: x, y: y, handle: 'nw' },
-      { x: x + width/2, y: y, handle: 'n' },
+      { x: x + width / 2, y: y, handle: 'n' },
       { x: x + width, y: y, handle: 'ne' },
-      { x: x + width, y: y + height/2, handle: 'e' },
+      { x: x + width, y: y + height / 2, handle: 'e' },
       { x: x + width, y: y + height, handle: 'se' },
-      { x: x + width/2, y: y + height, handle: 's' },
+      { x: x + width / 2, y: y + height, handle: 's' },
       { x: x, y: y + height, handle: 'sw' },
-      { x: x, y: y + height/2, handle: 'w' },
+      { x: x, y: y + height / 2, handle: 'w' },
     ];
 
     for (const handle of handles) {
-      if (
-        Math.abs(canvasX - handle.x) <= tolerance &&
-        Math.abs(canvasY - handle.y) <= tolerance
-      ) {
+      if (Math.abs(canvasX - handle.x) <= tolerance && Math.abs(canvasY - handle.y) <= tolerance) {
         return handle.handle;
       }
     }
@@ -360,96 +400,112 @@ export function VisualConstraintEditor({
   };
 
   // Handle mouse move
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
-    setMousePos({ x: canvasX, y: canvasY });
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+      setMousePos({ x: canvasX, y: canvasY });
 
-    if (isDragging && selectedConstraint) {
-      const constraint = constraints.find(c => c.id === selectedConstraint);
-      if (!constraint) return;
+      if (isDragging && selectedConstraint) {
+        const constraint = constraints.find((c) => c.id === selectedConstraint);
+        if (!constraint) return;
 
-      const deltaX = (canvasX - dragStart.x) / scaleFactor;
-      const deltaY = (canvasY - dragStart.y) / scaleFactor;
-      
-      const newPos = snapPoint({
-        x: constraint.x + deltaX,
-        y: constraint.y + deltaY
-      });
+        const deltaX = (canvasX - dragStart.x) / scaleFactor;
+        const deltaY = (canvasY - dragStart.y) / scaleFactor;
 
-      setConstraints(prev => prev.map(c => 
-        c.id === selectedConstraint 
-          ? { ...c, x: Math.max(0, newPos.x), y: Math.max(0, newPos.y) }
-          : c
-      ));
-      
-      setDragStart({ x: canvasX, y: canvasY });
-    } else if (isResizing && selectedConstraint) {
-      const constraint = constraints.find(c => c.id === selectedConstraint);
-      if (!constraint) return;
+        const newPos = snapPoint({
+          x: constraint.x + deltaX,
+          y: constraint.y + deltaY,
+        });
 
-      const deltaX = (canvasX - dragStart.x) / scaleFactor;
-      const deltaY = (canvasY - dragStart.y) / scaleFactor;
+        setConstraints((prev) =>
+          prev.map((c) =>
+            c.id === selectedConstraint
+              ? { ...c, x: Math.max(0, newPos.x), y: Math.max(0, newPos.y) }
+              : c
+          )
+        );
 
-      let newConstraint = { ...constraint };
+        setDragStart({ x: canvasX, y: canvasY });
+      } else if (isResizing && selectedConstraint) {
+        const constraint = constraints.find((c) => c.id === selectedConstraint);
+        if (!constraint) return;
 
-      switch (resizeHandle) {
-        case 'se':
-          newConstraint.width = Math.max(20, constraint.width + deltaX);
-          newConstraint.height = Math.max(20, constraint.height + deltaY);
-          break;
-        case 'sw':
-          newConstraint.x = constraint.x + deltaX;
-          newConstraint.width = Math.max(20, constraint.width - deltaX);
-          newConstraint.height = Math.max(20, constraint.height + deltaY);
-          break;
-        case 'ne':
-          newConstraint.width = Math.max(20, constraint.width + deltaX);
-          newConstraint.y = constraint.y + deltaY;
-          newConstraint.height = Math.max(20, constraint.height - deltaY);
-          break;
-        case 'nw':
-          newConstraint.x = constraint.x + deltaX;
-          newConstraint.y = constraint.y + deltaY;
-          newConstraint.width = Math.max(20, constraint.width - deltaX);
-          newConstraint.height = Math.max(20, constraint.height - deltaY);
-          break;
-        case 'n':
-          newConstraint.y = constraint.y + deltaY;
-          newConstraint.height = Math.max(20, constraint.height - deltaY);
-          break;
-        case 's':
-          newConstraint.height = Math.max(20, constraint.height + deltaY);
-          break;
-        case 'e':
-          newConstraint.width = Math.max(20, constraint.width + deltaX);
-          break;
-        case 'w':
-          newConstraint.x = constraint.x + deltaX;
-          newConstraint.width = Math.max(20, constraint.width - deltaX);
-          break;
+        const deltaX = (canvasX - dragStart.x) / scaleFactor;
+        const deltaY = (canvasY - dragStart.y) / scaleFactor;
+
+        const newConstraint = { ...constraint };
+
+        switch (resizeHandle) {
+          case 'se':
+            newConstraint.width = Math.max(20, constraint.width + deltaX);
+            newConstraint.height = Math.max(20, constraint.height + deltaY);
+            break;
+          case 'sw':
+            newConstraint.x = constraint.x + deltaX;
+            newConstraint.width = Math.max(20, constraint.width - deltaX);
+            newConstraint.height = Math.max(20, constraint.height + deltaY);
+            break;
+          case 'ne':
+            newConstraint.width = Math.max(20, constraint.width + deltaX);
+            newConstraint.y = constraint.y + deltaY;
+            newConstraint.height = Math.max(20, constraint.height - deltaY);
+            break;
+          case 'nw':
+            newConstraint.x = constraint.x + deltaX;
+            newConstraint.y = constraint.y + deltaY;
+            newConstraint.width = Math.max(20, constraint.width - deltaX);
+            newConstraint.height = Math.max(20, constraint.height - deltaY);
+            break;
+          case 'n':
+            newConstraint.y = constraint.y + deltaY;
+            newConstraint.height = Math.max(20, constraint.height - deltaY);
+            break;
+          case 's':
+            newConstraint.height = Math.max(20, constraint.height + deltaY);
+            break;
+          case 'e':
+            newConstraint.width = Math.max(20, constraint.width + deltaX);
+            break;
+          case 'w':
+            newConstraint.x = constraint.x + deltaX;
+            newConstraint.width = Math.max(20, constraint.width - deltaX);
+            break;
+        }
+
+        if (snapToGrid) {
+          newConstraint.x = Math.round(newConstraint.x / gridSize) * gridSize;
+          newConstraint.y = Math.round(newConstraint.y / gridSize) * gridSize;
+          newConstraint.width = Math.round(newConstraint.width / gridSize) * gridSize;
+          newConstraint.height = Math.round(newConstraint.height / gridSize) * gridSize;
+        }
+
+        setConstraints((prev) =>
+          prev.map((c) => (c.id === selectedConstraint ? newConstraint : c))
+        );
+
+        setDragStart({ x: canvasX, y: canvasY });
       }
 
-      if (snapToGrid) {
-        newConstraint.x = Math.round(newConstraint.x / gridSize) * gridSize;
-        newConstraint.y = Math.round(newConstraint.y / gridSize) * gridSize;
-        newConstraint.width = Math.round(newConstraint.width / gridSize) * gridSize;
-        newConstraint.height = Math.round(newConstraint.height / gridSize) * gridSize;
-      }
-
-      setConstraints(prev => prev.map(c => 
-        c.id === selectedConstraint ? newConstraint : c
-      ));
-      
-      setDragStart({ x: canvasX, y: canvasY });
-    }
-
-    redrawCanvas();
-  }, [isDragging, isResizing, selectedConstraint, constraints, dragStart, resizeHandle, scaleFactor, snapPoint, gridSize, snapToGrid]);
+      redrawCanvas();
+    },
+    [
+      isDragging,
+      isResizing,
+      selectedConstraint,
+      constraints,
+      dragStart,
+      resizeHandle,
+      scaleFactor,
+      snapPoint,
+      gridSize,
+      snapToGrid,
+    ]
+  );
 
   // Handle mouse up
   const handleMouseUp = useCallback(() => {
@@ -460,15 +516,18 @@ export function VisualConstraintEditor({
   }, [constraints, onConstraintsChange]);
 
   // Handle key press
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Delete' && selectedConstraint) {
-      setConstraints(prev => prev.filter(c => c.id !== selectedConstraint));
-      setSelectedConstraint(null);
-      onConstraintsChange(constraints.filter(c => c.id !== selectedConstraint));
-    } else if (e.key === 'Escape') {
-      setSelectedConstraint(null);
-    }
-  }, [selectedConstraint, constraints, onConstraintsChange]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Delete' && selectedConstraint) {
+        setConstraints((prev) => prev.filter((c) => c.id !== selectedConstraint));
+        setSelectedConstraint(null);
+        onConstraintsChange(constraints.filter((c) => c.id !== selectedConstraint));
+      } else if (e.key === 'Escape') {
+        setSelectedConstraint(null);
+      }
+    },
+    [selectedConstraint, constraints, onConstraintsChange]
+  );
 
   useEffect(() => {
     redrawCanvas();
@@ -478,7 +537,9 @@ export function VisualConstraintEditor({
     <Card>
       <CardHeader>
         <h3 className="text-lg font-semibold">Visual Constraint Editor</h3>
-        <p className="text-sm text-gray-600">Click and drag to create constraint regions. Select regions to resize or move them.</p>
+        <p className="text-sm text-gray-600">
+          Click and drag to create constraint regions. Select regions to resize or move them.
+        </p>
       </CardHeader>
       <CardBody>
         <div className="relative">
@@ -496,9 +557,12 @@ export function VisualConstraintEditor({
           />
           <img ref={imageRef} className="hidden" alt="" />
         </div>
-        
+
         <div className="mt-4 text-sm text-gray-500">
-          <p><kbd>Click</kbd> to create constraint • <kbd>Drag</kbd> to move • <kbd>Resize handles</kbd> to scale • <kbd>Delete</kbd> to remove</p>
+          <p>
+            <kbd>Click</kbd> to create constraint • <kbd>Drag</kbd> to move •{' '}
+            <kbd>Resize handles</kbd> to scale • <kbd>Delete</kbd> to remove
+          </p>
         </div>
       </CardBody>
     </Card>

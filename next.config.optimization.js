@@ -5,12 +5,7 @@ const bundleOptimization = {
   // Enable experimental optimizations
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: [
-      'lucide-react',
-      'date-fns',
-      'canvas',
-      'sharp'
-    ],
+    optimizePackageImports: ['lucide-react', 'date-fns', 'canvas', 'sharp'],
   },
 
   // Configure webpack for better code splitting
@@ -69,10 +64,12 @@ const bundleOptimization = {
     // Add bundle analyzer in development
     if (dev && process.env.ANALYZE === 'true') {
       const BundleAnalyzerPlugin = require('@next/bundle-analyzer');
-      config.plugins.push(new BundleAnalyzerPlugin({
-        analyzerMode: 'server',
-        openAnalyzer: true,
-      }));
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'server',
+          openAnalyzer: true,
+        })
+      );
     }
 
     return config;
@@ -105,7 +102,7 @@ const bundleOptimization = {
 
   // Modern JavaScript output
   swcMinify: true,
-  
+
   // Runtime configuration
   env: {
     CUSTOM_KEY: 'optimization_enabled',

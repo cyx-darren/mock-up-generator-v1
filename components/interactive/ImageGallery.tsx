@@ -32,7 +32,7 @@ export function ImageGallery({
   autoplay = false,
   autoplayDelay = 3000,
   className = '',
-  onImageChange
+  onImageChange,
 }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -44,11 +44,14 @@ export function ImageGallery({
 
   const minSwipeDistance = 50;
 
-  const goToImage = useCallback((index: number) => {
-    const newIndex = Math.max(0, Math.min(index, images.length - 1));
-    setCurrentIndex(newIndex);
-    onImageChange?.(newIndex, images[newIndex]);
-  }, [images, onImageChange]);
+  const goToImage = useCallback(
+    (index: number) => {
+      const newIndex = Math.max(0, Math.min(index, images.length - 1));
+      setCurrentIndex(newIndex);
+      onImageChange?.(newIndex, images[newIndex]);
+    },
+    [images, onImageChange]
+  );
 
   const goToNext = useCallback(() => {
     goToImage(currentIndex + 1);
@@ -77,7 +80,7 @@ export function ImageGallery({
     }
 
     autoplayRef.current = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % images.length);
+      setCurrentIndex((prev) => (prev + 1) % images.length);
     }, autoplayDelay);
 
     return () => {
@@ -92,7 +95,7 @@ export function ImageGallery({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target !== document.body && !isFullscreen) return;
-      
+
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
@@ -140,7 +143,7 @@ export function ImageGallery({
       setTouchEnd(null);
       setTouchStart({
         x: e.targetTouches[0].clientX,
-        y: e.targetTouches[0].clientY
+        y: e.targetTouches[0].clientY,
       });
     }
   }, []);
@@ -149,14 +152,14 @@ export function ImageGallery({
     if (e.touches.length === 1) {
       setTouchEnd({
         x: e.targetTouches[0].clientX,
-        y: e.targetTouches[0].clientY
+        y: e.targetTouches[0].clientY,
       });
     }
   }, []);
 
   const handleTouchEnd = useCallback(() => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distanceX = touchStart.x - touchEnd.x;
     const distanceY = touchStart.y - touchEnd.y;
     const isLeftSwipe = distanceX > minSwipeDistance;
@@ -209,19 +212,15 @@ export function ImageGallery({
               className="w-full h-auto object-contain"
               priority
             />
-            
+
             {/* Image Info Overlay */}
             {(currentImage.title || currentImage.description) && (
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                 {currentImage.title && (
-                  <h3 className="text-white text-lg font-semibold mb-1">
-                    {currentImage.title}
-                  </h3>
+                  <h3 className="text-white text-lg font-semibold mb-1">{currentImage.title}</h3>
                 )}
                 {currentImage.description && (
-                  <p className="text-gray-200 text-sm">
-                    {currentImage.description}
-                  </p>
+                  <p className="text-gray-200 text-sm">{currentImage.description}</p>
                 )}
               </div>
             )}
@@ -238,7 +237,12 @@ export function ImageGallery({
               title="Previous image (←)"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
 
@@ -249,7 +253,12 @@ export function ImageGallery({
               title="Next image (→)"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </>
@@ -266,11 +275,11 @@ export function ImageGallery({
             >
               {isPlaying ? (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                 </svg>
               ) : (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
+                  <path d="M8 5v14l11-7z" />
                 </svg>
               )}
             </button>
@@ -285,11 +294,21 @@ export function ImageGallery({
             >
               {isFullscreen ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                  />
                 </svg>
               )}
             </button>
@@ -352,7 +371,7 @@ export function ImageGallery({
         <div className="w-full h-full p-4">
           <GalleryContent />
         </div>
-        
+
         {/* Close button */}
         <button
           onClick={() => setIsFullscreen(false)}
@@ -360,7 +379,12 @@ export function ImageGallery({
           title="Exit fullscreen (Esc)"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -378,9 +402,9 @@ export function ImageGallery({
 export function LightboxGallery({
   images,
   triggerImage,
-  triggerAlt = "Open gallery",
+  triggerAlt = 'Open gallery',
   initialIndex = 0,
-  className = ''
+  className = '',
 }: {
   images: GalleryImage[];
   triggerImage: string;
@@ -396,10 +420,7 @@ export function LightboxGallery({
   return (
     <>
       {/* Trigger */}
-      <button
-        onClick={openGallery}
-        className={`relative group ${className}`}
-      >
+      <button onClick={openGallery} className={`relative group ${className}`}>
         <Image
           src={triggerImage}
           alt={triggerAlt}
@@ -407,16 +428,26 @@ export function LightboxGallery({
           height={200}
           className="w-full h-auto object-cover rounded-lg transition-opacity group-hover:opacity-80"
         />
-        
+
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all rounded-lg flex items-center justify-center">
           <div className="bg-white/90 rounded-full p-3 opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all">
-            <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            <svg
+              className="w-6 h-6 text-gray-800"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+              />
             </svg>
           </div>
         </div>
-        
+
         {/* Image count badge */}
         {images.length > 1 && (
           <div className="absolute top-2 right-2 bg-black/75 text-white px-2 py-1 rounded text-xs">
@@ -437,14 +468,19 @@ export function LightboxGallery({
               className="h-full"
             />
           </div>
-          
+
           {/* Close button */}
           <button
             onClick={closeGallery}
             className="absolute top-4 right-4 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

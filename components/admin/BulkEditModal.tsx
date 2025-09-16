@@ -29,9 +29,9 @@ export function BulkEditModal({ isOpen, onClose, selectedProducts, onSave }: Bul
   const [success, setSuccess] = useState('');
 
   const handleFieldChange = useCallback((field: keyof Product, value: any) => {
-    setUpdates(prev => ({
+    setUpdates((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   }, []);
 
@@ -88,7 +88,12 @@ export function BulkEditModal({ isOpen, onClose, selectedProducts, onSave }: Bul
                 disabled={isSaving}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -122,7 +127,7 @@ export function BulkEditModal({ isOpen, onClose, selectedProducts, onSave }: Bul
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                 Changes to Apply
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Category */}
                 <div>
@@ -188,7 +193,9 @@ export function BulkEditModal({ isOpen, onClose, selectedProducts, onSave }: Bul
                       type="number"
                       placeholder="Amount"
                       step="0.01"
-                      onChange={(e) => handleFieldChange('price', parseFloat(e.target.value) || undefined)}
+                      onChange={(e) =>
+                        handleFieldChange('price', parseFloat(e.target.value) || undefined)
+                      }
                       className="flex-1"
                     />
                   </div>
@@ -202,11 +209,11 @@ export function BulkEditModal({ isOpen, onClose, selectedProducts, onSave }: Bul
                   <Input
                     type="text"
                     placeholder="Add/remove tags (comma separated)"
-                    onChange={(e) => handleFieldChange('tags' as keyof Product, e.target.value || undefined)}
+                    onChange={(e) =>
+                      handleFieldChange('tags' as keyof Product, e.target.value || undefined)
+                    }
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Use +tag to add, -tag to remove
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Use +tag to add, -tag to remove</p>
                 </div>
               </div>
 
@@ -246,17 +253,10 @@ export function BulkEditModal({ isOpen, onClose, selectedProducts, onSave }: Bul
 
             {/* Actions */}
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSaving}
-              >
+              <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving || Object.keys(updates).length === 0}
-              >
+              <Button onClick={handleSave} disabled={isSaving || Object.keys(updates).length === 0}>
                 {isSaving ? 'Saving...' : `Save Changes (${selectedProducts.length} products)`}
               </Button>
             </div>

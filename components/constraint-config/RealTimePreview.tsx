@@ -45,7 +45,7 @@ export function RealTimePreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const productImageRef = useRef<HTMLImageElement>(null);
   const logoImageRef = useRef<HTMLImageElement>(null);
-  
+
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -88,7 +88,7 @@ export function RealTimePreview({
       const canvasRect = canvas.getBoundingClientRect();
       const imageAspect = productImg.naturalWidth / productImg.naturalHeight;
       const canvasAspect = canvasRect.width / canvasRect.height;
-      
+
       let drawWidth, drawHeight;
       if (imageAspect > canvasAspect) {
         drawWidth = canvasRect.width;
@@ -100,14 +100,14 @@ export function RealTimePreview({
 
       const scale = drawWidth / productImg.naturalWidth;
       setScaleFactor(scale);
-      
+
       const offsetX = (canvasRect.width - drawWidth) / 2;
       const offsetY = (canvasRect.height - drawHeight) / 2;
       setCanvasOffset({ x: offsetX, y: offsetY });
 
       canvas.width = canvasRect.width;
       canvas.height = canvasRect.height;
-      
+
       redrawCanvas();
     };
 
@@ -138,12 +138,11 @@ export function RealTimePreview({
         isValid = false;
       } else if (constraint.type === 'allowed') {
         // Check if logo is completely within allowed area
-        const isCompletelyInside = (
+        const isCompletelyInside =
           placement.x >= constraint.x &&
           placement.y >= constraint.y &&
           logoRight <= constraintRight &&
-          logoBottom <= constraintBottom
-        );
+          logoBottom <= constraintBottom;
 
         if (!isCompletelyInside) {
           violations.push(`Logo must be completely within allowed area (${constraint.id})`);
@@ -165,7 +164,7 @@ export function RealTimePreview({
     const canvas = canvasRef.current;
     const productImg = productImageRef.current;
     const logoImg = logoImageRef.current;
-    
+
     if (!canvas || !productImg) return;
 
     const ctx = canvas.getContext('2d');
@@ -181,7 +180,7 @@ export function RealTimePreview({
 
     // Draw constraints if enabled and in constraint mode
     if (showConstraints && (previewMode === 'constraint' || previewMode === 'normal')) {
-      constraints.forEach(constraint => {
+      constraints.forEach((constraint) => {
         drawConstraint(ctx, constraint);
       });
     }
@@ -195,7 +194,15 @@ export function RealTimePreview({
     if (previewMode !== 'final') {
       drawValidationFeedback(ctx);
     }
-  }, [scaleFactor, canvasOffset, constraints, showConstraints, previewMode, placement, validationResult]);
+  }, [
+    scaleFactor,
+    canvasOffset,
+    constraints,
+    showConstraints,
+    previewMode,
+    placement,
+    validationResult,
+  ]);
 
   // Draw constraint region
   const drawConstraint = (ctx: CanvasRenderingContext2D, constraint: ConstraintRegion) => {
@@ -222,17 +229,13 @@ export function RealTimePreview({
     // Label
     ctx.fillStyle = constraint.type === 'allowed' ? '#15803d' : '#dc2626';
     ctx.font = '12px sans-serif';
-    ctx.fillText(
-      constraint.type === 'allowed' ? 'ALLOWED' : 'FORBIDDEN',
-      x + 5,
-      y + 15
-    );
+    ctx.fillText(constraint.type === 'allowed' ? 'ALLOWED' : 'FORBIDDEN', x + 5, y + 15);
   };
 
   // Draw logo
   const drawLogo = (ctx: CanvasRenderingContext2D, logoImg: HTMLImageElement) => {
     ctx.save();
-    
+
     const x = canvasOffset.x + placement.x * scaleFactor;
     const y = canvasOffset.y + placement.y * scaleFactor;
     const width = placement.width * scaleFactor;
@@ -262,7 +265,7 @@ export function RealTimePreview({
         { x: width / 2 - handleSize / 2, y: height / 2 - handleSize / 2 },
         { x: -width / 2 - handleSize / 2, y: height / 2 - handleSize / 2 },
       ];
-      handles.forEach(handle => {
+      handles.forEach((handle) => {
         ctx.fillRect(handle.x, handle.y, handleSize, handleSize);
       });
     }
@@ -281,20 +284,11 @@ export function RealTimePreview({
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     const rectHeight = (validationResult.violations.length + 1) * lineHeight + padding * 2;
-    ctx.fillRect(
-      canvasRef.current!.width - maxWidth - padding,
-      padding,
-      maxWidth,
-      rectHeight
-    );
+    ctx.fillRect(canvasRef.current!.width - maxWidth - padding, padding, maxWidth, rectHeight);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px sans-serif';
-    ctx.fillText(
-      'Validation Errors:',
-      canvasRef.current!.width - maxWidth,
-      padding + lineHeight
-    );
+    ctx.fillText('Validation Errors:', canvasRef.current!.width - maxWidth, padding + lineHeight);
 
     ctx.font = '12px sans-serif';
     validationResult.violations.forEach((violation, index) => {
@@ -307,62 +301,71 @@ export function RealTimePreview({
   };
 
   // Convert canvas coordinates to image coordinates
-  const canvasToImage = useCallback((canvasX: number, canvasY: number) => {
-    return {
-      x: Math.round((canvasX - canvasOffset.x) / scaleFactor),
-      y: Math.round((canvasY - canvasOffset.y) / scaleFactor)
-    };
-  }, [canvasOffset, scaleFactor]);
+  const canvasToImage = useCallback(
+    (canvasX: number, canvasY: number) => {
+      return {
+        x: Math.round((canvasX - canvasOffset.x) / scaleFactor),
+        y: Math.round((canvasY - canvasOffset.y) / scaleFactor),
+      };
+    },
+    [canvasOffset, scaleFactor]
+  );
 
   // Handle mouse events
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (previewMode === 'final') return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (previewMode === 'final') return;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
-    const imageCoords = canvasToImage(canvasX, canvasY);
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+      const imageCoords = canvasToImage(canvasX, canvasY);
 
-    // Check if clicking on logo
-    const logoRight = placement.x + placement.width;
-    const logoBottom = placement.y + placement.height;
+      // Check if clicking on logo
+      const logoRight = placement.x + placement.width;
+      const logoBottom = placement.y + placement.height;
 
-    if (
-      imageCoords.x >= placement.x &&
-      imageCoords.x <= logoRight &&
-      imageCoords.y >= placement.y &&
-      imageCoords.y <= logoBottom
-    ) {
-      setIsDragging(true);
+      if (
+        imageCoords.x >= placement.x &&
+        imageCoords.x <= logoRight &&
+        imageCoords.y >= placement.y &&
+        imageCoords.y <= logoBottom
+      ) {
+        setIsDragging(true);
+        setDragStart({ x: canvasX, y: canvasY });
+      }
+    },
+    [placement, canvasToImage, previewMode]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isDragging || previewMode === 'final') return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+
+      const deltaX = (canvasX - dragStart.x) / scaleFactor;
+      const deltaY = (canvasY - dragStart.y) / scaleFactor;
+
+      const newPlacement = {
+        ...placement,
+        x: Math.max(0, placement.x + deltaX),
+        y: Math.max(0, placement.y + deltaY),
+      };
+
+      onPlacementChange(newPlacement);
       setDragStart({ x: canvasX, y: canvasY });
-    }
-  }, [placement, canvasToImage, previewMode]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || previewMode === 'final') return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
-
-    const deltaX = (canvasX - dragStart.x) / scaleFactor;
-    const deltaY = (canvasY - dragStart.y) / scaleFactor;
-
-    const newPlacement = {
-      ...placement,
-      x: Math.max(0, placement.x + deltaX),
-      y: Math.max(0, placement.y + deltaY),
-    };
-
-    onPlacementChange(newPlacement);
-    setDragStart({ x: canvasX, y: canvasY });
-  }, [isDragging, dragStart, placement, scaleFactor, onPlacementChange, previewMode]);
+    },
+    [isDragging, dragStart, placement, scaleFactor, onPlacementChange, previewMode]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -404,13 +407,17 @@ export function RealTimePreview({
             onMouseUp={handleMouseUp}
             style={{ width: '100%', height: 'auto' }}
           />
-          
+
           {/* Validation Status */}
           <div className="mt-4">
             {validationResult.isValid ? (
               <div className="flex items-center gap-2 text-green-600">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span className="text-sm font-medium">Placement is valid</span>
               </div>
@@ -418,7 +425,11 @@ export function RealTimePreview({
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-red-600">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span className="text-sm font-medium">Placement violations detected</span>
                 </div>
@@ -441,7 +452,9 @@ export function RealTimePreview({
                   <input
                     type="number"
                     value={Math.round(placement.width)}
-                    onChange={(e) => onPlacementChange({ ...placement, width: Number(e.target.value) })}
+                    onChange={(e) =>
+                      onPlacementChange({ ...placement, width: Number(e.target.value) })
+                    }
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     min="10"
                     max="500"
@@ -452,7 +465,9 @@ export function RealTimePreview({
                   <input
                     type="number"
                     value={Math.round(placement.height)}
-                    onChange={(e) => onPlacementChange({ ...placement, height: Number(e.target.value) })}
+                    onChange={(e) =>
+                      onPlacementChange({ ...placement, height: Number(e.target.value) })
+                    }
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                     min="10"
                     max="500"
@@ -463,7 +478,9 @@ export function RealTimePreview({
                   <input
                     type="range"
                     value={placement.rotation}
-                    onChange={(e) => onPlacementChange({ ...placement, rotation: Number(e.target.value) })}
+                    onChange={(e) =>
+                      onPlacementChange({ ...placement, rotation: Number(e.target.value) })
+                    }
                     className="w-full"
                     min="-180"
                     max="180"
@@ -476,13 +493,17 @@ export function RealTimePreview({
                   <input
                     type="range"
                     value={placement.opacity}
-                    onChange={(e) => onPlacementChange({ ...placement, opacity: Number(e.target.value) })}
+                    onChange={(e) =>
+                      onPlacementChange({ ...placement, opacity: Number(e.target.value) })
+                    }
                     className="w-full"
                     min="0.1"
                     max="1"
                     step="0.1"
                   />
-                  <span className="text-xs text-gray-500">{Math.round(placement.opacity * 100)}%</span>
+                  <span className="text-xs text-gray-500">
+                    {Math.round(placement.opacity * 100)}%
+                  </span>
                 </div>
               </div>
             </div>

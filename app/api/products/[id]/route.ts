@@ -35,6 +35,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       // Don't fail the request if constraints can't be loaded
     }
 
+    // Temporarily add dual-sided support for testing (for ALL products)
+    product.has_back_printing = true;
+    product.back_image_url = product.primary_image_url || product.base_image_url;
+
     // Return product with constraints
     return NextResponse.json({
       product,

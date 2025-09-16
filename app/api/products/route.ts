@@ -5,13 +5,17 @@ import { withCompression, CompressionPresets } from '@/lib/middleware/compressio
 
 const getHandler = async (request: NextRequest) => {
   const supabase = await createOptimizedClient();
-  
+
   try {
     // Get query parameters for filtering and pagination
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const search = searchParams.get('search');
-    const tags = searchParams.get('tags')?.split(',').map(t => t.trim()).filter(Boolean);
+    const tags = searchParams
+      .get('tags')
+      ?.split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
     const sort = searchParams.get('sort') || 'name';
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Max 100 items
     const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
@@ -26,32 +30,35 @@ const getHandler = async (request: NextRequest) => {
         sort,
         limit,
         offset,
-        useCache
+        useCache,
       }),
-      getOptimizedMetadata(supabase)
+      getOptimizedMetadata(supabase),
     ]);
 
-    return NextResponse.json({
-      ...productsResult,
-      categories: metadataResult.categories.map(c => c.name),
-      tags: metadataResult.tags,
-      metadata: {
-        lastUpdated: metadataResult.lastUpdated,
-        cacheUsed: useCache
+    return NextResponse.json(
+      {
+        ...productsResult,
+        categories: metadataResult.categories.map((c) => c.name),
+        tags: metadataResult.tags,
+        metadata: {
+          lastUpdated: metadataResult.lastUpdated,
+          cacheUsed: useCache,
+        },
+      },
+      {
+        headers: {
+          'Cache-Control': useCache ? 'public, max-age=300, s-maxage=600' : 'no-cache',
+          'X-Cache-Status': useCache ? 'enabled' : 'disabled',
+        },
       }
-    }, {
-      headers: {
-        'Cache-Control': useCache ? 'public, max-age=300, s-maxage=600' : 'no-cache',
-        'X-Cache-Status': useCache ? 'enabled' : 'disabled'
-      }
-    });
+    );
   } catch (error) {
     console.error('Products fetch error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch products',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      }, 
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      },
       { status: 500 }
     );
   } finally {

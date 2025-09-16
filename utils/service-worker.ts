@@ -27,7 +27,7 @@ export class ServiceWorkerManager {
     try {
       this.registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',
-        updateViaCache: 'none'
+        updateViaCache: 'none',
       });
 
       // Handle updates
@@ -100,7 +100,7 @@ export class ServiceWorkerManager {
         const estimate = await navigator.storage.estimate();
         return {
           usage: estimate.usage || 0,
-          quota: estimate.quota || 0
+          quota: estimate.quota || 0,
         };
       } catch (error) {
         console.error('Cache usage estimate failed:', error);
@@ -113,9 +113,7 @@ export class ServiceWorkerManager {
   async clearCaches(): Promise<boolean> {
     try {
       const cacheNames = await caches.keys();
-      await Promise.all(
-        cacheNames.map(cacheName => caches.delete(cacheName))
-      );
+      await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
       console.log('All caches cleared');
       return true;
     } catch (error) {
@@ -126,11 +124,7 @@ export class ServiceWorkerManager {
 
   // Preload critical resources
   async preloadCriticalResources(): Promise<void> {
-    const criticalResources = [
-      '/catalog',
-      '/api/products',
-      '/_next/static/css/app.css'
-    ];
+    const criticalResources = ['/catalog', '/api/products', '/_next/static/css/app.css'];
 
     try {
       const cache = await caches.open('mockupgen-preload-v1.0.0');
@@ -154,7 +148,7 @@ export function useServiceWorker() {
     getCacheUsage: () => swManager.getCacheUsage(),
     clearCaches: () => swManager.clearCaches(),
     preloadCriticalResources: () => swManager.preloadCriticalResources(),
-    isSupported: swManager['isSupported']
+    isSupported: swManager['isSupported'],
   };
 }
 
@@ -162,7 +156,7 @@ export function useServiceWorker() {
 export function initServiceWorker(): void {
   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
     const swManager = ServiceWorkerManager.getInstance();
-    
+
     window.addEventListener('load', () => {
       swManager.register().then(() => {
         swManager.preloadCriticalResources();

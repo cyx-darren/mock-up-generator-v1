@@ -21,7 +21,12 @@ export interface ProductFormData {
   tags: string[];
   thumbnail_url: string;
   primary_image_url: string;
+  back_image_url: string;
+  has_back_printing: boolean;
   additional_images: string[];
+  horizontal_enabled: boolean;
+  vertical_enabled: boolean;
+  all_over_enabled: boolean;
 }
 
 /**
@@ -136,6 +141,36 @@ export const PRODUCT_VALIDATION_RULES: Record<keyof ProductFormData, ValidationR
         if (urlError) return urlError;
       }
 
+      return null;
+    },
+  },
+  back_image_url: {
+    custom: (value) => {
+      if (!value) return null; // Optional field
+      return validateImageUrl(value);
+    },
+  },
+  has_back_printing: {
+    custom: (value) => {
+      if (typeof value !== 'boolean') return 'Has back printing must be a boolean';
+      return null;
+    },
+  },
+  horizontal_enabled: {
+    custom: (value) => {
+      if (typeof value !== 'boolean') return 'Horizontal enabled must be a boolean';
+      return null;
+    },
+  },
+  vertical_enabled: {
+    custom: (value) => {
+      if (typeof value !== 'boolean') return 'Vertical enabled must be a boolean';
+      return null;
+    },
+  },
+  all_over_enabled: {
+    custom: (value) => {
+      if (typeof value !== 'boolean') return 'All over enabled must be a boolean';
       return null;
     },
   },

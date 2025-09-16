@@ -33,7 +33,7 @@ export function OptimizedImage({
   blurDataURL,
   fallback = '/images/placeholder.jpg',
   onLoad,
-  onError
+  onError,
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -84,7 +84,7 @@ export function OptimizedImage({
         onLoad={handleLoad}
         onError={handleError}
       />
-      
+
       {/* Loading skeleton */}
       {isLoading && !hasError && (
         <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
@@ -95,8 +95,18 @@ export function OptimizedImage({
       {/* Error state */}
       {hasError && imageSrc === fallback && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg
+            className="w-8 h-8 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
         </div>
       )}
@@ -114,7 +124,7 @@ export function LazyImage({
   rootMargin = '200px',
   threshold = 0.1,
   fallback,
-  placeholder
+  placeholder,
 }: OptimizedImageProps & {
   rootMargin?: string;
   threshold?: number;
@@ -154,8 +164,18 @@ export function LazyImage({
         />
       ) : (
         <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg
+            className="w-8 h-8 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
         </div>
       )}
@@ -171,7 +191,7 @@ export function ResponsiveImage({
   className = '',
   aspectRatio = 'aspect-square',
   priority = false,
-  quality = 85
+  quality = 85,
 }: {
   src: string;
   alt: string;
@@ -221,7 +241,7 @@ export function ResponsiveImage({
 export function MobileImageGallery({
   images,
   onImageClick,
-  className = ''
+  className = '',
 }: {
   images: Array<{
     id: string;
@@ -235,7 +255,7 @@ export function MobileImageGallery({
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   const handleImageLoad = (imageId: string) => {
-    setLoadedImages(prev => new Set(prev).add(imageId));
+    setLoadedImages((prev) => new Set(prev).add(imageId));
   };
 
   return (
@@ -252,12 +272,22 @@ export function MobileImageGallery({
             className="w-full h-full rounded-lg overflow-hidden group-hover:scale-105 transition-transform duration-200"
             onLoad={() => handleImageLoad(image.id)}
           />
-          
+
           {/* Loading overlay */}
           {!loadedImages.has(image.id) && (
             <div className="absolute inset-0 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-6 h-6 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
             </div>
           )}
@@ -271,19 +301,13 @@ export function MobileImageGallery({
 }
 
 // Adaptive image quality based on connection speed
-export function AdaptiveImage({
-  src,
-  alt,
-  width,
-  height,
-  className = ''
-}: OptimizedImageProps) {
+export function AdaptiveImage({ src, alt, width, height, className = '' }: OptimizedImageProps) {
   const [quality, setQuality] = useState(85);
 
   useEffect(() => {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
-      
+
       // Adjust quality based on connection speed
       if (connection) {
         if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') {
@@ -316,7 +340,7 @@ export function WebPImage({
   alt,
   width,
   height,
-  className = ''
+  className = '',
 }: {
   src: string;
   webpSrc: string;
@@ -345,9 +369,7 @@ export function WebPImage({
   }, []);
 
   if (!isChecked) {
-    return (
-      <div className={`bg-gray-200 animate-pulse ${className}`} style={{ width, height }} />
-    );
+    return <div className={`bg-gray-200 animate-pulse ${className}`} style={{ width, height }} />;
   }
 
   return (

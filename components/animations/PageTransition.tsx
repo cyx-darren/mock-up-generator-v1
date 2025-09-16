@@ -12,15 +12,17 @@ interface PageTransitionProps {
 export function PageTransition({ children, className = '' }: PageTransitionProps) {
   const pathname = usePathname();
   const [displayChildren, setDisplayChildren] = useState(children);
-  const [transitionStage, setTransitionStage] = useState<'entering' | 'entered' | 'exiting'>('entered');
+  const [transitionStage, setTransitionStage] = useState<'entering' | 'entered' | 'exiting'>(
+    'entered'
+  );
 
   useEffect(() => {
     setTransitionStage('exiting');
-    
+
     const timer = setTimeout(() => {
       setDisplayChildren(children);
       setTransitionStage('entering');
-      
+
       setTimeout(() => {
         setTransitionStage('entered');
       }, 50);
@@ -34,18 +36,18 @@ export function PageTransition({ children, className = '' }: PageTransitionProps
       case 'entering':
         return {
           animation: `${pageTransitions.slideUp} ${durations.normal} ${easingFunctions.easeOut}`,
-          opacity: 0
+          opacity: 0,
         };
       case 'entered':
         return {
           opacity: 1,
-          transform: 'translateY(0)'
+          transform: 'translateY(0)',
         };
       case 'exiting':
         return {
           opacity: 0,
           transform: 'translateY(10px)',
-          transition: `all ${durations.fast} ${easingFunctions.easeIn}`
+          transition: `all ${durations.fast} ${easingFunctions.easeIn}`,
         };
       default:
         return {};
@@ -53,10 +55,7 @@ export function PageTransition({ children, className = '' }: PageTransitionProps
   };
 
   return (
-    <div 
-      className={`transition-wrapper ${className}`}
-      style={getTransitionStyle()}
-    >
+    <div className={`transition-wrapper ${className}`} style={getTransitionStyle()}>
       {displayChildren}
     </div>
   );
@@ -77,7 +76,7 @@ export function withPageTransition<P extends object>(
     const animationStyle = {
       opacity: isVisible ? 1 : 0,
       transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
-      transition: `all ${durations.normal} ${easingFunctions.easeOut}`
+      transition: `all ${durations.normal} ${easingFunctions.easeOut}`,
     };
 
     return (
@@ -89,23 +88,23 @@ export function withPageTransition<P extends object>(
 }
 
 // Staggered children animation
-export function StaggeredChildren({ 
-  children, 
+export function StaggeredChildren({
+  children,
   staggerDelay = 100,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   staggerDelay?: number;
   className?: string;
 }) {
   const [visibleIndexes, setVisibleIndexes] = useState<Set<number>>(new Set());
-  
+
   useEffect(() => {
     const childArray = React.Children.toArray(children);
-    
+
     childArray.forEach((_, index) => {
       setTimeout(() => {
-        setVisibleIndexes(prev => new Set(prev).add(index));
+        setVisibleIndexes((prev) => new Set(prev).add(index));
       }, index * staggerDelay);
     });
   }, [children, staggerDelay]);
@@ -118,7 +117,7 @@ export function StaggeredChildren({
           style={{
             opacity: visibleIndexes.has(index) ? 1 : 0,
             transform: visibleIndexes.has(index) ? 'translateY(0)' : 'translateY(20px)',
-            transition: `all ${durations.normal} ${easingFunctions.easeOut}`
+            transition: `all ${durations.normal} ${easingFunctions.easeOut}`,
           }}
         >
           {child}
@@ -137,7 +136,7 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (pathname !== currentPath) {
       setIsTransitioning(true);
-      
+
       setTimeout(() => {
         setCurrentPath(pathname);
         setIsTransitioning(false);
@@ -152,7 +151,7 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
         style={{
           opacity: isTransitioning ? 0 : 1,
           transform: isTransitioning ? 'translateX(-20px)' : 'translateX(0)',
-          transition: `all ${durations.fast} ${easingFunctions.easeInOut}`
+          transition: `all ${durations.fast} ${easingFunctions.easeInOut}`,
         }}
       >
         {children}

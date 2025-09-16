@@ -32,11 +32,11 @@ interface ProductTemplatesProps {
   onDeleteTemplate: (templateId: string) => Promise<void>;
 }
 
-export function ProductTemplates({ 
-  templates, 
-  onCreateTemplate, 
-  onUseTemplate, 
-  onDeleteTemplate 
+export function ProductTemplates({
+  templates,
+  onCreateTemplate,
+  onUseTemplate,
+  onDeleteTemplate,
 }: ProductTemplatesProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTemplate, setNewTemplate] = useState<Partial<ProductTemplate>>({
@@ -48,8 +48,8 @@ export function ProductTemplates({
     constraints: {
       horizontal: true,
       vertical: false,
-      allOver: false
-    }
+      allOver: false,
+    },
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -73,22 +73,25 @@ export function ProductTemplates({
         constraints: {
           horizontal: true,
           vertical: false,
-          allOver: false
-        }
+          allOver: false,
+        },
       });
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to create template');
     }
   }, [newTemplate, onCreateTemplate]);
 
-  const handleUseTemplate = useCallback(async (templateId: string) => {
-    try {
-      await onUseTemplate(templateId);
-      setSuccess('Product created from template');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to use template');
-    }
-  }, [onUseTemplate]);
+  const handleUseTemplate = useCallback(
+    async (templateId: string) => {
+      try {
+        await onUseTemplate(templateId);
+        setSuccess('Product created from template');
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to use template');
+      }
+    },
+    [onUseTemplate]
+  );
 
   const popularTemplates = [...templates]
     .sort((a, b) => b.metadata.usageCount - a.metadata.usageCount)
@@ -119,9 +122,7 @@ export function ProductTemplates({
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {template.name}
-                      </h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white">{template.name}</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         {template.category}
                       </p>
@@ -137,10 +138,7 @@ export function ProductTemplates({
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       ${template.defaultPrice}
                     </span>
-                    <Button
-                      size="sm"
-                      onClick={() => handleUseTemplate(template.id)}
-                    >
+                    <Button size="sm" onClick={() => handleUseTemplate(template.id)}>
                       Use Template
                     </Button>
                   </div>
@@ -165,7 +163,7 @@ export function ProductTemplates({
             </div>
             <Button
               onClick={() => setIsCreating(!isCreating)}
-              variant={isCreating ? "outline" : "primary"}
+              variant={isCreating ? 'outline' : 'primary'}
             >
               {isCreating ? 'Cancel' : 'New Template'}
             </Button>
@@ -182,7 +180,7 @@ export function ProductTemplates({
                   <Input
                     type="text"
                     value={newTemplate.name || ''}
-                    onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setNewTemplate((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="e.g., Office Supplies Template"
                   />
                 </div>
@@ -192,7 +190,9 @@ export function ProductTemplates({
                   </label>
                   <select
                     value={newTemplate.category || ''}
-                    onChange={(e) => setNewTemplate(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) =>
+                      setNewTemplate((prev) => ({ ...prev, category: e.target.value }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="">Select category</option>
@@ -213,7 +213,12 @@ export function ProductTemplates({
                   <Input
                     type="number"
                     value={newTemplate.defaultPrice || 0}
-                    onChange={(e) => setNewTemplate(prev => ({ ...prev, defaultPrice: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) =>
+                      setNewTemplate((prev) => ({
+                        ...prev,
+                        defaultPrice: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                     placeholder="0.00"
                     step="0.01"
                   />
@@ -226,8 +231,11 @@ export function ProductTemplates({
                     type="text"
                     placeholder="tag1, tag2, tag3"
                     onChange={(e) => {
-                      const tags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean);
-                      setNewTemplate(prev => ({ ...prev, tags }));
+                      const tags = e.target.value
+                        .split(',')
+                        .map((tag) => tag.trim())
+                        .filter(Boolean);
+                      setNewTemplate((prev) => ({ ...prev, tags }));
                     }}
                   />
                 </div>
@@ -238,7 +246,9 @@ export function ProductTemplates({
                 </label>
                 <textarea
                   value={newTemplate.description || ''}
-                  onChange={(e) => setNewTemplate(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setNewTemplate((prev) => ({ ...prev, description: e.target.value }))
+                  }
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Describe this template..."
@@ -253,10 +263,12 @@ export function ProductTemplates({
                     <input
                       type="checkbox"
                       checked={newTemplate.constraints?.horizontal || false}
-                      onChange={(e) => setNewTemplate(prev => ({
-                        ...prev,
-                        constraints: { ...prev.constraints!, horizontal: e.target.checked }
-                      }))}
+                      onChange={(e) =>
+                        setNewTemplate((prev) => ({
+                          ...prev,
+                          constraints: { ...prev.constraints!, horizontal: e.target.checked },
+                        }))
+                      }
                       className="mr-2"
                     />
                     Horizontal
@@ -265,10 +277,12 @@ export function ProductTemplates({
                     <input
                       type="checkbox"
                       checked={newTemplate.constraints?.vertical || false}
-                      onChange={(e) => setNewTemplate(prev => ({
-                        ...prev,
-                        constraints: { ...prev.constraints!, vertical: e.target.checked }
-                      }))}
+                      onChange={(e) =>
+                        setNewTemplate((prev) => ({
+                          ...prev,
+                          constraints: { ...prev.constraints!, vertical: e.target.checked },
+                        }))
+                      }
                       className="mr-2"
                     />
                     Vertical
@@ -277,10 +291,12 @@ export function ProductTemplates({
                     <input
                       type="checkbox"
                       checked={newTemplate.constraints?.allOver || false}
-                      onChange={(e) => setNewTemplate(prev => ({
-                        ...prev,
-                        constraints: { ...prev.constraints!, allOver: e.target.checked }
-                      }))}
+                      onChange={(e) =>
+                        setNewTemplate((prev) => ({
+                          ...prev,
+                          constraints: { ...prev.constraints!, allOver: e.target.checked },
+                        }))
+                      }
                       className="mr-2"
                     />
                     All-Over Print
@@ -288,15 +304,10 @@ export function ProductTemplates({
                 </div>
               </div>
               <div className="flex justify-end space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCreating(false)}
-                >
+                <Button variant="outline" onClick={() => setIsCreating(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateTemplate}>
-                  Create Template
-                </Button>
+                <Button onClick={handleCreateTemplate}>Create Template</Button>
               </div>
             </div>
           )}
@@ -310,9 +321,7 @@ export function ProductTemplates({
               >
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      {template.name}
-                    </h4>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{template.name}</h4>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                       {template.category}
                     </span>
@@ -382,15 +391,27 @@ export function ProductTemplates({
 
             {templates.length === 0 && (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No templates</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by creating your first product template.</p>
+                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                  No templates
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Get started by creating your first product template.
+                </p>
                 <div className="mt-6">
-                  <Button onClick={() => setIsCreating(true)}>
-                    Create Template
-                  </Button>
+                  <Button onClick={() => setIsCreating(true)}>Create Template</Button>
                 </div>
               </div>
             )}

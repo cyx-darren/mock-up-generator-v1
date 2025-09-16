@@ -20,7 +20,12 @@ interface Product {
   tags: string[];
   thumbnail_url?: string;
   primary_image_url?: string;
+  back_image_url?: string;
+  has_back_printing?: boolean;
   additional_images?: string[];
+  horizontal_enabled?: boolean;
+  vertical_enabled?: boolean;
+  all_over_enabled?: boolean;
 }
 
 export default function EditProductPage() {
@@ -43,24 +48,32 @@ export default function EditProductPage() {
     tags: '',
     thumbnail_url: '',
     primary_image_url: '',
+    back_image_url: '',
+    has_back_printing: false,
     additional_images: [] as string[],
+    horizontal_enabled: true,
+    vertical_enabled: true,
+    all_over_enabled: false,
   });
 
   const [uploadProgress, setUploadProgress] = useState({
     thumbnail: 0,
     primary: 0,
+    back: 0,
     additional: 0,
   });
 
   const [uploading, setUploading] = useState({
     thumbnail: false,
     primary: false,
+    back: false,
     additional: false,
   });
 
   const [previews, setPreviews] = useState({
     thumbnail: '',
     primary: '',
+    back: '',
   });
 
   const fetchProduct = useCallback(async () => {
@@ -91,9 +104,17 @@ export default function EditProductPage() {
         tags: Array.isArray(productData.tags) ? productData.tags.join(', ') : '',
         thumbnail_url: productData.thumbnail_url || '',
         primary_image_url: productData.primary_image_url || '',
+        back_image_url: productData.back_image_url || '',
+        has_back_printing: productData.has_back_printing || false,
         additional_images: Array.isArray(productData.additional_images)
           ? productData.additional_images
           : [],
+        horizontal_enabled:
+          productData.horizontal_enabled !== undefined ? productData.horizontal_enabled : true,
+        vertical_enabled:
+          productData.vertical_enabled !== undefined ? productData.vertical_enabled : true,
+        all_over_enabled:
+          productData.all_over_enabled !== undefined ? productData.all_over_enabled : false,
       });
     } catch (error) {
       console.error('Fetch product error:', error);
@@ -115,8 +136,9 @@ export default function EditProductPage() {
     setPreviews({
       thumbnail: formData.thumbnail_url,
       primary: formData.primary_image_url,
+      back: formData.back_image_url,
     });
-  }, [formData.thumbnail_url, formData.primary_image_url]);
+  }, [formData.thumbnail_url, formData.primary_image_url, formData.back_image_url]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -145,7 +167,7 @@ export default function EditProductPage() {
 
   const handleImageUpload = async (
     file: File,
-    imageType: 'thumbnail' | 'primary' | 'additional'
+    imageType: 'thumbnail' | 'primary' | 'back' | 'additional'
   ): Promise<void> => {
     const validationError = validateImageFile(file);
     if (validationError) {
@@ -197,7 +219,10 @@ export default function EditProductPage() {
           additional_images: [...prev.additional_images, publicUrl],
         }));
       } else {
-        const fieldName = imageType === 'thumbnail' ? 'thumbnail_url' : 'primary_image_url';
+        let fieldName = 'primary_image_url';
+        if (imageType === 'thumbnail') fieldName = 'thumbnail_url';
+        else if (imageType === 'back') fieldName = 'back_image_url';
+
         setFormData((prev) => ({
           ...prev,
           [fieldName]: publicUrl,
@@ -237,7 +262,7 @@ export default function EditProductPage() {
 
   const handleFileSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
-    imageType: 'thumbnail' | 'primary'
+    imageType: 'thumbnail' | 'primary' | 'back'
   ) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -706,6 +731,194 @@ export default function EditProductPage() {
                   <p className="text-xs text-gray-500">
                     Upload PNG, JPG, JPEG, or WebP (max 5MB) or enter URL manually
                   </p>
+                </div>
+
+                {/* Dual-Sided Printing Configuration */}
+                <div className="space-y-6 border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Dual-Sided Printing Configuration
+                  </h3>
+
+                  {/* Has Back Printing Toggle */}
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        name="has_back_printing"
+                        checked={formData.has_back_printing}
+                        onChange={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            has_back_printing: e.target.checked,
+                          }));
+                        }}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Enable back-side printing for this product
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 ml-7">
+                      Check this if customers can print logos on both front and back sides
+                    </p>
+                  </div>
+
+                  {/* Back Image (only show if back printing is enabled) */}
+                  {formData.has_back_printing && (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Back Side Image
+                      </label>
+
+                      {/* URL Input */}
+                      <Input
+                        type="url"
+                        name="back_image_url"
+                        value={formData.back_image_url}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com/back-image.jpg"
+                      />
+
+                      {/* Upload Section */}
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="file"
+                          id="back-upload"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={(e) => handleFileSelect(e, 'back')}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="back-upload"
+                          className={`cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
+                            uploading.back ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          {uploading.back ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                className="h-4 w-4 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                />
+                              </svg>
+                              Upload Back Image
+                            </>
+                          )}
+                        </label>
+
+                        {/* Upload Progress */}
+                        {uploadProgress.back > 0 && uploadProgress.back < 100 && (
+                          <div className="flex-1 max-w-xs">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${uploadProgress.back}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-gray-500 mt-1">
+                              {uploadProgress.back}%
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Preview */}
+                      {previews.back && (
+                        <div className="mt-3">
+                          <img
+                            src={previews.back}
+                            alt="Back image preview"
+                            className="w-32 h-32 object-cover border border-gray-300 dark:border-gray-600 rounded-lg"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-500">
+                        Upload the back side view of the product (PNG, JPG, JPEG, WebP, max 5MB)
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Logo Placement Options */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Available Logo Placement Options
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          name="horizontal_enabled"
+                          checked={formData.horizontal_enabled}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              horizontal_enabled: e.target.checked,
+                            }));
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          Horizontal Placement
+                        </span>
+                      </label>
+
+                      <label className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          name="vertical_enabled"
+                          checked={formData.vertical_enabled}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              vertical_enabled: e.target.checked,
+                            }));
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          Vertical Placement
+                        </span>
+                      </label>
+
+                      <label className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          name="all_over_enabled"
+                          checked={formData.all_over_enabled}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              all_over_enabled: e.target.checked,
+                            }));
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          All-Over Print
+                        </span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Select which logo placement options are available for this product
+                    </p>
+                  </div>
                 </div>
 
                 {/* Additional Images */}

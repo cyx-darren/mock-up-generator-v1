@@ -4,11 +4,7 @@ const nextConfig: NextConfig = {
   // Bundle optimization
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: [
-      'lucide-react',
-      'date-fns', 
-      'sharp'
-    ],
+    optimizePackageImports: ['lucide-react', 'date-fns', 'sharp'],
   },
 
   // Configure webpack for better code splitting
@@ -38,7 +34,7 @@ const nextConfig: NextConfig = {
     if (!isServer) {
       config.externals = config.externals || [];
       config.externals.push({
-        jimp: 'jimp'
+        jimp: 'jimp',
       });
     }
 

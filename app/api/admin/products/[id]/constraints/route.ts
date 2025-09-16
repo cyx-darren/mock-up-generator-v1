@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { verifyAdminSession } from '@/lib/auth/admin-session';
+import { requireAnyRole } from '@/lib/auth/permissions';
 
 // GET /api/admin/products/[id]/constraints
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await verifyAdminSession(request);
-    if (!session.success) {
-      return NextResponse.json({ error: session.error }, { status: 401 });
-    }
-
-    // Check if user can view products
-    const userRole = session.user.role;
-    if (!['super_admin', 'product_manager'].includes(userRole)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
-    }
+    const user = await requireAnyRole(request, ['super_admin', 'product_manager']);
 
     const supabase = createClient();
-    const productId = params.id;
+    const { id: productId } = await params;
 
     // First verify the product exists
     const { data: product, error: productError } = await supabase
@@ -37,9 +28,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         `
         id,
         placement_type,
+        side,
         constraint_image_url,
         detected_area_pixels,
         detected_area_percentage,
+        detected_area_x,
+        detected_area_y,
+        detected_area_width,
+        detected_area_height,
         min_logo_width,
         min_logo_height,
         max_logo_width,

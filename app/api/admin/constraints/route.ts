@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { verifyAdminSession } from '@/lib/auth/admin-session';
+import { requireAnyRole } from '@/lib/auth/permissions';
 
 // POST /api/admin/constraints
 export async function POST(request: NextRequest) {
   try {
-    const session = await verifyAdminSession(request);
-    if (!session.success) {
-      return NextResponse.json({ error: session.error }, { status: 401 });
-    }
-
-    // Check if user can edit products
-    const userRole = session.user.role;
-    if (!['super_admin', 'product_manager'].includes(userRole)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
-    }
+    const user = await requireAnyRole(request, ['super_admin', 'product_manager']);
 
     const supabase = createClient();
     const body = await request.json();
@@ -22,6 +13,7 @@ export async function POST(request: NextRequest) {
     const {
       productId,
       placementType,
+      side = 'front', // Default to front for backward compatibility
       constraintImageUrl,
       detectedAreaPixels,
       detectedAreaPercentage,
@@ -54,6 +46,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid placement type' }, { status: 400 });
     }
 
+    // Validate side
+    if (!['front', 'back'].includes(side)) {
+      return NextResponse.json(
+        { error: 'Invalid side. Must be "front" or "back"' },
+        { status: 400 }
+      );
+    }
+
     // Verify the product exists
     const { data: product, error: productError } = await supabase
       .from('gift_items')
@@ -65,12 +65,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Check if constraint already exists for this product and placement type
+    // Check if constraint already exists for this product, placement type, and side
     const { data: existingConstraint } = await supabase
       .from('placement_constraints')
       .select('id')
       .eq('item_id', productId)
       .eq('placement_type', placementType)
+      .eq('side', side)
       .single();
 
     let constraint, constraintError;
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
       const { data: updatedConstraint, error: updateError } = await supabase
         .from('placement_constraints')
         .update({
+          side: side,
           constraint_image_url: constraintImageUrl,
           detected_area_pixels: detectedAreaPixels,
           detected_area_percentage: detectedAreaPercentage,
@@ -111,6 +113,7 @@ export async function POST(request: NextRequest) {
         .insert({
           item_id: productId,
           placement_type: placementType,
+          side: side,
           constraint_image_url: constraintImageUrl,
           detected_area_pixels: detectedAreaPixels,
           detected_area_percentage: detectedAreaPercentage,
@@ -150,7 +153,7 @@ export async function POST(request: NextRequest) {
         .from('gift_items')
         .update({
           [enableField]: true,
-          updated_by: session.user.id,
+          updated_by: user.userId,
           updated_at: new Date().toISOString(),
         })
         .eq('id', productId);
@@ -162,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     // Log the action
     await supabase.from('audit_log').insert({
-      admin_user_id: session.user.id,
+      admin_user_id: user.userId,
       action: existingConstraint ? 'UPDATE' : 'CREATE',
       entity_type: 'placement_constraint',
       entity_id: constraint.id,

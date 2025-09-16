@@ -12,7 +12,7 @@ export const pageTransitions = {
       opacity: 1;
     }
   `,
-  
+
   slideInFromRight: keyframes`
     from {
       transform: translateX(100%);
@@ -23,7 +23,7 @@ export const pageTransitions = {
       opacity: 1;
     }
   `,
-  
+
   slideInFromLeft: keyframes`
     from {
       transform: translateX(-100%);
@@ -34,7 +34,7 @@ export const pageTransitions = {
       opacity: 1;
     }
   `,
-  
+
   slideUp: keyframes`
     from {
       transform: translateY(20px);
@@ -45,7 +45,7 @@ export const pageTransitions = {
       opacity: 1;
     }
   `,
-  
+
   scaleIn: keyframes`
     from {
       transform: scale(0.95);
@@ -55,7 +55,7 @@ export const pageTransitions = {
       transform: scale(1);
       opacity: 1;
     }
-  `
+  `,
 };
 
 // Loading animations
@@ -68,7 +68,7 @@ export const loadingAnimations = {
       transform: rotate(360deg);
     }
   `,
-  
+
   pulse: keyframes`
     0%, 100% {
       opacity: 1;
@@ -77,7 +77,7 @@ export const loadingAnimations = {
       opacity: 0.5;
     }
   `,
-  
+
   wave: keyframes`
     0%, 60%, 100% {
       transform: initial;
@@ -86,7 +86,7 @@ export const loadingAnimations = {
       transform: translateY(-15px);
     }
   `,
-  
+
   skeleton: keyframes`
     0% {
       background-position: -200px 0;
@@ -95,7 +95,7 @@ export const loadingAnimations = {
       background-position: calc(200px + 100%) 0;
     }
   `,
-  
+
   bounce: keyframes`
     0%, 20%, 53%, 80%, 100% {
       animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -112,7 +112,7 @@ export const loadingAnimations = {
     90% {
       transform: translateY(-4px);
     }
-  `
+  `,
 };
 
 // Hover effects
@@ -125,7 +125,7 @@ export const hoverEffects = {
       transform: translateY(-4px);
     }
   `,
-  
+
   scaleHover: keyframes`
     from {
       transform: scale(1);
@@ -134,7 +134,7 @@ export const hoverEffects = {
       transform: scale(1.05);
     }
   `,
-  
+
   glow: keyframes`
     from {
       box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
@@ -143,7 +143,7 @@ export const hoverEffects = {
       box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
     }
   `,
-  
+
   shimmer: keyframes`
     0% {
       background-position: -1000px 0;
@@ -151,7 +151,7 @@ export const hoverEffects = {
     100% {
       background-position: 1000px 0;
     }
-  `
+  `,
 };
 
 // Micro-interactions
@@ -173,7 +173,7 @@ export const microInteractions = {
       transform: scale(1);
     }
   `,
-  
+
   wiggle: keyframes`
     0%, 7% {
       transform: rotateZ(0);
@@ -197,7 +197,7 @@ export const microInteractions = {
       transform: rotateZ(0);
     }
   `,
-  
+
   rubberBand: keyframes`
     from {
       transform: scale3d(1, 1, 1);
@@ -221,7 +221,7 @@ export const microInteractions = {
       transform: scale3d(1, 1, 1);
     }
   `,
-  
+
   tada: keyframes`
     from {
       transform: scale3d(1, 1, 1);
@@ -238,7 +238,7 @@ export const microInteractions = {
     to {
       transform: scale3d(1, 1, 1);
     }
-  `
+  `,
 };
 
 // Success animations
@@ -253,7 +253,7 @@ export const successAnimations = {
       stroke-dashoffset: 0;
     }
   `,
-  
+
   fadeInSuccess: keyframes`
     0% {
       opacity: 0;
@@ -271,7 +271,7 @@ export const successAnimations = {
       transform: scale(1);
     }
   `,
-  
+
   confetti: keyframes`
     0% {
       transform: rotateZ(15deg) rotateY(0deg) translate(0, 0);
@@ -281,7 +281,7 @@ export const successAnimations = {
       transform: rotateZ(15deg) rotateY(180deg) translate(-20px, -120px);
       opacity: 0;
     }
-  `
+  `,
 };
 
 // Animation timing functions
@@ -290,7 +290,7 @@ export const easingFunctions = {
   easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
   easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
   bounceOut: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-  elastic: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)'
+  elastic: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)',
 };
 
 // Animation durations
@@ -298,15 +298,15 @@ export const durations = {
   fast: '150ms',
   normal: '300ms',
   slow: '500ms',
-  slower: '700ms'
+  slower: '700ms',
 };
 
 // Scroll animations
 export const scrollAnimations = {
   parallax: (speed: number = 0.5) => ({
-    transform: `translateY(${speed * 100}px)`
+    transform: `translateY(${speed * 100}px)`,
   }),
-  
+
   revealUp: keyframes`
     from {
       opacity: 0;
@@ -317,7 +317,7 @@ export const scrollAnimations = {
       transform: translateY(0);
     }
   `,
-  
+
   revealDown: keyframes`
     from {
       opacity: 0;
@@ -328,7 +328,7 @@ export const scrollAnimations = {
       transform: translateY(0);
     }
   `,
-  
+
   revealLeft: keyframes`
     from {
       opacity: 0;
@@ -339,7 +339,7 @@ export const scrollAnimations = {
       transform: translateX(0);
     }
   `,
-  
+
   revealRight: keyframes`
     from {
       opacity: 0;
@@ -349,5 +349,5 @@ export const scrollAnimations = {
       opacity: 1;
       transform: translateX(0);
     }
-  `
+  `,
 };

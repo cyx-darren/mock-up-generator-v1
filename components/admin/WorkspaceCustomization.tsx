@@ -38,25 +38,25 @@ const defaultSettings: WorkspaceSettings = {
   tableSettings: {
     itemsPerPage: 10,
     defaultSort: 'name',
-    visibleColumns: ['name', 'category', 'sku', 'price', 'status', 'created', 'actions']
+    visibleColumns: ['name', 'category', 'sku', 'price', 'status', 'created', 'actions'],
   },
   dashboardWidgets: [
     { id: 'statistics', visible: true, position: 0 },
     { id: 'popular-products', visible: true, position: 1 },
     { id: 'recent-activity', visible: true, position: 2 },
     { id: 'system-health', visible: true, position: 3 },
-    { id: 'category-breakdown', visible: false, position: 4 }
+    { id: 'category-breakdown', visible: false, position: 4 },
   ],
   notifications: {
     desktop: true,
     email: false,
-    sound: false
+    sound: false,
   },
   accessibility: {
     reducedMotion: false,
     highContrast: false,
-    fontSize: 'medium'
-  }
+    fontSize: 'medium',
+  },
 };
 
 interface WorkspaceCustomizationProps {
@@ -81,32 +81,38 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
   }, []);
 
   // Save settings to localStorage and notify parent
-  const saveSettings = useCallback(async (newSettings: WorkspaceSettings) => {
-    try {
-      localStorage.setItem('workspace-settings', JSON.stringify(newSettings));
-      setSettings(newSettings);
-      onSettingsChange?.(newSettings);
-      setSuccess('Settings saved successfully');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error) {
-      setError('Failed to save settings');
-      setTimeout(() => setError(''), 3000);
-    }
-  }, [onSettingsChange]);
+  const saveSettings = useCallback(
+    async (newSettings: WorkspaceSettings) => {
+      try {
+        localStorage.setItem('workspace-settings', JSON.stringify(newSettings));
+        setSettings(newSettings);
+        onSettingsChange?.(newSettings);
+        setSuccess('Settings saved successfully');
+        setTimeout(() => setSuccess(''), 3000);
+      } catch (error) {
+        setError('Failed to save settings');
+        setTimeout(() => setError(''), 3000);
+      }
+    },
+    [onSettingsChange]
+  );
 
   // Update a specific setting
-  const updateSetting = useCallback((path: string, value: any) => {
-    const newSettings = { ...settings };
-    const keys = path.split('.');
-    let current = newSettings as any;
+  const updateSetting = useCallback(
+    (path: string, value: any) => {
+      const newSettings = { ...settings };
+      const keys = path.split('.');
+      let current = newSettings as any;
 
-    for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]];
-    }
-    current[keys[keys.length - 1]] = value;
+      for (let i = 0; i < keys.length - 1; i++) {
+        current = current[keys[i]];
+      }
+      current[keys[keys.length - 1]] = value;
 
-    saveSettings(newSettings);
-  }, [settings, saveSettings]);
+      saveSettings(newSettings);
+    },
+    [settings, saveSettings]
+  );
 
   // Reset to defaults
   const resetSettings = useCallback(() => {
@@ -138,7 +144,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
     { id: 'price', label: 'Price' },
     { id: 'status', label: 'Status' },
     { id: 'created', label: 'Created' },
-    { id: 'actions', label: 'Actions' }
+    { id: 'actions', label: 'Actions' },
   ];
 
   return (
@@ -149,9 +155,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
       {/* Appearance Settings */}
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Appearance
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Appearance</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Customize the look and feel of your workspace
           </p>
@@ -238,9 +242,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
       {/* Table Settings */}
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Table Settings
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Table Settings</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Configure how tables display data
           </p>
@@ -277,14 +279,12 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
                     onChange={(e) => {
                       const newColumns = e.target.checked
                         ? [...settings.tableSettings.visibleColumns, column.id]
-                        : settings.tableSettings.visibleColumns.filter(id => id !== column.id);
+                        : settings.tableSettings.visibleColumns.filter((id) => id !== column.id);
                       updateSetting('tableSettings.visibleColumns', newColumns);
                     }}
                     className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-900 dark:text-white">
-                    {column.label}
-                  </span>
+                  <span className="text-sm text-gray-900 dark:text-white">{column.label}</span>
                 </label>
               ))}
             </div>
@@ -295,9 +295,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
       {/* Dashboard Widgets */}
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Dashboard Widgets
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Dashboard Widgets</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Choose which widgets to display on your dashboard
           </p>
@@ -305,7 +303,10 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
         <CardBody>
           <div className="space-y-3">
             {settings.dashboardWidgets.map((widget) => (
-              <div key={widget.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div
+                key={widget.id}
+                className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+              >
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white capitalize">
                     {widget.id.replace('-', ' ')}
@@ -316,7 +317,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
                     type="checkbox"
                     checked={widget.visible}
                     onChange={(e) => {
-                      const newWidgets = settings.dashboardWidgets.map(w =>
+                      const newWidgets = settings.dashboardWidgets.map((w) =>
                         w.id === widget.id ? { ...w, visible: e.target.checked } : w
                       );
                       updateSetting('dashboardWidgets', newWidgets);
@@ -334,9 +335,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
       {/* Accessibility */}
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Accessibility
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Accessibility</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Make the interface more accessible
           </p>
@@ -354,7 +353,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
                 Reduce motion and animations
               </span>
             </label>
-            
+
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -362,9 +361,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
                 onChange={(e) => updateSetting('accessibility.highContrast', e.target.checked)}
                 className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-900 dark:text-white">
-                High contrast mode
-              </span>
+              <span className="text-sm text-gray-900 dark:text-white">High contrast mode</span>
             </label>
           </div>
 
@@ -387,10 +384,7 @@ export function WorkspaceCustomization({ onSettingsChange }: WorkspaceCustomizat
 
       {/* Actions */}
       <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-        <Button
-          variant="outline"
-          onClick={resetSettings}
-        >
+        <Button variant="outline" onClick={resetSettings}>
           Reset to Defaults
         </Button>
         <div className="text-sm text-gray-500 dark:text-gray-400">

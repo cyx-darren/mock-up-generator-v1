@@ -23,7 +23,7 @@ interface CacheEntry {
 class ResponseCache {
   private cache = new Map<string, CacheEntry>();
   private static instance: ResponseCache;
-  
+
   static getInstance(): ResponseCache {
     if (!ResponseCache.instance) {
       ResponseCache.instance = new ResponseCache();
@@ -37,7 +37,7 @@ class ResponseCache {
     const keyParts = [
       url.pathname,
       ...searchParams.map(([k, v]) => `${k}=${v}`),
-      ...additionalKeys
+      ...additionalKeys,
     ];
     return keyParts.join('|');
   }
@@ -48,7 +48,7 @@ class ResponseCache {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return `"${Math.abs(hash).toString(36)}"`;
@@ -65,7 +65,7 @@ class ResponseCache {
     }
 
     const cacheControl = [];
-    
+
     if (config.private) {
       cacheControl.push('private');
     } else {
@@ -103,7 +103,7 @@ class ResponseCache {
     // Add custom cache headers for debugging
     headers['X-Cache-Config'] = JSON.stringify({
       ttl: config.ttl,
-      tags: config.tags
+      tags: config.tags,
     });
 
     return headers;
@@ -137,9 +137,9 @@ class ResponseCache {
         data: null,
         headers: {
           ...this.buildCacheHeaders(config, entry.etag),
-          'X-Cache-Status': 'hit-304'
+          'X-Cache-Status': 'hit-304',
         },
-        hit: true
+        hit: true,
       };
     }
 
@@ -148,9 +148,9 @@ class ResponseCache {
       headers: {
         ...this.buildCacheHeaders(config, entry.etag),
         'X-Cache-Status': 'hit',
-        'Age': Math.floor(age / 1000).toString()
+        Age: Math.floor(age / 1000).toString(),
       },
-      hit: true
+      hit: true,
     };
   }
 
@@ -163,22 +163,22 @@ class ResponseCache {
     const cacheKey = this.generateCacheKey(request, additionalKeys);
     const etag = this.generateETag(data);
     const ttl = config.ttl || 300; // Default 5 minutes
-    
+
     if (!config.noCache && ttl > 0) {
       const entry: CacheEntry = {
         data,
         timestamp: Date.now(),
         ttl,
         tags: config.tags || [],
-        etag
+        etag,
       };
-      
+
       this.cache.set(cacheKey, entry);
     }
 
     const headers = {
       ...this.buildCacheHeaders(config, etag),
-      'X-Cache-Status': 'miss'
+      'X-Cache-Status': 'miss',
     };
 
     return { headers, etag };
@@ -228,7 +228,7 @@ class ResponseCache {
     return {
       size: this.cache.size,
       entries: Array.from(this.cache.keys()),
-      memoryUsage: totalSize
+      memoryUsage: totalSize,
     };
   }
 
@@ -236,7 +236,7 @@ class ResponseCache {
   cleanup(): number {
     let count = 0;
     const now = Date.now();
-    
+
     for (const [key, entry] of this.cache.entries()) {
       const age = now - entry.timestamp;
       if (age > entry.ttl * 1000) {
@@ -244,50 +244,51 @@ class ResponseCache {
         count++;
       }
     }
-    
+
     if (count > 0) {
       console.log(`Cache: Cleaned up ${count} expired entries`);
     }
-    
+
     return count;
   }
 }
 
 // Cache middleware wrapper
 export function withCache(config: CacheConfig = {}) {
-  return function cacheMiddleware(
-    handler: (request: NextRequest) => Promise<NextResponse>
-  ) {
+  return function cacheMiddleware(handler: (request: NextRequest) => Promise<NextResponse>) {
     return async function cachedHandler(request: NextRequest): Promise<NextResponse> {
       const cache = ResponseCache.getInstance();
-      
+
       // Try to get from cache
       const cached = await cache.get(request, config);
-      
+
       if (cached) {
         if (cached.data === null) {
           // Return 304 Not Modified
           return new NextResponse(null, {
             status: 304,
-            headers: cached.headers
+            headers: cached.headers,
           });
         }
-        
+
         // Return cached response
         return NextResponse.json(cached.data, {
-          headers: cached.headers
+          headers: cached.headers,
         });
       }
 
       // Execute handler
       const response = await handler(request);
-      
+
       // Cache the response if it's successful
       if (response.ok && !config.noCache) {
-        const data = await response.clone().json().catch(() => null);
+        const data = await response
+          .clone()
+          .json()
+          .catch(() => null);
         if (data) {
           const { headers } = await cache.set(request, data, config);
-          
+
           // Add cache headers to response
           Object.entries(headers).forEach(([key, value]) => {
             response.headers.set(key, value as string);
@@ -309,7 +310,7 @@ export const CacheConfigs = {
     sMaxAge: 600, // CDN cache for 10 minutes
     staleWhileRevalidate: 1800, // 30 minutes stale
     tags: ['products', 'catalog'],
-    vary: ['Accept-Encoding']
+    vary: ['Accept-Encoding'],
   } as CacheConfig,
 
   // Product metadata - 10 minutes
@@ -318,7 +319,7 @@ export const CacheConfigs = {
     maxAge: 600,
     sMaxAge: 1200,
     tags: ['products', 'metadata'],
-    vary: ['Accept-Encoding']
+    vary: ['Accept-Encoding'],
   } as CacheConfig,
 
   // Statistics - 2 minutes, private
@@ -327,7 +328,7 @@ export const CacheConfigs = {
     maxAge: 120,
     private: true,
     tags: ['statistics'],
-    mustRevalidate: true
+    mustRevalidate: true,
   } as CacheConfig,
 
   // Individual product - 15 minutes
@@ -337,13 +338,13 @@ export const CacheConfigs = {
     sMaxAge: 1800,
     staleWhileRevalidate: 3600,
     tags: ['products'],
-    vary: ['Accept-Encoding']
+    vary: ['Accept-Encoding'],
   } as CacheConfig,
 
   // No cache for mutations
   noCache: {
-    noCache: true
-  } as CacheConfig
+    noCache: true,
+  } as CacheConfig,
 };
 
 // Export singleton instance

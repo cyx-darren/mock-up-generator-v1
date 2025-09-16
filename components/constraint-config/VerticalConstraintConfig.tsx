@@ -332,7 +332,68 @@ export function VerticalConstraintConfig({
               ideal for tall products like water bottles, tumblers, or banners.
             </p>
 
+            {/* Show existing constraint info */}
+            {existingConstraint?.constraintImageUrl && !constraintImage && (
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                      ✅ Existing Constraint Active
+                    </h5>
+                    <p className="text-xs text-blue-600 dark:text-blue-300">
+                      Vertical placement constraint is configured and saved
+                    </p>
+                    {existingConstraint.detectedAreaPixels && (
+                      <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                        Coverage: {existingConstraint.detectedAreaPercentage}% (
+                        {existingConstraint.detectedAreaPixels.toLocaleString()} pixels)
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setConstraintImage({ file: null as any, url: '', detectedArea: undefined })
+                    }
+                    className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                  >
+                    Replace Image
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Show upload area when no existing constraint or user wants to replace */}
             {!existingConstraint?.constraintImageUrl && !constraintImage && (
+              <div className="mb-4">
+                <div className="p-4 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg mb-4">
+                  <div className="flex items-center">
+                    <div className="text-amber-600 dark:text-amber-400 mr-2">⚠️</div>
+                    <div>
+                      <h5 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        No Constraint Configured
+                      </h5>
+                      <p className="text-xs text-amber-600 dark:text-amber-300">
+                        Upload a constraint image to enable vertical placement
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <FileUploadManager
+                  onUploadComplete={handleFileUpload}
+                  maxFiles={1}
+                  multiple={false}
+                  validation={{
+                    maxSize: 10 * 1024 * 1024, // 10MB
+                    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Show upload area when replacing existing constraint */}
+            {constraintImage?.file === null && (
               <FileUploadManager
                 onUploadComplete={handleFileUpload}
                 maxFiles={1}
@@ -344,57 +405,79 @@ export function VerticalConstraintConfig({
               />
             )}
 
-            {(constraintImage || existingConstraint?.constraintImageUrl) && (
-              <div className="relative">
-                <img
-                  ref={imageRef}
-                  src={constraintImage?.url || existingConstraint?.constraintImageUrl}
-                  alt="Vertical constraint preview"
-                  className="max-w-full h-auto border border-gray-300 dark:border-gray-600 rounded-lg"
-                />
-                {isDetecting && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                    <div className="text-white text-sm flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Detecting vertical green areas...
-                    </div>
-                  </div>
-                )}
-                {constraintImage?.detectedArea && (
-                  <div className="mt-2 p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded">
-                    <p className="text-sm text-green-800 dark:text-green-200">
-                      <strong>Vertical Detection Results:</strong>
-                      <br />
-                      Green pixels: {constraintImage.detectedArea.pixels.toLocaleString()}
-                      <br />
-                      Coverage: {constraintImage.detectedArea.percentage}%<br />
-                      Bounds: {constraintImage.detectedArea.bounds.width} ×{' '}
-                      {constraintImage.detectedArea.bounds.height}px
-                      <br />
-                      {constraintImage.detectedArea.isVertical
-                        ? '✓ Vertical orientation detected'
-                        : '⚠ Consider adjusting for vertical orientation'}
-                    </p>
-                  </div>
-                )}
-                {constraintImage && (
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (constraintImage?.url) {
-                          URL.revokeObjectURL(constraintImage.url);
+            {/* Show constraint image preview */}
+            {(constraintImage?.url || existingConstraint?.constraintImageUrl) &&
+              constraintImage?.file !== null && (
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+                      Constraint Image Preview
+                    </h5>
+                    {(constraintImage?.url || existingConstraint?.constraintImageUrl) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setConstraintImage({
+                            file: null as any,
+                            url: '',
+                            detectedArea: undefined,
+                          })
                         }
-                        setConstraintImage(null);
-                      }}
-                    >
-                      Remove Image
-                    </Button>
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        Replace
+                      </Button>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+                  <img
+                    ref={imageRef}
+                    src={constraintImage?.url || existingConstraint?.constraintImageUrl}
+                    alt="Vertical constraint preview"
+                    className="max-w-full h-auto border border-gray-300 dark:border-gray-600 rounded-lg"
+                  />
+                  {isDetecting && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                      <div className="text-white text-sm flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Detecting vertical green areas...
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show detection results for new uploads */}
+                  {constraintImage?.detectedArea && (
+                    <div className="mt-2 p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded">
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        <strong>✅ New Vertical Detection Results:</strong>
+                        <br />
+                        Green pixels: {constraintImage.detectedArea.pixels.toLocaleString()}
+                        <br />
+                        Coverage: {constraintImage.detectedArea.percentage}%<br />
+                        Bounds: {constraintImage.detectedArea.bounds.width} ×{' '}
+                        {constraintImage.detectedArea.bounds.height}px
+                        <br />
+                        {constraintImage.detectedArea.isVertical
+                          ? '✓ Vertical orientation detected'
+                          : '⚠ Consider adjusting for vertical orientation'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Show existing constraint stats */}
+                  {!constraintImage?.detectedArea && existingConstraint?.detectedAreaPixels && (
+                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>📊 Saved Vertical Constraint Stats:</strong>
+                        <br />
+                        Green pixels: {existingConstraint.detectedAreaPixels.toLocaleString()}
+                        <br />
+                        Coverage: {existingConstraint.detectedAreaPercentage}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
             <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
           </div>

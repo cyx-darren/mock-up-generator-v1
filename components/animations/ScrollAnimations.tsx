@@ -4,10 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { scrollAnimations, durations, easingFunctions } from './AnimationUtils';
 
 // Hook for intersection observer
-function useIntersectionObserver(
-  threshold = 0.1,
-  rootMargin = '0px 0px -50px 0px'
-) {
+function useIntersectionObserver(threshold = 0.1, rootMargin = '0px 0px -50px 0px') {
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -35,12 +32,12 @@ function useIntersectionObserver(
 }
 
 // Reveal animation on scroll
-export function ScrollReveal({ 
+export function ScrollReveal({
   children,
   direction = 'up',
   delay = 0,
   duration = '600ms',
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   direction?: 'up' | 'down' | 'left' | 'right';
@@ -52,11 +49,16 @@ export function ScrollReveal({
 
   const getInitialTransform = () => {
     switch (direction) {
-      case 'up': return 'translateY(40px)';
-      case 'down': return 'translateY(-40px)';
-      case 'left': return 'translateX(40px)';
-      case 'right': return 'translateX(-40px)';
-      default: return 'translateY(40px)';
+      case 'up':
+        return 'translateY(40px)';
+      case 'down':
+        return 'translateY(-40px)';
+      case 'left':
+        return 'translateX(40px)';
+      case 'right':
+        return 'translateX(-40px)';
+      default:
+        return 'translateY(40px)';
     }
   };
 
@@ -68,7 +70,7 @@ export function ScrollReveal({
         opacity: isIntersecting ? 1 : 0,
         transform: isIntersecting ? 'translate(0)' : getInitialTransform(),
         transition: `all ${duration} ${easingFunctions.easeOut}`,
-        transitionDelay: `${delay}ms`
+        transitionDelay: `${delay}ms`,
       }}
     >
       {children}
@@ -77,11 +79,11 @@ export function ScrollReveal({
 }
 
 // Staggered scroll reveal
-export function StaggeredScrollReveal({ 
+export function StaggeredScrollReveal({
   children,
   staggerDelay = 100,
   direction = 'up',
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   staggerDelay?: number;
@@ -106,10 +108,10 @@ export function StaggeredScrollReveal({
 }
 
 // Parallax scroll effect
-export function ParallaxScroll({ 
+export function ParallaxScroll({
   children,
   speed = 0.5,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   speed?: number;
@@ -121,7 +123,7 @@ export function ParallaxScroll({
   useEffect(() => {
     const handleScroll = () => {
       if (!ref.current) return;
-      
+
       const scrollTop = window.pageYOffset;
       const rate = scrollTop * -speed;
       setOffset(rate);
@@ -136,7 +138,7 @@ export function ParallaxScroll({
       <div
         style={{
           transform: `translateY(${offset}px)`,
-          willChange: 'transform'
+          willChange: 'transform',
         }}
       >
         {children}
@@ -146,13 +148,13 @@ export function ParallaxScroll({
 }
 
 // Count up animation
-export function CountUp({ 
+export function CountUp({
   end,
   start = 0,
   duration = 2000,
   className = '',
   suffix = '',
-  prefix = '' 
+  prefix = '',
 }: {
   end: number;
   start?: number;
@@ -171,7 +173,7 @@ export function CountUp({
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
-      
+
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
       setCount(Math.floor(easeOutQuart * (end - start) + start));
 
@@ -185,17 +187,19 @@ export function CountUp({
 
   return (
     <span ref={ref} className={className}>
-      {prefix}{count.toLocaleString()}{suffix}
+      {prefix}
+      {count.toLocaleString()}
+      {suffix}
     </span>
   );
 }
 
 // Progress bar reveal
-export function ProgressReveal({ 
+export function ProgressReveal({
   progress,
   color = 'blue-500',
   height = '8px',
-  className = '' 
+  className = '',
 }: {
   progress: number;
   color?: string;
@@ -216,11 +220,15 @@ export function ProgressReveal({
   }, [isIntersecting, progress]);
 
   return (
-    <div ref={ref} className={`w-full bg-gray-200 rounded-full overflow-hidden ${className}`} style={{ height }}>
+    <div
+      ref={ref}
+      className={`w-full bg-gray-200 rounded-full overflow-hidden ${className}`}
+      style={{ height }}
+    >
       <div
         className={`bg-${color} rounded-full h-full transition-all duration-1000 ease-out`}
         style={{
-          width: `${Math.min(100, Math.max(0, animatedProgress))}%`
+          width: `${Math.min(100, Math.max(0, animatedProgress))}%`,
         }}
       />
     </div>
@@ -228,11 +236,11 @@ export function ProgressReveal({
 }
 
 // Typewriter effect
-export function TypeWriter({ 
+export function TypeWriter({
   text,
   speed = 100,
   className = '',
-  cursor = '|' 
+  cursor = '|',
 }: {
   text: string;
   speed?: number;
@@ -264,7 +272,7 @@ export function TypeWriter({
     if (!showCursor) return;
 
     const cursorTimer = setInterval(() => {
-      setShowCursor(prev => !prev);
+      setShowCursor((prev) => !prev);
     }, 500);
 
     return () => clearInterval(cursorTimer);
@@ -281,9 +289,9 @@ export function TypeWriter({
 }
 
 // Scroll triggered fade in/out
-export function ScrollFade({ 
+export function ScrollFade({
   children,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
@@ -297,22 +305,22 @@ export function ScrollFade({
 
       const rect = ref.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      
+
       let newOpacity = 1;
-      
+
       if (rect.top < 0) {
         newOpacity = Math.max(0, 1 + rect.top / 200);
       } else if (rect.bottom > windowHeight) {
         const overflow = rect.bottom - windowHeight;
         newOpacity = Math.max(0, 1 - overflow / 200);
       }
-      
+
       setOpacity(newOpacity);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Initial check
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -322,7 +330,7 @@ export function ScrollFade({
       className={className}
       style={{
         opacity,
-        transition: 'opacity 0.1s ease-out'
+        transition: 'opacity 0.1s ease-out',
       }}
     >
       {children}
@@ -331,9 +339,9 @@ export function ScrollFade({
 }
 
 // Sticky reveal header
-export function StickyRevealHeader({ 
+export function StickyRevealHeader({
   children,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
@@ -344,13 +352,13 @@ export function StickyRevealHeader({
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
@@ -362,7 +370,7 @@ export function StickyRevealHeader({
     <div
       className={`transition-transform duration-300 ${className}`}
       style={{
-        transform: isVisible ? 'translateY(0)' : 'translateY(-100%)'
+        transform: isVisible ? 'translateY(0)' : 'translateY(-100%)',
       }}
     >
       {children}

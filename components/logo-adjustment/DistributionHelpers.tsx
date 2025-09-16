@@ -27,90 +27,89 @@ export function DistributionHelpers({
   canvasWidth,
   canvasHeight,
   onLogosUpdate,
-  className = ''
+  className = '',
 }: DistributionHelpersProps) {
-  
   // Distribute logos horizontally with equal spacing
   const distributeHorizontally = () => {
     if (logos.length < 2) return;
-    
+
     const sortedLogos = [...logos].sort((a, b) => a.x - b.x);
     const leftMost = sortedLogos[0];
     const rightMost = sortedLogos[sortedLogos.length - 1];
     const totalWidth = rightMost.x - leftMost.x;
     const spacing = totalWidth / (sortedLogos.length - 1);
-    
+
     const distributed = sortedLogos.map((logo, index) => ({
       ...logo,
-      x: leftMost.x + (spacing * index)
+      x: leftMost.x + spacing * index,
     }));
-    
+
     onLogosUpdate(distributed);
   };
 
   // Distribute logos vertically with equal spacing
   const distributeVertically = () => {
     if (logos.length < 2) return;
-    
+
     const sortedLogos = [...logos].sort((a, b) => a.y - b.y);
     const topMost = sortedLogos[0];
     const bottomMost = sortedLogos[sortedLogos.length - 1];
     const totalHeight = bottomMost.y - topMost.y;
     const spacing = totalHeight / (sortedLogos.length - 1);
-    
+
     const distributed = sortedLogos.map((logo, index) => ({
       ...logo,
-      y: topMost.y + (spacing * index)
+      y: topMost.y + spacing * index,
     }));
-    
+
     onLogosUpdate(distributed);
   };
 
   // Align all logos horizontally
   const alignHorizontally = (position: 'top' | 'center' | 'bottom') => {
     let targetY: number;
-    
+
     switch (position) {
       case 'top':
-        targetY = Math.min(...logos.map(logo => logo.y - logo.height / 2)) + logos[0].height / 2;
+        targetY = Math.min(...logos.map((logo) => logo.y - logo.height / 2)) + logos[0].height / 2;
         break;
       case 'center':
         targetY = canvasHeight / 2;
         break;
       case 'bottom':
-        targetY = Math.max(...logos.map(logo => logo.y + logo.height / 2)) - logos[0].height / 2;
+        targetY = Math.max(...logos.map((logo) => logo.y + logo.height / 2)) - logos[0].height / 2;
         break;
     }
-    
-    const aligned = logos.map(logo => ({
+
+    const aligned = logos.map((logo) => ({
       ...logo,
-      y: targetY
+      y: targetY,
     }));
-    
+
     onLogosUpdate(aligned);
   };
 
   // Align all logos vertically
   const alignVertically = (position: 'left' | 'center' | 'right') => {
     let targetX: number;
-    
+
     switch (position) {
       case 'left':
-        targetX = Math.min(...logos.map(logo => logo.x - logo.width / 2)) + logos[0].width / 2;
+        targetX = Math.min(...logos.map((logo) => logo.x - logo.width / 2)) + logos[0].width / 2;
         break;
       case 'center':
         targetX = canvasWidth / 2;
         break;
       case 'right':
-        targetX = Math.max(...logos.map(logo => logo.x + logo.width / 2)) - logos[0].width / 2;
+        targetX = Math.max(...logos.map((logo) => logo.x + logo.width / 2)) - logos[0].width / 2;
         break;
     }
-    
-    const aligned = logos.map(logo => ({
+
+    const aligned = logos.map((logo) => ({
       ...logo,
-      x: targetX
+      x: targetX,
     }));
-    
+
     onLogosUpdate(aligned);
   };
 
@@ -119,70 +118,70 @@ export function DistributionHelpers({
     const totalLogos = Math.min(logos.length, rows * cols);
     const marginX = canvasWidth * 0.1;
     const marginY = canvasHeight * 0.1;
-    const availableWidth = canvasWidth - (marginX * 2);
-    const availableHeight = canvasHeight - (marginY * 2);
-    
+    const availableWidth = canvasWidth - marginX * 2;
+    const availableHeight = canvasHeight - marginY * 2;
+
     const cellWidth = availableWidth / cols;
     const cellHeight = availableHeight / rows;
-    
+
     const gridLogos = logos.slice(0, totalLogos).map((logo, index) => {
       const row = Math.floor(index / cols);
       const col = index % cols;
-      
+
       return {
         ...logo,
-        x: marginX + (col * cellWidth) + (cellWidth / 2),
-        y: marginY + (row * cellHeight) + (cellHeight / 2)
+        x: marginX + col * cellWidth + cellWidth / 2,
+        y: marginY + row * cellHeight + cellHeight / 2,
       };
     });
-    
+
     onLogosUpdate(gridLogos);
   };
 
   // Create circular arrangement
   const arrangeInCircle = () => {
     if (logos.length < 2) return;
-    
+
     const centerX = canvasWidth / 2;
     const centerY = canvasHeight / 2;
     const radius = Math.min(canvasWidth, canvasHeight) * 0.3;
     const angleStep = (2 * Math.PI) / logos.length;
-    
+
     const circular = logos.map((logo, index) => ({
       ...logo,
       x: centerX + Math.cos(angleStep * index) * radius,
-      y: centerY + Math.sin(angleStep * index) * radius
+      y: centerY + Math.sin(angleStep * index) * radius,
     }));
-    
+
     onLogosUpdate(circular);
   };
 
   // Create scattered random arrangement
   const scatterRandomly = () => {
     const margin = 50;
-    
-    const scattered = logos.map(logo => ({
+
+    const scattered = logos.map((logo) => ({
       ...logo,
       x: margin + Math.random() * (canvasWidth - margin * 2),
-      y: margin + Math.random() * (canvasHeight - margin * 2)
+      y: margin + Math.random() * (canvasHeight - margin * 2),
     }));
-    
+
     onLogosUpdate(scattered);
   };
 
   // Match sizes of all logos
   const matchSizes = () => {
     if (logos.length === 0) return;
-    
+
     const referenceWidth = logos[0].width;
     const referenceHeight = logos[0].height;
-    
-    const matched = logos.map(logo => ({
+
+    const matched = logos.map((logo) => ({
       ...logo,
       width: referenceWidth,
-      height: referenceHeight
+      height: referenceHeight,
     }));
-    
+
     onLogosUpdate(matched);
   };
 
@@ -191,12 +190,12 @@ export function DistributionHelpers({
     const margin = 50;
     const usableWidth = canvasWidth - margin * 2;
     const usableHeight = canvasHeight - margin * 2;
-    
+
     const patterned = logos.map((logo, index) => {
       const progress = index / (logos.length - 1 || 1);
-      let x = margin + progress * usableWidth;
+      const x = margin + progress * usableWidth;
       let y = margin + usableHeight / 2;
-      
+
       switch (pattern) {
         case 'diagonal':
           y = margin + progress * usableHeight;
@@ -208,14 +207,14 @@ export function DistributionHelpers({
           y = margin + (index % 2 === 0 ? usableHeight * 0.25 : usableHeight * 0.75);
           break;
       }
-      
+
       return {
         ...logo,
         x,
-        y
+        y,
       };
     });
-    
+
     onLogosUpdate(patterned);
   };
 
@@ -227,18 +226,16 @@ export function DistributionHelpers({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Distribution Tools
         </h3>
-        
+
         {!isMultipleLogos && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Multiple logos required for distribution tools
           </p>
         )}
-        
+
         {/* Basic Distribution */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Equal Spacing
-          </h4>
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Equal Spacing</h4>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -261,9 +258,7 @@ export function DistributionHelpers({
 
         {/* Alignment */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Bulk Alignment
-          </h4>
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Bulk Alignment</h4>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
               <p className="text-xs text-gray-500">Horizontal</p>
@@ -295,7 +290,7 @@ export function DistributionHelpers({
                 Align Bottom
               </Button>
             </div>
-            
+
             <div className="space-y-2">
               <p className="text-xs text-gray-500">Vertical</p>
               <Button
@@ -331,9 +326,7 @@ export function DistributionHelpers({
 
         {/* Grid Layouts */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Grid Layouts
-          </h4>
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Grid Layouts</h4>
           <div className="grid grid-cols-3 gap-2">
             <Button
               variant="outline"
@@ -412,16 +405,9 @@ export function DistributionHelpers({
 
         {/* Size Matching */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Size Control
-          </h4>
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Size Control</h4>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={matchSizes}
-              disabled={!isMultipleLogos}
-            >
+            <Button variant="outline" size="sm" onClick={matchSizes} disabled={!isMultipleLogos}>
               Match All Sizes
             </Button>
             <Button

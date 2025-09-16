@@ -24,7 +24,7 @@ export function ImageZoom({
   minZoom = 1,
   className = '',
   enablePan = true,
-  onZoomChange
+  onZoomChange,
 }: ImageZoomProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -33,89 +33,101 @@ export function ImageZoom({
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    
-    const delta = e.deltaY * -0.01;
-    const newZoom = Math.min(Math.max(zoom + delta, minZoom), maxZoom);
-    
-    if (newZoom !== zoom) {
-      // Calculate zoom center based on mouse position
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (rect) {
-        const centerX = (e.clientX - rect.left) / rect.width - 0.5;
-        const centerY = (e.clientY - rect.top) / rect.height - 0.5;
-        
-        // Adjust pan to keep the zoom centered on mouse position
-        const zoomDiff = newZoom - zoom;
-        setPan(prev => ({
-          x: prev.x - centerX * zoomDiff * width,
-          y: prev.y - centerY * zoomDiff * height
-        }));
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
+
+      const delta = e.deltaY * -0.01;
+      const newZoom = Math.min(Math.max(zoom + delta, minZoom), maxZoom);
+
+      if (newZoom !== zoom) {
+        // Calculate zoom center based on mouse position
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (rect) {
+          const centerX = (e.clientX - rect.left) / rect.width - 0.5;
+          const centerY = (e.clientY - rect.top) / rect.height - 0.5;
+
+          // Adjust pan to keep the zoom centered on mouse position
+          const zoomDiff = newZoom - zoom;
+          setPan((prev) => ({
+            x: prev.x - centerX * zoomDiff * width,
+            y: prev.y - centerY * zoomDiff * height,
+          }));
+        }
+
+        setZoom(newZoom);
+        onZoomChange?.(newZoom);
       }
-      
-      setZoom(newZoom);
-      onZoomChange?.(newZoom);
-    }
-  }, [zoom, minZoom, maxZoom, width, height, onZoomChange]);
+    },
+    [zoom, minZoom, maxZoom, width, height, onZoomChange]
+  );
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!enablePan || zoom <= minZoom) return;
-    
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - pan.x,
-      y: e.clientY - pan.y
-    });
-  }, [enablePan, zoom, minZoom, pan]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!enablePan || zoom <= minZoom) return;
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !enablePan) return;
-    
-    const newPan = {
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    };
-    
-    // Constrain pan to image boundaries
-    const maxPanX = (width * (zoom - 1)) / 2;
-    const maxPanY = (height * (zoom - 1)) / 2;
-    
-    setPan({
-      x: Math.min(Math.max(newPan.x, -maxPanX), maxPanX),
-      y: Math.min(Math.max(newPan.y, -maxPanY), maxPanY)
-    });
-  }, [isDragging, enablePan, dragStart, zoom, width, height]);
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - pan.x,
+        y: e.clientY - pan.y,
+      });
+    },
+    [enablePan, zoom, minZoom, pan]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isDragging || !enablePan) return;
+
+      const newPan = {
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      };
+
+      // Constrain pan to image boundaries
+      const maxPanX = (width * (zoom - 1)) / 2;
+      const maxPanY = (height * (zoom - 1)) / 2;
+
+      setPan({
+        x: Math.min(Math.max(newPan.x, -maxPanX), maxPanX),
+        y: Math.min(Math.max(newPan.y, -maxPanY), maxPanY),
+      });
+    },
+    [isDragging, enablePan, dragStart, zoom, width, height]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
-  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (zoom > minZoom) {
-      // Reset zoom and pan
-      setZoom(minZoom);
-      setPan({ x: 0, y: 0 });
-      onZoomChange?.(minZoom);
-    } else {
-      // Zoom to 2x at click position
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (rect) {
-        const newZoom = Math.min(2, maxZoom);
-        const centerX = (e.clientX - rect.left) / rect.width - 0.5;
-        const centerY = (e.clientY - rect.top) / rect.height - 0.5;
-        
-        setZoom(newZoom);
-        setPan({
-          x: -centerX * newZoom * width * 0.5,
-          y: -centerY * newZoom * height * 0.5
-        });
-        onZoomChange?.(newZoom);
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+
+      if (zoom > minZoom) {
+        // Reset zoom and pan
+        setZoom(minZoom);
+        setPan({ x: 0, y: 0 });
+        onZoomChange?.(minZoom);
+      } else {
+        // Zoom to 2x at click position
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (rect) {
+          const newZoom = Math.min(2, maxZoom);
+          const centerX = (e.clientX - rect.left) / rect.width - 0.5;
+          const centerY = (e.clientY - rect.top) / rect.height - 0.5;
+
+          setZoom(newZoom);
+          setPan({
+            x: -centerX * newZoom * width * 0.5,
+            y: -centerY * newZoom * height * 0.5,
+          });
+          onZoomChange?.(newZoom);
+        }
       }
-    }
-  }, [zoom, minZoom, maxZoom, width, height, onZoomChange]);
+    },
+    [zoom, minZoom, maxZoom, width, height, onZoomChange]
+  );
 
   const resetZoom = useCallback(() => {
     setZoom(minZoom);
@@ -132,81 +144,91 @@ export function ImageZoom({
   const zoomOut = useCallback(() => {
     const newZoom = Math.max(zoom / 1.2, minZoom);
     setZoom(newZoom);
-    
+
     // Reset pan if zooming out to minimum
     if (newZoom === minZoom) {
       setPan({ x: 0, y: 0 });
     }
-    
+
     onZoomChange?.(newZoom);
   }, [zoom, minZoom, onZoomChange]);
 
   // Touch support for mobile
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(
+    null
+  );
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      // Single touch - start pan
-      if (enablePan && zoom > minZoom) {
-        const touch = e.touches[0];
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 1) {
+        // Single touch - start pan
+        if (enablePan && zoom > minZoom) {
+          const touch = e.touches[0];
+          setTouchStart({
+            x: touch.clientX - pan.x,
+            y: touch.clientY - pan.y,
+          });
+        }
+      } else if (e.touches.length === 2) {
+        // Pinch zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const distance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+
         setTouchStart({
-          x: touch.clientX - pan.x,
-          y: touch.clientY - pan.y
+          x: (touch1.clientX + touch2.clientX) / 2,
+          y: (touch1.clientY + touch2.clientY) / 2,
+          distance,
         });
       }
-    } else if (e.touches.length === 2) {
-      // Pinch zoom
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const distance = Math.sqrt(
-        Math.pow(touch2.clientX - touch1.clientX, 2) + Math.pow(touch2.clientY - touch1.clientY, 2)
-      );
-      
-      setTouchStart({
-        x: (touch1.clientX + touch2.clientX) / 2,
-        y: (touch1.clientY + touch2.clientY) / 2,
-        distance
-      });
-    }
-  }, [enablePan, zoom, minZoom, pan]);
+    },
+    [enablePan, zoom, minZoom, pan]
+  );
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    if (!touchStart) return;
-    
-    if (e.touches.length === 1 && enablePan && zoom > minZoom) {
-      // Single touch pan
-      const touch = e.touches[0];
-      const newPan = {
-        x: touch.clientX - touchStart.x,
-        y: touch.clientY - touchStart.y
-      };
-      
-      const maxPanX = (width * (zoom - 1)) / 2;
-      const maxPanY = (height * (zoom - 1)) / 2;
-      
-      setPan({
-        x: Math.min(Math.max(newPan.x, -maxPanX), maxPanX),
-        y: Math.min(Math.max(newPan.y, -maxPanY), maxPanY)
-      });
-    } else if (e.touches.length === 2 && touchStart.distance) {
-      // Pinch zoom
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const currentDistance = Math.sqrt(
-        Math.pow(touch2.clientX - touch1.clientX, 2) + Math.pow(touch2.clientY - touch1.clientY, 2)
-      );
-      
-      const scale = currentDistance / touchStart.distance;
-      const newZoom = Math.min(Math.max(zoom * scale, minZoom), maxZoom);
-      
-      if (newZoom !== zoom) {
-        setZoom(newZoom);
-        onZoomChange?.(newZoom);
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      e.preventDefault();
+
+      if (!touchStart) return;
+
+      if (e.touches.length === 1 && enablePan && zoom > minZoom) {
+        // Single touch pan
+        const touch = e.touches[0];
+        const newPan = {
+          x: touch.clientX - touchStart.x,
+          y: touch.clientY - touchStart.y,
+        };
+
+        const maxPanX = (width * (zoom - 1)) / 2;
+        const maxPanY = (height * (zoom - 1)) / 2;
+
+        setPan({
+          x: Math.min(Math.max(newPan.x, -maxPanX), maxPanX),
+          y: Math.min(Math.max(newPan.y, -maxPanY), maxPanY),
+        });
+      } else if (e.touches.length === 2 && touchStart.distance) {
+        // Pinch zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.sqrt(
+          Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+        );
+
+        const scale = currentDistance / touchStart.distance;
+        const newZoom = Math.min(Math.max(zoom * scale, minZoom), maxZoom);
+
+        if (newZoom !== zoom) {
+          setZoom(newZoom);
+          onZoomChange?.(newZoom);
+        }
       }
-    }
-  }, [touchStart, enablePan, zoom, minZoom, maxZoom, width, height, onZoomChange]);
+    },
+    [touchStart, enablePan, zoom, minZoom, maxZoom, width, height, onZoomChange]
+  );
 
   const handleTouchEnd = useCallback(() => {
     setTouchStart(null);
@@ -216,7 +238,7 @@ export function ImageZoom({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target !== document.body) return;
-      
+
       switch (e.key) {
         case '+':
         case '=':
@@ -239,7 +261,9 @@ export function ImageZoom({
   }, [zoomIn, zoomOut, resetZoom]);
 
   return (
-    <div className={`relative overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-lg ${className}`}>
+    <div
+      className={`relative overflow-hidden bg-gray-100 dark:bg-gray-800 rounded-lg ${className}`}
+    >
       {/* Image Container */}
       <div
         ref={containerRef}
@@ -260,7 +284,7 @@ export function ImageZoom({
           className="absolute inset-0 transition-transform duration-200 ease-out"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            cursor: isDragging ? 'grabbing' : zoom > minZoom ? 'grab' : 'zoom-in'
+            cursor: isDragging ? 'grabbing' : zoom > minZoom ? 'grab' : 'zoom-in',
           }}
         >
           <Image
@@ -283,12 +307,17 @@ export function ImageZoom({
           title="Zoom In (+)"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
           </svg>
         </button>
-        
+
         <div className="w-full h-px bg-gray-200 dark:bg-gray-700" />
-        
+
         <button
           onClick={zoomOut}
           disabled={zoom <= minZoom}
@@ -299,9 +328,9 @@ export function ImageZoom({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
           </svg>
         </button>
-        
+
         <div className="w-full h-px bg-gray-200 dark:bg-gray-700" />
-        
+
         <button
           onClick={resetZoom}
           disabled={zoom === minZoom && pan.x === 0 && pan.y === 0}
@@ -309,7 +338,12 @@ export function ImageZoom({
           title="Reset Zoom (0)"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
         </button>
       </div>
@@ -335,7 +369,7 @@ export function ImageLightbox({
   alt,
   isOpen,
   onClose,
-  className = ''
+  className = '',
 }: {
   src: string;
   alt: string;
@@ -372,10 +406,15 @@ export function ImageLightbox({
           title="Close (Escape)"
         >
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
-        
+
         <ImageZoom
           src={src}
           alt={alt}
@@ -385,12 +424,9 @@ export function ImageLightbox({
           className="bg-transparent"
         />
       </div>
-      
+
       {/* Click outside to close */}
-      <div
-        className="absolute inset-0 -z-10"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 -z-10" onClick={onClose} />
     </div>
   );
 }

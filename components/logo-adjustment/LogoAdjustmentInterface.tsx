@@ -29,7 +29,7 @@ export function LogoAdjustmentInterface({
   canvasWidth = 400,
   canvasHeight = 400,
   onTransformChange,
-  className = ''
+  className = '',
 }: LogoAdjustmentProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [transform, setTransform] = useState<LogoTransform>({
@@ -40,9 +40,9 @@ export function LogoAdjustmentInterface({
     rotation: 0,
     scaleX: 1,
     scaleY: 1,
-    opacity: 1
+    opacity: 1,
   });
-  
+
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState<string>('');
@@ -52,34 +52,40 @@ export function LogoAdjustmentInterface({
   const gridSize = 10;
 
   // Update transform and notify parent
-  const updateTransform = useCallback((newTransform: Partial<LogoTransform>) => {
-    const updated = { ...transform, ...newTransform };
-    setTransform(updated);
-    onTransformChange(updated);
-  }, [transform, onTransformChange]);
+  const updateTransform = useCallback(
+    (newTransform: Partial<LogoTransform>) => {
+      const updated = { ...transform, ...newTransform };
+      setTransform(updated);
+      onTransformChange(updated);
+    },
+    [transform, onTransformChange]
+  );
 
   // Snap to grid helper
-  const snapValue = useCallback((value: number) => {
-    if (!snapToGrid) return value;
-    return Math.round(value / gridSize) * gridSize;
-  }, [snapToGrid]);
+  const snapValue = useCallback(
+    (value: number) => {
+      if (!snapToGrid) return value;
+      return Math.round(value / gridSize) * gridSize;
+    },
+    [snapToGrid]
+  );
 
   // Draw canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     // Clear canvas
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    
+
     // Draw grid
     if (showGrid) {
       ctx.strokeStyle = '#e5e7eb';
       ctx.lineWidth = 1;
-      
+
       // Vertical lines
       for (let x = 0; x <= canvasWidth; x += gridSize) {
         ctx.beginPath();
@@ -87,7 +93,7 @@ export function LogoAdjustmentInterface({
         ctx.lineTo(x, canvasHeight);
         ctx.stroke();
       }
-      
+
       // Horizontal lines
       for (let y = 0; y <= canvasHeight; y += gridSize) {
         ctx.beginPath();
@@ -103,30 +109,46 @@ export function LogoAdjustmentInterface({
     ctx.translate(transform.x, transform.y);
     ctx.rotate((transform.rotation * Math.PI) / 180);
     ctx.scale(transform.scaleX, transform.scaleY);
-    
+
     // Draw logo rectangle (placeholder)
     ctx.fillStyle = '#3b82f6';
     ctx.fillRect(-transform.width / 2, -transform.height / 2, transform.width, transform.height);
-    
+
     // Draw resize handles
     const handleSize = 8;
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 2;
-    
+
     // Corner handles
     const handles = [
-      { x: -transform.width / 2 - handleSize / 2, y: -transform.height / 2 - handleSize / 2, cursor: 'nw-resize' },
-      { x: transform.width / 2 - handleSize / 2, y: -transform.height / 2 - handleSize / 2, cursor: 'ne-resize' },
-      { x: transform.width / 2 - handleSize / 2, y: transform.height / 2 - handleSize / 2, cursor: 'se-resize' },
-      { x: -transform.width / 2 - handleSize / 2, y: transform.height / 2 - handleSize / 2, cursor: 'sw-resize' }
+      {
+        x: -transform.width / 2 - handleSize / 2,
+        y: -transform.height / 2 - handleSize / 2,
+        cursor: 'nw-resize',
+      },
+      {
+        x: transform.width / 2 - handleSize / 2,
+        y: -transform.height / 2 - handleSize / 2,
+        cursor: 'ne-resize',
+      },
+      {
+        x: transform.width / 2 - handleSize / 2,
+        y: transform.height / 2 - handleSize / 2,
+        cursor: 'se-resize',
+      },
+      {
+        x: -transform.width / 2 - handleSize / 2,
+        y: transform.height / 2 - handleSize / 2,
+        cursor: 'sw-resize',
+      },
     ];
-    
-    handles.forEach(handle => {
+
+    handles.forEach((handle) => {
       ctx.fillRect(handle.x, handle.y, handleSize, handleSize);
       ctx.strokeRect(handle.x, handle.y, handleSize, handleSize);
     });
-    
+
     ctx.restore();
   }, [transform, canvasWidth, canvasHeight, showGrid]);
 
@@ -134,33 +156,33 @@ export function LogoAdjustmentInterface({
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     setDragStart({ x, y });
     setIsDragging(true);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDragging) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const deltaX = x - dragStart.x;
     const deltaY = y - dragStart.y;
-    
+
     updateTransform({
       x: snapValue(transform.x + deltaX),
-      y: snapValue(transform.y + deltaY)
+      y: snapValue(transform.y + deltaY),
     });
-    
+
     setDragStart({ x, y });
   };
 
@@ -180,7 +202,7 @@ export function LogoAdjustmentInterface({
     { name: 'Center Right', x: canvasWidth * 0.75, y: canvasHeight * 0.5 },
     { name: 'Bottom Left', x: canvasWidth * 0.25, y: canvasHeight * 0.75 },
     { name: 'Bottom Center', x: canvasWidth * 0.5, y: canvasHeight * 0.75 },
-    { name: 'Bottom Right', x: canvasWidth * 0.75, y: canvasHeight * 0.75 }
+    { name: 'Bottom Right', x: canvasWidth * 0.75, y: canvasHeight * 0.75 },
   ];
 
   const applyPreset = (preset: { x: number; y: number }) => {
@@ -201,19 +223,19 @@ export function LogoAdjustmentInterface({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         />
-        
+
         {/* Canvas Controls */}
         <div className="absolute top-2 right-2 flex gap-2">
           <Button
             size="sm"
-            variant={showGrid ? "default" : "outline"}
+            variant={showGrid ? 'default' : 'outline'}
             onClick={() => setShowGrid(!showGrid)}
           >
             Grid
           </Button>
           <Button
             size="sm"
-            variant={snapToGrid ? "default" : "outline"}
+            variant={snapToGrid ? 'default' : 'outline'}
             onClick={() => setSnapToGrid(!snapToGrid)}
           >
             Snap
@@ -225,10 +247,8 @@ export function LogoAdjustmentInterface({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Resize Controls */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Size Controls
-          </h3>
-          
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Size Controls</h3>
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -282,11 +302,11 @@ export function LogoAdjustmentInterface({
               variant="outline"
               onClick={() => {
                 const aspectRatio = transform.width / transform.height;
-                updateTransform({ 
-                  scaleX: 1, 
+                updateTransform({
+                  scaleX: 1,
                   scaleY: 1,
                   width: Math.min(transform.width, transform.height) * aspectRatio,
-                  height: Math.min(transform.width, transform.height)
+                  height: Math.min(transform.width, transform.height),
                 });
               }}
               className="w-full"
@@ -301,7 +321,7 @@ export function LogoAdjustmentInterface({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Position Controls
           </h3>
-          
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -360,7 +380,7 @@ export function LogoAdjustmentInterface({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Transform Controls
           </h3>
-          
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -402,7 +422,9 @@ export function LogoAdjustmentInterface({
                 <Input
                   type="number"
                   value={Math.round(transform.opacity * 100)}
-                  onChange={(e) => updateTransform({ opacity: (parseInt(e.target.value) || 0) / 100 })}
+                  onChange={(e) =>
+                    updateTransform({ opacity: (parseInt(e.target.value) || 0) / 100 })
+                  }
                   className="w-20"
                   min={0}
                   max={100}
@@ -417,7 +439,7 @@ export function LogoAdjustmentInterface({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Alignment Tools
           </h3>
-          
+
           <div className="grid grid-cols-3 gap-2">
             <Button
               variant="outline"
@@ -440,7 +462,7 @@ export function LogoAdjustmentInterface({
             >
               Align Right
             </Button>
-            
+
             <Button
               variant="outline"
               onClick={() => updateTransform({ y: transform.height / 2 })}
@@ -468,10 +490,8 @@ export function LogoAdjustmentInterface({
 
       {/* Preset Positions */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Preset Positions
-        </h3>
-        
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Preset Positions</h3>
+
         <div className="grid grid-cols-3 gap-2">
           {presetPositions.map((preset, index) => (
             <Button
@@ -490,29 +510,25 @@ export function LogoAdjustmentInterface({
       <div className="flex gap-2">
         <Button
           variant="outline"
-          onClick={() => updateTransform({
-            x: canvasWidth / 2,
-            y: canvasHeight / 2,
-            width: 100,
-            height: 100,
-            rotation: 0,
-            scaleX: 1,
-            scaleY: 1,
-            opacity: 1
-          })}
+          onClick={() =>
+            updateTransform({
+              x: canvasWidth / 2,
+              y: canvasHeight / 2,
+              width: 100,
+              height: 100,
+              rotation: 0,
+              scaleX: 1,
+              scaleY: 1,
+              opacity: 1,
+            })
+          }
         >
           Reset All
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => updateTransform({ rotation: 0 })}
-        >
+        <Button variant="outline" onClick={() => updateTransform({ rotation: 0 })}>
           Reset Rotation
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => updateTransform({ scaleX: 1, scaleY: 1 })}
-        >
+        <Button variant="outline" onClick={() => updateTransform({ scaleX: 1, scaleY: 1 })}>
           Reset Scale
         </Button>
       </div>

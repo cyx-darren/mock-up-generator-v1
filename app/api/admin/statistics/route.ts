@@ -4,9 +4,9 @@ import { getOptimizedStatistics } from '@/lib/database/query-optimizer';
 import { withCache, CacheConfigs } from '@/lib/cache/response-cache';
 import { verifyAdminSession } from '@/lib/auth/admin-session';
 
-export const GET = withCache(CacheConfigs.statistics)(async function(request: NextRequest) {
+export const GET = withCache(CacheConfigs.statistics)(async function (request: NextRequest) {
   const supabase = await createOptimizedClient();
-  
+
   try {
     // Verify admin session
     const sessionResult = await verifyAdminSession(request);
@@ -31,12 +31,7 @@ export const GET = withCache(CacheConfigs.statistics)(async function(request: Ne
     const statisticsData = await getOptimizedStatistics(supabase);
 
     // Run additional queries in parallel for enhanced statistics
-    const [
-      recentActivity,
-      popularProducts,
-      systemHealth,
-      usageStats,
-    ] = await Promise.all([
+    const [recentActivity, popularProducts, systemHealth, usageStats] = await Promise.all([
       getRecentActivity(supabase),
       getPopularProducts(supabase),
       getSystemHealth(supabase),
@@ -50,14 +45,17 @@ export const GET = withCache(CacheConfigs.statistics)(async function(request: Ne
       systemHealth,
       usage: usageStats,
       lastUpdated: new Date().toISOString(),
-      cacheEnabled: useCache
+      cacheEnabled: useCache,
     });
   } catch (error) {
     console.error('Statistics API error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch statistics',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch statistics',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      },
+      { status: 500 }
+    );
   } finally {
     releaseClient(supabase);
   }

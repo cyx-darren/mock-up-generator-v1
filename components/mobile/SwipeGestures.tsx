@@ -22,7 +22,7 @@ export function useSwipeGestures(handlers: SwipeHandlers, config: SwipeConfig = 
     minDistance = 50,
     maxTime = 300,
     velocityThreshold = 0.3,
-    preventScroll = false
+    preventScroll = false,
   } = config;
 
   const touchStart = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -33,59 +33,65 @@ export function useSwipeGestures(handlers: SwipeHandlers, config: SwipeConfig = 
       touchStart.current = {
         x: touch.clientX,
         y: touch.clientY,
-        time: Date.now()
+        time: Date.now(),
       };
     }
   }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (preventScroll && touchStart.current) {
-      e.preventDefault();
-    }
-  }, [preventScroll]);
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (preventScroll && touchStart.current) {
+        e.preventDefault();
+      }
+    },
+    [preventScroll]
+  );
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (!touchStart.current || e.changedTouches.length !== 1) {
-      touchStart.current = null;
-      return;
-    }
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchStart.current || e.changedTouches.length !== 1) {
+        touchStart.current = null;
+        return;
+      }
 
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStart.current.x;
-    const deltaY = touch.clientY - touchStart.current.y;
-    const deltaTime = Date.now() - touchStart.current.time;
-    
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    const velocity = Math.sqrt(deltaX * deltaX + deltaY * deltaY) / deltaTime;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStart.current.x;
+      const deltaY = touch.clientY - touchStart.current.y;
+      const deltaTime = Date.now() - touchStart.current.time;
 
-    // Check if swipe meets minimum criteria
-    if (deltaTime <= maxTime && velocity >= velocityThreshold) {
-      // Determine primary direction
-      if (absX > absY && absX > minDistance) {
-        // Horizontal swipe
-        if (deltaX > 0) {
-          handlers.onSwipeRight?.();
-        } else {
-          handlers.onSwipeLeft?.();
-        }
-      } else if (absY > absX && absY > minDistance) {
-        // Vertical swipe
-        if (deltaY > 0) {
-          handlers.onSwipeDown?.();
-        } else {
-          handlers.onSwipeUp?.();
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+      const velocity = Math.sqrt(deltaX * deltaX + deltaY * deltaY) / deltaTime;
+
+      // Check if swipe meets minimum criteria
+      if (deltaTime <= maxTime && velocity >= velocityThreshold) {
+        // Determine primary direction
+        if (absX > absY && absX > minDistance) {
+          // Horizontal swipe
+          if (deltaX > 0) {
+            handlers.onSwipeRight?.();
+          } else {
+            handlers.onSwipeLeft?.();
+          }
+        } else if (absY > absX && absY > minDistance) {
+          // Vertical swipe
+          if (deltaY > 0) {
+            handlers.onSwipeDown?.();
+          } else {
+            handlers.onSwipeUp?.();
+          }
         }
       }
-    }
 
-    touchStart.current = null;
-  }, [handlers, minDistance, maxTime, velocityThreshold]);
+      touchStart.current = null;
+    },
+    [handlers, minDistance, maxTime, velocityThreshold]
+  );
 
   return {
     onTouchStart: handleTouchStart,
     onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd
+    onTouchEnd: handleTouchEnd,
   };
 }
 
@@ -99,7 +105,7 @@ export function SwipeContainer({
   className = '',
   preventScroll = false,
   minDistance = 50,
-  showSwipeIndicators = false
+  showSwipeIndicators = false,
 }: {
   children: ReactNode;
   onSwipeLeft?: () => void;
@@ -111,51 +117,71 @@ export function SwipeContainer({
   minDistance?: number;
   showSwipeIndicators?: boolean;
 }) {
-  const swipeHandlers = useSwipeGestures({
-    onSwipeLeft,
-    onSwipeRight,
-    onSwipeUp,
-    onSwipeDown
-  }, {
-    minDistance,
-    preventScroll
-  });
+  const swipeHandlers = useSwipeGestures(
+    {
+      onSwipeLeft,
+      onSwipeRight,
+      onSwipeUp,
+      onSwipeDown,
+    },
+    {
+      minDistance,
+      preventScroll,
+    }
+  );
 
   return (
-    <div
-      className={`relative ${className}`}
-      {...swipeHandlers}
-    >
+    <div className={`relative ${className}`} {...swipeHandlers}>
       {children}
-      
+
       {/* Optional swipe indicators */}
       {showSwipeIndicators && (
         <div className="absolute inset-0 pointer-events-none">
           {onSwipeLeft && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 opacity-30">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </div>
           )}
           {onSwipeRight && (
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 opacity-30">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </div>
           )}
           {onSwipeUp && (
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-gray-400 opacity-30">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 15l7-7 7 7"
+                />
               </svg>
             </div>
           )}
           {onSwipeDown && (
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-gray-400 opacity-30">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           )}
@@ -171,7 +197,7 @@ export function SwipeCardStack({
   onSwipeLeft,
   onSwipeRight,
   renderCard,
-  className = ''
+  className = '',
 }: {
   items: any[];
   onSwipeLeft?: (item: any, index: number) => void;
@@ -201,7 +227,12 @@ export function SwipeCardStack({
     return (
       <div className={`flex items-center justify-center p-8 text-gray-500 ${className}`}>
         <div className="text-center">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-16 h-16 mx-auto mb-4 text-gray-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
           <p className="text-lg font-medium">All done!</p>
@@ -220,7 +251,7 @@ export function SwipeCardStack({
         className="relative"
       >
         {renderCard(items[currentIndex], currentIndex)}
-        
+
         {/* Next card preview (slightly visible behind) */}
         {currentIndex + 1 < items.length && (
           <div className="absolute inset-0 -z-10 transform scale-95 opacity-50">
@@ -228,14 +259,18 @@ export function SwipeCardStack({
           </div>
         )}
       </SwipeContainer>
-      
+
       {/* Progress indicator */}
       <div className="flex justify-center mt-4 space-x-2">
         {items.map((_, index) => (
           <div
             key={index}
             className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-blue-500' : index < currentIndex ? 'bg-green-500' : 'bg-gray-300'
+              index === currentIndex
+                ? 'bg-blue-500'
+                : index < currentIndex
+                  ? 'bg-green-500'
+                  : 'bg-gray-300'
             }`}
           />
         ))}
@@ -249,15 +284,15 @@ export function SwipeTabs({
   tabs,
   activeTab,
   onTabChange,
-  className = ''
+  className = '',
 }: {
   tabs: Array<{ id: string; label: string; content: ReactNode }>;
   activeTab: string;
   onTabChange: (tabId: string) => void;
   className?: string;
 }) {
-  const activeIndex = tabs.findIndex(tab => tab.id === activeTab);
-  
+  const activeIndex = tabs.findIndex((tab) => tab.id === activeTab);
+
   const handleSwipeLeft = useCallback(() => {
     const nextIndex = (activeIndex + 1) % tabs.length;
     onTabChange(tabs[nextIndex].id);
@@ -297,7 +332,7 @@ export function SwipeTabs({
       >
         {activeContent}
       </SwipeContainer>
-      
+
       {/* Swipe hint */}
       <div className="text-center mt-2 text-xs text-gray-400">
         Swipe left or right to change tabs
@@ -311,7 +346,7 @@ export function SwipeDismissNotification({
   children,
   onDismiss,
   className = '',
-  position = 'top'
+  position = 'top',
 }: {
   children: ReactNode;
   onDismiss: () => void;
@@ -320,14 +355,14 @@ export function SwipeDismissNotification({
 }) {
   const [isVisible, setIsVisible] = React.useState(true);
   const [translateX, setTranslateX] = React.useState(0);
-  
+
   const touchStart = useRef<{ x: number; time: number } | null>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       touchStart.current = {
         x: e.touches[0].clientX,
-        time: Date.now()
+        time: Date.now(),
       };
     }
   }, []);
@@ -362,7 +397,7 @@ export function SwipeDismissNotification({
       className={`fixed left-4 right-4 ${positionClasses} z-50 transform transition-all duration-300 ${className}`}
       style={{
         transform: `translateX(${translateX}px) ${!isVisible ? 'scale(0.8) opacity-0' : ''}`,
-        opacity: 1 - Math.abs(translateX) / 200
+        opacity: 1 - Math.abs(translateX) / 200,
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -370,7 +405,7 @@ export function SwipeDismissNotification({
     >
       <div className="bg-white rounded-lg shadow-lg border p-4 relative">
         {children}
-        
+
         {/* Dismiss hint */}
         {Math.abs(translateX) > 20 && (
           <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-90 text-white text-sm font-medium rounded-lg">

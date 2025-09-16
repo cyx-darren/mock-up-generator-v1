@@ -33,7 +33,7 @@ class ImageOptimizer {
       supportedFormats: ['webp', 'jpeg', 'png', 'avif'],
       maxWidth: 2048,
       maxHeight: 2048,
-      ...config
+      ...config,
     };
   }
 
@@ -47,7 +47,7 @@ class ImageOptimizer {
   // Generate optimized image URL
   optimizeImage(imageUrl: string, options: ImageOptimizationOptions = {}): string {
     if (!imageUrl) return '';
-    
+
     // Handle relative URLs
     if (imageUrl.startsWith('/')) {
       imageUrl = `${this.config.baseUrl}${imageUrl}`;
@@ -127,15 +127,15 @@ class ImageOptimizer {
     // Extract the file path from Supabase URL
     const url = new URL(imageUrl);
     const pathParts = url.pathname.split('/');
-    const bucketIndex = pathParts.findIndex(part => part === 'storage');
-    
+    const bucketIndex = pathParts.findIndex((part) => part === 'storage');
+
     if (bucketIndex !== -1 && bucketIndex < pathParts.length - 3) {
       const bucket = pathParts[bucketIndex + 2];
       const filePath = pathParts.slice(bucketIndex + 3).join('/');
-      
+
       // Build transformation URL
       const transformParams = new URLSearchParams();
-      
+
       // Map our params to Supabase transform params
       if (params.has('w')) transformParams.set('width', params.get('w')!);
       if (params.has('h')) transformParams.set('height', params.get('h')!);
@@ -155,7 +155,7 @@ class ImageOptimizer {
     // Use Next.js Image Optimization API
     const nextParams = new URLSearchParams();
     nextParams.set('url', encodeURIComponent(imageUrl));
-    
+
     // Map our params to Next.js params
     if (params.has('w')) nextParams.set('w', params.get('w')!);
     if (params.has('q')) nextParams.set('q', params.get('q')!);
@@ -167,7 +167,7 @@ class ImageOptimizer {
     // Use our image proxy for external images
     const params = new URLSearchParams();
     params.set('url', encodeURIComponent(imageUrl));
-    
+
     if (options.width) params.set('w', options.width.toString());
     if (options.height) params.set('h', options.height.toString());
     if (options.quality) params.set('q', options.quality.toString());
@@ -183,28 +183,28 @@ class ImageOptimizer {
   ): { src: string; srcSet: string; sizes: string } {
     const breakpoints = [320, 640, 768, 1024, 1280, 1920];
     const baseWidth = options.width || 1200;
-    
+
     const srcSet = breakpoints
-      .filter(bp => bp <= baseWidth)
-      .map(width => {
+      .filter((bp) => bp <= baseWidth)
+      .map((width) => {
         const optimizedUrl = this.optimizeImage(imageUrl, {
           ...options,
           width,
-          height: options.height ? Math.round((options.height * width) / baseWidth) : undefined
+          height: options.height ? Math.round((options.height * width) / baseWidth) : undefined,
         });
         return `${optimizedUrl} ${width}w`;
       })
       .join(', ');
 
     const src = this.optimizeImage(imageUrl, options);
-    
+
     const sizes = [
       '(max-width: 320px) 320px',
       '(max-width: 640px) 640px',
       '(max-width: 768px) 768px',
       '(max-width: 1024px) 1024px',
       '(max-width: 1280px) 1280px',
-      '1920px'
+      '1920px',
     ].join(', ');
 
     return { src, srcSet, sizes };
@@ -217,9 +217,9 @@ class ImageOptimizer {
         const optimizedUrl = this.optimizeImage(url, {
           quality: 85,
           format: 'webp',
-          ...options
+          ...options,
         });
-        
+
         return `<link rel="preload" as="image" href="${optimizedUrl}" />`;
       })
       .join('\n');
@@ -247,7 +247,7 @@ class ImageOptimizer {
   // Check if format is supported by browser
   static supportsFormat(format: string, userAgent?: string): boolean {
     const ua = userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : '');
-    
+
     switch (format) {
       case 'webp':
         return /Chrome|Firefox|Edge|Opera/.test(ua) || /Safari/.test(ua);
@@ -284,7 +284,9 @@ export function generateResponsiveImage(url: string, options?: ImageOptimization
   return optimizer.generateResponsiveSet(url, options);
 }
 
-export function preloadCriticalImages(images: { url: string; options?: ImageOptimizationOptions }[]) {
+export function preloadCriticalImages(
+  images: { url: string; options?: ImageOptimizationOptions }[]
+) {
   const optimizer = ImageOptimizer.getInstance();
   return optimizer.generatePreloadTags(images);
 }

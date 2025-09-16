@@ -209,16 +209,79 @@ export function AllOverConstraintConfig({
         </CardHeader>
         <CardBody>
           <div className="space-y-4">
-            <FileUploadManager
-              onFilesSelected={handleImageUpload}
-              accept="image/*"
-              maxFiles={1}
-              maxFileSize={10 * 1024 * 1024}
-              onUploadProgress={setUploadProgress}
-            />
+            {/* Show existing constraint info */}
+            {existingConstraint?.constraintImageUrl && !constraintImage && (
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                      ✅ Existing Pattern Constraint Active
+                    </h5>
+                    <p className="text-xs text-blue-600 dark:text-blue-300">
+                      All-over print pattern constraint is configured and saved
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                      Pattern Repeats: {existingConstraint.patternRepeatX}×
+                      {existingConstraint.patternRepeatY}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConstraintImage('')}
+                    className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                  >
+                    Replace Image
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Show upload area when no existing constraint */}
+            {!existingConstraint?.constraintImageUrl && !constraintImage && (
+              <div className="mb-4">
+                <div className="p-4 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg mb-4">
+                  <div className="flex items-center">
+                    <div className="text-amber-600 dark:text-amber-400 mr-2">⚠️</div>
+                    <div>
+                      <h5 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        No Pattern Constraint Configured
+                      </h5>
+                      <p className="text-xs text-amber-600 dark:text-amber-300">
+                        Upload a pattern template to enable all-over printing
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show upload area when replacing or no existing constraint */}
+            {!constraintImage && (
+              <FileUploadManager
+                onFilesSelected={handleImageUpload}
+                accept="image/*"
+                maxFiles={1}
+                maxFileSize={10 * 1024 * 1024}
+                onUploadProgress={setUploadProgress}
+              />
+            )}
 
             {constraintImage && (
               <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="text-sm font-medium text-gray-900 dark:text-white">
+                    Pattern Template Preview
+                  </h5>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConstraintImage('')}
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    Replace
+                  </Button>
+                </div>
                 <div className="relative w-full max-w-md mx-auto">
                   <Image
                     src={constraintImage}

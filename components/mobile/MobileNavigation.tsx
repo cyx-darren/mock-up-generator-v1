@@ -15,7 +15,7 @@ interface NavItem {
 // Bottom navigation for mobile
 export function BottomNavigation({
   items,
-  className = ''
+  className = '',
 }: {
   items: NavItem[];
   className?: string;
@@ -23,11 +23,13 @@ export function BottomNavigation({
   const pathname = usePathname();
 
   return (
-    <nav className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb ${className}`}>
+    <nav
+      className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb ${className}`}
+    >
       <div className="flex">
         {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          
+
           return (
             <Link
               key={item.id}
@@ -48,7 +50,9 @@ export function BottomNavigation({
                   </span>
                 )}
               </div>
-              <span className={`text-xs mt-1 font-medium ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
+              <span
+                className={`text-xs mt-1 font-medium ${isActive ? 'text-blue-600' : 'text-gray-600'}`}
+              >
                 {item.label}
               </span>
             </Link>
@@ -64,7 +68,7 @@ export function HamburgerMenu({
   items,
   isOpen,
   onToggle,
-  className = ''
+  className = '',
 }: {
   items: Array<{
     id: string;
@@ -150,7 +154,12 @@ export function HamburgerMenu({
               className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -202,7 +211,7 @@ export function MobileDropdown({
   isOpen,
   onToggle,
   align = 'right',
-  className = ''
+  className = '',
 }: {
   trigger: ReactNode;
   items: Array<{
@@ -221,17 +230,10 @@ export function MobileDropdown({
   return (
     <div className={`relative ${className}`}>
       {/* Trigger */}
-      <div onClick={onToggle}>
-        {trigger}
-      </div>
+      <div onClick={onToggle}>{trigger}</div>
 
       {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={onToggle}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 z-30" onClick={onToggle} />}
 
       {/* Dropdown */}
       <div
@@ -280,7 +282,7 @@ export function MobileHeader({
   rightAction,
   showBackButton = false,
   onBack,
-  className = ''
+  className = '',
 }: {
   title?: string;
   leftAction?: ReactNode;
@@ -290,7 +292,9 @@ export function MobileHeader({
   className?: string;
 }) {
   return (
-    <header className={`sticky top-0 z-40 bg-white border-b border-gray-200 safe-area-pt ${className}`}>
+    <header
+      className={`sticky top-0 z-40 bg-white border-b border-gray-200 safe-area-pt ${className}`}
+    >
       <div className="flex items-center justify-between h-16 px-4">
         {/* Left side */}
         <div className="flex items-center min-w-0">
@@ -300,22 +304,21 @@ export function MobileHeader({
               className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors mr-2"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
           )}
           {leftAction}
-          {title && (
-            <h1 className="text-lg font-semibold text-gray-900 truncate">
-              {title}
-            </h1>
-          )}
+          {title && <h1 className="text-lg font-semibold text-gray-900 truncate">{title}</h1>}
         </div>
 
         {/* Right side */}
-        <div className="flex items-center">
-          {rightAction}
-        </div>
+        <div className="flex items-center">{rightAction}</div>
       </div>
     </header>
   );
@@ -330,7 +333,7 @@ export function MobileSearchBar({
   onBlur,
   showCancel = false,
   onCancel,
-  className = ''
+  className = '',
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -348,8 +351,18 @@ export function MobileSearchBar({
       {/* Search input */}
       <div className="flex-1 relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </div>
         <input
@@ -373,7 +386,11 @@ export function MobileSearchBar({
             className="absolute inset-y-0 right-0 pr-3 flex items-center"
           >
             <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         )}

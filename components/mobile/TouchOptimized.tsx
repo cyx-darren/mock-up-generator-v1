@@ -20,20 +20,22 @@ export function TouchButton({
   className?: string;
   [key: string]: any;
 }) {
-  const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 select-none';
-  
+  const baseClasses =
+    'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 select-none';
+
   // Minimum 44px touch target for accessibility
   const sizeClasses = {
     small: 'min-h-[44px] px-4 py-2 text-sm',
     medium: 'min-h-[48px] px-6 py-3 text-base',
-    large: 'min-h-[52px] px-8 py-4 text-lg'
+    large: 'min-h-[52px] px-8 py-4 text-lg',
   };
 
   const variantClasses = {
     primary: 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500',
     secondary: 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 border border-gray-300 focus:ring-gray-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500'
+    ghost:
+      'bg-transparent hover:bg-gray-100 text-gray-700 border border-gray-300 focus:ring-gray-500',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
   };
 
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '';
@@ -56,7 +58,7 @@ export function TouchCard({
   children,
   onClick,
   className = '',
-  elevated = false
+  elevated = false,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -64,7 +66,9 @@ export function TouchCard({
   elevated?: boolean;
 }) {
   const baseClasses = 'rounded-lg transition-all duration-200 select-none';
-  const interactiveClasses = onClick ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' : '';
+  const interactiveClasses = onClick
+    ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+    : '';
   const shadowClasses = elevated ? 'shadow-lg hover:shadow-xl' : 'shadow-sm hover:shadow-md';
 
   return (
@@ -73,12 +77,16 @@ export function TouchCard({
       onClick={onClick}
       tabIndex={onClick ? 0 : undefined}
       role={onClick ? 'button' : undefined}
-      onKeyDown={onClick ? (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      } : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
     >
       {children}
     </div>
@@ -92,7 +100,7 @@ export function TouchToggle({
   label,
   size = 'medium',
   disabled = false,
-  className = ''
+  className = '',
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -104,7 +112,7 @@ export function TouchToggle({
   const sizeClasses = {
     small: { switch: 'w-11 h-6', circle: 'w-4 h-4', translate: 'translate-x-5' },
     medium: { switch: 'w-14 h-7', circle: 'w-5 h-5', translate: 'translate-x-7' },
-    large: { switch: 'w-16 h-8', circle: 'w-6 h-6', translate: 'translate-x-8' }
+    large: { switch: 'w-16 h-8', circle: 'w-6 h-6', translate: 'translate-x-8' },
   };
 
   const { switch: switchSize, circle: circleSize, translate } = sizeClasses[size];
@@ -147,7 +155,7 @@ export function TouchInput({
   placeholder = '',
   error = '',
   disabled = false,
-  className = ''
+  className = '',
 }: {
   label: string;
   type?: string;
@@ -160,9 +168,7 @@ export function TouchInput({
 }) {
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+      <label className="block text-sm font-medium text-gray-700">{label}</label>
       <input
         type={type}
         value={value}
@@ -175,9 +181,7 @@ export function TouchInput({
             : 'border-gray-300 bg-white text-gray-900 placeholder-gray-400'
         } ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'hover:border-gray-400'}`}
       />
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }
@@ -187,7 +191,7 @@ export function TouchTabs({
   tabs,
   activeTab,
   onTabChange,
-  className = ''
+  className = '',
 }: {
   tabs: Array<{ id: string; label: string; icon?: ReactNode }>;
   activeTab: string;
@@ -223,7 +227,7 @@ export function TouchSlider({
   step = 1,
   label = '',
   showValue = true,
-  className = ''
+  className = '',
 }: {
   value: number;
   onChange: (value: number) => void;
@@ -238,12 +242,8 @@ export function TouchSlider({
     <div className={`space-y-2 ${className}`}>
       {label && (
         <div className="flex justify-between">
-          <label className="block text-sm font-medium text-gray-700">
-            {label}
-          </label>
-          {showValue && (
-            <span className="text-sm text-gray-500">{value}</span>
-          )}
+          <label className="block text-sm font-medium text-gray-700">{label}</label>
+          {showValue && <span className="text-sm text-gray-500">{value}</span>}
         </div>
       )}
       <div className="relative">
@@ -256,7 +256,7 @@ export function TouchSlider({
           onChange={(e) => onChange(Number(e.target.value))}
           className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 slider"
           style={{
-            background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((value - min) / (max - min)) * 100}%, #E5E7EB ${((value - min) / (max - min)) * 100}%, #E5E7EB 100%)`
+            background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((value - min) / (max - min)) * 100}%, #E5E7EB ${((value - min) / (max - min)) * 100}%, #E5E7EB 100%)`,
           }}
         />
         <style jsx>{`
@@ -265,7 +265,7 @@ export function TouchSlider({
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            background: #3B82F6;
+            background: #3b82f6;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             cursor: pointer;
@@ -281,7 +281,7 @@ export function TouchSlider({
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            background: #3B82F6;
+            background: #3b82f6;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             cursor: pointer;
@@ -305,7 +305,7 @@ export function TouchFAB({
   onClick,
   position = 'bottom-right',
   size = 'medium',
-  className = ''
+  className = '',
 }: {
   children: ReactNode;
   onClick: () => void;
@@ -316,13 +316,13 @@ export function TouchFAB({
   const sizeClasses = {
     small: 'w-12 h-12',
     medium: 'w-14 h-14',
-    large: 'w-16 h-16'
+    large: 'w-16 h-16',
   };
 
   const positionClasses = {
     'bottom-right': 'bottom-6 right-6',
     'bottom-left': 'bottom-6 left-6',
-    'bottom-center': 'bottom-6 left-1/2 transform -translate-x-1/2'
+    'bottom-center': 'bottom-6 left-1/2 transform -translate-x-1/2',
   };
 
   return (

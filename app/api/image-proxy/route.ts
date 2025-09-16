@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
       'images.unsplash.com',
       'supabase.co',
       'easyprintsg.com',
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('.supabase.co', '')
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('.supabase.co', ''),
     ].filter(Boolean);
 
-    const isAllowed = allowedDomains.some(domain => 
-      url.hostname === domain || url.hostname.endsWith(`.${domain}`)
+    const isAllowed = allowedDomains.some(
+      (domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`)
     );
 
     if (!isAllowed) {
@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
     // Fetch the image
     const imageResponse = await fetch(url.toString(), {
       headers: {
-        'User-Agent': 'MockupGen-ImageProxy/1.0'
-      }
+        'User-Agent': 'MockupGen-ImageProxy/1.0',
+      },
     });
 
     if (!imageResponse.ok) {
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       'Content-Type': `image/${format}`,
       'Cache-Control': 'public, max-age=31536000, immutable', // 1 year cache
       'X-Image-Proxy': 'optimized',
-      'Vary': 'Accept'
+      Vary: 'Accept',
     };
 
     // Add optimization headers
@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
 
     // Return optimized image
     return new NextResponse(imageBuffer, { headers });
-
   } catch (error) {
     console.error('Image proxy error:', error);
     return NextResponse.json({ error: 'Image proxy failed' }, { status: 500 });
@@ -105,8 +104,8 @@ export async function HEAD(request: NextRequest) {
         'Content-Type': response.headers.get('content-type') || 'application/octet-stream',
         'Content-Length': response.headers.get('content-length') || '0',
         'Last-Modified': response.headers.get('last-modified') || new Date().toUTCString(),
-        'Cache-Control': 'public, max-age=3600'
-      }
+        'Cache-Control': 'public, max-age=3600',
+      },
     });
   } catch (error) {
     return new NextResponse(null, { status: 500 });

@@ -9,18 +9,19 @@ interface ConnectionPoolConfig {
 }
 
 class ConnectionPool {
-  private connections: Map<string, { client: SupabaseClient; lastUsed: number; inUse: boolean }> = new Map();
+  private connections: Map<string, { client: SupabaseClient; lastUsed: number; inUse: boolean }> =
+    new Map();
   private config: Required<ConnectionPoolConfig>;
   private static instance: ConnectionPool;
-  
+
   private constructor(config: ConnectionPoolConfig = {}) {
     this.config = {
       maxConnections: config.maxConnections || 10,
       idleTimeout: config.idleTimeout || 300000, // 5 minutes
       connectionTimeout: config.connectionTimeout || 10000, // 10 seconds
-      retryAttempts: config.retryAttempts || 3
+      retryAttempts: config.retryAttempts || 3,
     };
-    
+
     // Start cleanup interval
     this.startCleanupInterval();
   }
@@ -35,7 +36,7 @@ class ConnectionPool {
   async getConnection(): Promise<SupabaseClient<Database>> {
     // Find available connection
     for (const [id, conn] of this.connections) {
-      if (!conn.inUse && (Date.now() - conn.lastUsed) < this.config.idleTimeout) {
+      if (!conn.inUse && Date.now() - conn.lastUsed < this.config.idleTimeout) {
         conn.inUse = true;
         conn.lastUsed = Date.now();
         return conn.client;
@@ -53,13 +54,13 @@ class ConnectionPool {
             persistSession: false,
           },
           db: {
-            schema: 'public'
+            schema: 'public',
           },
           global: {
             headers: {
-              'x-connection-pool': 'true'
-            }
-          }
+              'x-connection-pool': 'true',
+            },
+          },
         }
       );
 
@@ -67,7 +68,7 @@ class ConnectionPool {
       this.connections.set(connectionId, {
         client,
         lastUsed: Date.now(),
-        inUse: true
+        inUse: true,
       });
 
       return client;
@@ -114,12 +115,12 @@ class ConnectionPool {
       const toRemove: string[] = [];
 
       for (const [id, conn] of this.connections) {
-        if (!conn.inUse && (now - conn.lastUsed) > this.config.idleTimeout) {
+        if (!conn.inUse && now - conn.lastUsed > this.config.idleTimeout) {
           toRemove.push(id);
         }
       }
 
-      toRemove.forEach(id => {
+      toRemove.forEach((id) => {
         this.connections.delete(id);
       });
 
@@ -144,7 +145,7 @@ class ConnectionPool {
     return {
       total: this.connections.size,
       active,
-      idle
+      idle,
     };
   }
 
@@ -168,7 +169,7 @@ export function createOptimizedClient(): Promise<SupabaseClient<Database>> {
     idleTimeout: parseInt(process.env.DB_POOL_IDLE_TIMEOUT || '300000'),
     connectionTimeout: parseInt(process.env.DB_POOL_CONNECTION_TIMEOUT || '10000'),
   });
-  
+
   return pool.getConnection();
 }
 

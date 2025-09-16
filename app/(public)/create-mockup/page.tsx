@@ -12,6 +12,7 @@ import { FormatConverter } from '@/lib/format-conversion';
 import { QualityValidator } from '@/lib/quality-validation';
 import { ResultCache } from '@/lib/result-caching';
 import { PromptAdjuster, AdjustmentHistory } from '@/components/mockup/PromptAdjuster';
+import { ViewToggle } from '@/components/mockup/ViewToggle';
 
 // Types
 interface Product {
@@ -22,6 +23,8 @@ interface Product {
   price: number;
   sku: string;
   primary_image_url?: string;
+  back_image_url?: string;
+  has_back_printing: boolean;
   horizontal_enabled: boolean;
   vertical_enabled: boolean;
   all_over_enabled: boolean;
@@ -31,6 +34,7 @@ interface Constraint {
   id: string;
   gift_item_id: string;
   placement_type: 'horizontal' | 'vertical' | 'all_over';
+  side: 'front' | 'back';
   constraint_image_url: string;
   default_position_x: number;
   default_position_y: number;
@@ -78,12 +82,14 @@ function Step({ number, title, active, completed }: StepProps) {
 // Helper function to create default constraints when missing
 function createDefaultConstraint(
   productId: string,
-  placementType: 'horizontal' | 'vertical' | 'all_over'
+  placementType: 'horizontal' | 'vertical' | 'all_over',
+  side: 'front' | 'back' = 'front'
 ): Constraint {
   return {
-    id: `default-${placementType}-${Date.now()}`,
+    id: `default-${placementType}-${side}-${Date.now()}`,
     gift_item_id: productId,
     placement_type: placementType,
+    side,
     constraint_image_url: '', // Will be handled by the pipeline
     default_position_x: 0.5, // Center position
     default_position_y: 0.5, // Center position
@@ -91,7 +97,7 @@ function createDefaultConstraint(
     max_logo_width: 300,
     min_logo_height: 50,
     max_logo_height: 300,
-    guidelines: `Default ${placementType} placement with centered positioning`,
+    guidelines: `Default ${placementType} placement with centered positioning on ${side} side`,
     is_active: true,
   };
 }
@@ -115,6 +121,18 @@ function CreateMockupContent() {
   const [processedLogo, setProcessedLogo] = useState<string | null>(null);
   const [generatedMockup, setGeneratedMockup] = useState<string | null>(null);
   const [downloadFormats, setDownloadFormats] = useState<{ [key: string]: string }>({});
+
+  // Dual-sided support state
+  const [frontUploadedFile, setFrontUploadedFile] = useState<File | null>(null);
+  const [backUploadedFile, setBackUploadedFile] = useState<File | null>(null);
+  const [frontProcessedLogo, setFrontProcessedLogo] = useState<string | null>(null);
+  const [backProcessedLogo, setBackProcessedLogo] = useState<string | null>(null);
+  const [currentMockupView, setCurrentMockupView] = useState<'front' | 'back'>('front');
+  const [generatedMockups, setGeneratedMockups] = useState<{
+    front: string | null;
+    back: string | null;
+  }>({ front: null, back: null });
+  const [selectedSides, setSelectedSides] = useState<'front' | 'back' | 'both'>('front');
 
   // Adjustment history state
   const [adjustmentHistory, setAdjustmentHistory] = useState<AdjustmentHistory[]>([]);
@@ -225,16 +243,32 @@ function CreateMockupContent() {
   const [isDragging, setIsDragging] = useState(false);
   const [_dragCounter, setDragCounter] = useState(0);
 
-  // Handle file upload
+  // Handle file upload (legacy single-sided)
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    processFile(file);
+    processFile(file, 'legacy');
+  };
+
+  // Handle front logo upload
+  const handleFrontLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    processFile(file, 'front');
+  };
+
+  // Handle back logo upload
+  const handleBackLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    processFile(file, 'back');
   };
 
   // Process uploaded file (shared logic for both upload and drop)
-  const processFile = useCallback((file: File) => {
+  const processFile = useCallback((file: File, side: 'legacy' | 'front' | 'back' = 'legacy') => {
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file');
       return;
@@ -245,7 +279,17 @@ function CreateMockupContent() {
       return;
     }
 
-    setUploadedFile(file);
+    // Set the appropriate file state based on which side is being uploaded
+    if (side === 'front') {
+      setFrontUploadedFile(file);
+    } else if (side === 'back') {
+      setBackUploadedFile(file);
+    } else {
+      // Legacy mode - set both legacy state and front state for backward compatibility
+      setUploadedFile(file);
+      setFrontUploadedFile(file);
+    }
+
     setError(null);
   }, []);
 
@@ -275,7 +319,7 @@ function CreateMockupContent() {
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    (e: React.DragEvent, side: 'legacy' | 'front' | 'back' = 'legacy') => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
@@ -283,48 +327,86 @@ function CreateMockupContent() {
 
       const files = e.dataTransfer.files;
       if (files.length > 0) {
-        processFile(files[0]); // Only take the first file
+        processFile(files[0], side); // Only take the first file
       }
     },
     [processFile]
   );
 
-  // Process logo (remove background)
+  // Process logo(s) (remove background)
   const processLogo = async () => {
-    if (!uploadedFile) return;
-
     try {
       setLoading(true);
-      setProgress('Removing background from logo...');
       setError(null);
 
-      // Create form data for API call
-      const formData = new FormData();
-      formData.append('image', uploadedFile);
+      const processQueue = [];
 
-      // Call background removal API
-      const response = await fetch('/api/remove-background', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to process logo');
+      // Handle front logo processing
+      if ((selectedSides === 'front' || selectedSides === 'both') && frontUploadedFile) {
+        processQueue.push({ file: frontUploadedFile, side: 'front' });
+      } else if (selectedSides === 'front' && uploadedFile) {
+        // Legacy mode - treat uploadedFile as front
+        processQueue.push({ file: uploadedFile, side: 'front' });
       }
 
-      const result = await response.json();
-
-      if (!result.success || !result.processedImage) {
-        throw new Error('Invalid response from background removal service');
+      // Handle back logo processing
+      if ((selectedSides === 'back' || selectedSides === 'both') && backUploadedFile) {
+        processQueue.push({ file: backUploadedFile, side: 'back' });
+      } else if (selectedSides === 'back' && uploadedFile) {
+        // Legacy mode - treat uploadedFile as back
+        processQueue.push({ file: uploadedFile, side: 'back' });
       }
 
-      setProcessedLogo(result.processedImage);
+      if (processQueue.length === 0) {
+        throw new Error('No logos to process');
+      }
+
+      // Process each logo
+      for (let i = 0; i < processQueue.length; i++) {
+        const { file, side } = processQueue[i];
+        const progress =
+          processQueue.length > 1
+            ? `Processing ${side} logo (${i + 1}/${processQueue.length})...`
+            : `Removing background from logo...`;
+
+        setProgress(progress);
+
+        // Create form data for API call
+        const formData = new FormData();
+        formData.append('image', file);
+
+        // Call background removal API
+        const response = await fetch('/api/remove-background', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to process ${side} logo`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success || !result.processedImage) {
+          throw new Error(`Invalid response from background removal service for ${side} logo`);
+        }
+
+        // Set processed logo for the appropriate side
+        if (side === 'front') {
+          setFrontProcessedLogo(result.processedImage);
+          // Legacy compatibility
+          setProcessedLogo(result.processedImage);
+        } else {
+          setBackProcessedLogo(result.processedImage);
+        }
+      }
+
       setCurrentStep(3);
       setProgress('');
     } catch (err) {
       console.error('Error processing logo:', err);
-      setError(err instanceof Error ? err.message : 'Failed to process logo. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to process logo(s). Please try again.');
     } finally {
       setLoading(false);
     }
@@ -410,7 +492,21 @@ function CreateMockupContent() {
 
   // Generate mockup
   const generateMockup = async () => {
-    if (!product || !processedLogo) return;
+    if (!product) return;
+
+    // Check if we have required logos based on selected sides
+    if (selectedSides === 'both' && (!frontProcessedLogo || !backProcessedLogo)) {
+      setError('Please upload logos for both front and back sides');
+      return;
+    }
+    if (selectedSides === 'front' && !frontProcessedLogo && !processedLogo) {
+      setError('Please upload a logo for the front side');
+      return;
+    }
+    if (selectedSides === 'back' && !backProcessedLogo) {
+      setError('Please upload a logo for the back side');
+      return;
+    }
 
     try {
       // Immediately show progress UI
@@ -471,28 +567,64 @@ function CreateMockupContent() {
         });
       }, 800);
 
+      // Prepare API request based on selected sides
+      const requestBody: any = {
+        product: {
+          id: product.id,
+          name: product.name,
+          imageUrl: product.primary_image_url || '',
+          backImageUrl: product.back_image_url || '',
+          category: product.category,
+          hasBackPrinting: product.has_back_printing,
+        },
+        placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
+        side: selectedSides,
+        adjustments: designAdjustments,
+      };
+
+      // Add logos based on selected sides
+      if (selectedSides === 'both') {
+        requestBody.frontLogo = {
+          file: frontProcessedLogo,
+          processedImageUrl: frontProcessedLogo,
+          originalDimensions: { width: 200, height: 100 },
+          format: 'png',
+          hasTransparency: true,
+        };
+        requestBody.backLogo = {
+          file: backProcessedLogo,
+          processedImageUrl: backProcessedLogo,
+          originalDimensions: { width: 200, height: 100 },
+          format: 'png',
+          hasTransparency: true,
+        };
+      } else if (selectedSides === 'front') {
+        const logoData = frontProcessedLogo || processedLogo;
+        requestBody.frontLogo = {
+          file: logoData,
+          processedImageUrl: logoData,
+          originalDimensions: { width: 200, height: 100 },
+          format: 'png',
+          hasTransparency: true,
+        };
+        // Legacy support
+        requestBody.logo = requestBody.frontLogo;
+      } else if (selectedSides === 'back') {
+        requestBody.backLogo = {
+          file: backProcessedLogo,
+          processedImageUrl: backProcessedLogo,
+          originalDimensions: { width: 200, height: 100 },
+          format: 'png',
+          hasTransparency: true,
+        };
+      }
+
       const apiResponse = await fetch('/api/generate-mockup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          logo: {
-            file: processedLogo,
-            processedImageUrl: processedLogo,
-            originalDimensions: { width: 200, height: 100 },
-            format: 'png',
-            hasTransparency: true,
-          },
-          product: {
-            id: product.id,
-            name: product.name,
-            imageUrl: product.primary_image_url || '',
-            category: product.category,
-          },
-          placementType: selectedPlacement === 'all_over' ? 'all-over' : selectedPlacement,
-          adjustments: designAdjustments,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!apiResponse.ok) {
@@ -507,22 +639,63 @@ function CreateMockupContent() {
       setProgressPercentage(90);
       setProgress('Finalizing mockup...');
 
-      if (!result.generatedImageUrl) {
-        throw new Error('No image URL returned from pipeline');
+      // Handle dual-sided results
+      if (selectedSides === 'both') {
+        const frontMockup = result.front;
+        const backMockup = result.back;
+
+        if (!frontMockup || !backMockup) {
+          throw new Error('No mockup image URL returned for dual-sided generation');
+        }
+
+        // Update dual-sided state with proper front and back images
+        setGeneratedMockups({
+          front: frontMockup,
+          back: backMockup,
+        });
+        setOriginalMockup(frontMockup);
+        setGeneratedMockup(frontMockup);
+        setCurrentMockupView('front');
+      } else {
+        // Single-sided result
+        const imageUrl =
+          selectedSides === 'front'
+            ? result.generatedImageUrl || result.front
+            : result.back || result.generatedImageUrl;
+
+        if (!imageUrl) {
+          throw new Error('No image URL returned from pipeline');
+        }
+
+        if (selectedSides === 'front') {
+          setGeneratedMockups((prev) => ({ ...prev, front: imageUrl }));
+          setCurrentMockupView('front');
+        } else {
+          setGeneratedMockups((prev) => ({ ...prev, back: imageUrl }));
+          setCurrentMockupView('back');
+        }
+
+        setGeneratedMockup(imageUrl); // Legacy state for compatibility
+        setOriginalMockup(imageUrl);
       }
 
-      // Cache the result
+      // Cache the result (update to handle dual-sided caching)
+      const cacheData =
+        selectedSides === 'both'
+          ? { front: result.front, back: result.back }
+          : selectedSides === 'front'
+            ? result.generatedImageUrl || result.front
+            : result.back || result.generatedImageUrl;
+
       await cache.set(cacheKey, {
-        result: result.generatedImageUrl,
+        result: cacheData,
         metadata: {
           productId: product.id,
           placement: selectedPlacement,
+          side: selectedSides,
           generatedAt: new Date().toISOString(),
         },
       });
-
-      setGeneratedMockup(result.generatedImageUrl);
-      setOriginalMockup(result.generatedImageUrl);
       setCurrentMockupIndex(0);
       setProgressPercentage(100);
       setProgress('Mockup generated successfully!');
@@ -906,13 +1079,34 @@ function CreateMockupContent() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>{generatedMockup ? 'Generated Mockup' : 'Selected Product'}</span>
-                  {generatedMockup && getAllMockups().length > 1 && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>
-                        {currentMockupIndex + 1} of {getAllMockups().length}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-4">
+                    {/* ViewToggle for dual-sided products */}
+                    {generatedMockup && product?.has_back_printing && (
+                      <ViewToggle
+                        currentView={currentMockupView}
+                        onViewChange={(view) => {
+                          setCurrentMockupView(view);
+                          // Update displayed mockup based on view
+                          if (view === 'front' && generatedMockups.front) {
+                            setGeneratedMockup(generatedMockups.front);
+                          } else if (view === 'back' && generatedMockups.back) {
+                            setGeneratedMockup(generatedMockups.back);
+                          }
+                        }}
+                        hasBackView={product.has_back_printing}
+                        frontMockup={generatedMockups.front}
+                        backMockup={generatedMockups.back}
+                      />
+                    )}
+                    {/* Version navigation */}
+                    {generatedMockup && getAllMockups().length > 1 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <span>
+                          {currentMockupIndex + 1} of {getAllMockups().length}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardBody>
@@ -1127,74 +1321,163 @@ function CreateMockupContent() {
                   <CardTitle>Step {currentStep}: Upload Your Logo</CardTitle>
                 </CardHeader>
                 <CardBody>
-                  <div className="space-y-4">
-                    <div
-                      className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
-                        isDragging
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-105'
-                          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                      }`}
-                      onDragEnter={handleDragEnter}
-                      onDragLeave={handleDragLeave}
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="logo-upload"
-                      />
-                      <label htmlFor="logo-upload" className="cursor-pointer block">
-                        {uploadedFile ? (
-                          <div>
-                            <div className="text-green-600 mb-2 text-4xl">✓</div>
-                            <p className="text-gray-900 dark:text-gray-100 font-medium">
-                              {uploadedFile.name}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Click to change file or drag a new one
-                            </p>
-                          </div>
-                        ) : (
-                          <div>
-                            {isDragging ? (
+                  <div className="space-y-6">
+                    {/* Side Selection */}
+                    {product?.has_back_printing && (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Choose printing sides:
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setSelectedSides('front')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              selectedSides === 'front'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            Front Only
+                          </button>
+                          <button
+                            onClick={() => setSelectedSides('back')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              selectedSides === 'back'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            Back Only
+                          </button>
+                          <button
+                            onClick={() => setSelectedSides('both')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                              selectedSides === 'both'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            Both Sides
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Front Logo Upload */}
+                    {(selectedSides === 'front' || selectedSides === 'both') && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {selectedSides === 'both' ? 'Front Logo' : 'Logo'}
+                        </h4>
+                        <div
+                          className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 ${
+                            isDragging
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-105'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                          }`}
+                          onDragEnter={handleDragEnter}
+                          onDragLeave={handleDragLeave}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, 'front')}
+                        >
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFrontLogoUpload}
+                            className="hidden"
+                            id="front-logo-upload"
+                          />
+                          <label htmlFor="front-logo-upload" className="cursor-pointer block">
+                            {frontUploadedFile ? (
                               <div>
-                                <div className="text-4xl text-blue-500 mb-2">⬇️</div>
-                                <p className="text-blue-600 dark:text-blue-400 font-medium">
-                                  Drop your logo here
+                                <div className="text-green-600 mb-2 text-3xl">✓</div>
+                                <p className="text-gray-900 dark:text-gray-100 font-medium text-sm">
+                                  {frontUploadedFile.name}
                                 </p>
-                                <p className="text-sm text-blue-500 mt-2">Release to upload</p>
+                                <p className="text-xs text-gray-500 mt-1">Click to change file</p>
                               </div>
                             ) : (
                               <div>
-                                <div className="text-4xl text-gray-400 mb-2">🎨</div>
-                                <p className="text-gray-600 dark:text-gray-400 font-medium">
-                                  Drag & drop your logo or click to upload
+                                <div className="text-3xl text-gray-400 mb-2">🎨</div>
+                                <p className="text-gray-600 dark:text-gray-400 font-medium text-sm">
+                                  Upload front logo
                                 </p>
-                                <p className="text-sm text-gray-500 mt-2">
-                                  PNG, JPG, WebP, or HEIC up to 10MB
+                                <p className="text-xs text-gray-500 mt-1">
+                                  PNG, JPG, WebP up to 10MB
                                 </p>
                               </div>
                             )}
-                          </div>
-                        )}
-                      </label>
-                    </div>
-
-                    {uploadedFile && (
-                      <Button onClick={processLogo} disabled={loading} className="w-full">
-                        {loading ? 'Processing...' : 'Process Logo'}
-                      </Button>
+                          </label>
+                        </div>
+                      </div>
                     )}
+
+                    {/* Back Logo Upload */}
+                    {(selectedSides === 'back' || selectedSides === 'both') && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {selectedSides === 'both' ? 'Back Logo' : 'Logo'}
+                        </h4>
+                        <div
+                          className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 ${
+                            isDragging
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-105'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                          }`}
+                          onDragEnter={handleDragEnter}
+                          onDragLeave={handleDragLeave}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, 'back')}
+                        >
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleBackLogoUpload}
+                            className="hidden"
+                            id="back-logo-upload"
+                          />
+                          <label htmlFor="back-logo-upload" className="cursor-pointer block">
+                            {backUploadedFile ? (
+                              <div>
+                                <div className="text-green-600 mb-2 text-3xl">✓</div>
+                                <p className="text-gray-900 dark:text-gray-100 font-medium text-sm">
+                                  {backUploadedFile.name}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">Click to change file</p>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="text-3xl text-gray-400 mb-2">🎨</div>
+                                <p className="text-gray-600 dark:text-gray-400 font-medium text-sm">
+                                  Upload back logo
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  PNG, JPG, WebP up to 10MB
+                                </p>
+                              </div>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Process Logos Button */}
+                    {((selectedSides === 'front' || selectedSides === 'both') &&
+                      frontUploadedFile) ||
+                    ((selectedSides === 'back' || selectedSides === 'both') && backUploadedFile) ||
+                    (selectedSides === 'both' && frontUploadedFile && backUploadedFile) ||
+                    uploadedFile ? (
+                      <Button onClick={processLogo} disabled={loading} className="w-full">
+                        {loading ? 'Processing...' : 'Process Logo(s)'}
+                      </Button>
+                    ) : null}
                   </div>
                 </CardBody>
               </Card>
             )}
 
             {/* Step 3: Placement Selection */}
-            {currentStep === 3 && processedLogo && (
+            {currentStep === 3 && (processedLogo || frontProcessedLogo || backProcessedLogo) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Step 3: Select Placement</CardTitle>
@@ -1204,15 +1487,49 @@ function CreateMockupContent() {
                     {/* Processed Logo Preview */}
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Your Processed Logo:
+                        Your Processed Logo{selectedSides === 'both' ? 's' : ''}:
                       </p>
-                      <div className="w-32 h-32 mx-auto bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-                        <img
-                          src={processedLogo}
-                          alt="Processed Logo"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
+
+                      {selectedSides === 'both' ? (
+                        <div className="flex gap-4 justify-center">
+                          {frontProcessedLogo && (
+                            <div className="text-center">
+                              <div className="w-24 h-24 bg-white dark:bg-gray-900 rounded-lg overflow-hidden mb-2">
+                                <img
+                                  src={frontProcessedLogo}
+                                  alt="Front Logo"
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500">Front</p>
+                            </div>
+                          )}
+                          {backProcessedLogo && (
+                            <div className="text-center">
+                              <div className="w-24 h-24 bg-white dark:bg-gray-900 rounded-lg overflow-hidden mb-2">
+                                <img
+                                  src={backProcessedLogo}
+                                  alt="Back Logo"
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500">Back</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-32 h-32 mx-auto bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+                          <img
+                            src={
+                              selectedSides === 'front'
+                                ? frontProcessedLogo || processedLogo
+                                : backProcessedLogo
+                            }
+                            alt="Processed Logo"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Placement Options */}

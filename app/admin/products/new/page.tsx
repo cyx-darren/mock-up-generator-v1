@@ -39,7 +39,12 @@ export default function NewProductPage() {
     tags: [],
     thumbnail_url: '',
     primary_image_url: '',
+    back_image_url: '',
+    has_back_printing: false,
     additional_images: [],
+    horizontal_enabled: true,
+    vertical_enabled: true,
+    all_over_enabled: false,
   });
 
   // Auto-save functionality
@@ -57,29 +62,6 @@ export default function NewProductPage() {
       }
     },
   });
-
-  // Check if user has permission to create products
-  if (!can('canCreateProducts')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card>
-          <CardBody>
-            <Alert
-              type="error"
-              message={`You don't have permission to create products. Current role: ${user?.role || 'No role'}`}
-            />
-            <div className="mt-4">
-              <Link href="/admin/dashboard">
-                <button className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                  Back to Dashboard
-                </button>
-              </Link>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
 
   // Handle field changes
   const handleFieldChange = useCallback((field: string, value: any) => {
@@ -106,6 +88,29 @@ export default function NewProductPage() {
       setIsGeneratingSku(false);
     }
   }, [formData.name, formData.category, handleFieldChange]);
+
+  // Check if user has permission to create products
+  if (!can('canCreateProducts')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <CardBody>
+            <Alert
+              type="error"
+              message={`You don't have permission to create products. Current role: ${user?.role || 'No role'}`}
+            />
+            <div className="mt-4">
+              <Link href="/admin/dashboard">
+                <button className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                  Back to Dashboard
+                </button>
+              </Link>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   // Handle form completion
   const handleFormComplete = async () => {
@@ -217,7 +222,12 @@ export default function NewProductPage() {
           data={{
             thumbnail_url: formData.thumbnail_url,
             primary_image_url: formData.primary_image_url,
+            back_image_url: formData.back_image_url,
+            has_back_printing: formData.has_back_printing,
             additional_images: formData.additional_images,
+            horizontal_enabled: formData.horizontal_enabled,
+            vertical_enabled: formData.vertical_enabled,
+            all_over_enabled: formData.all_over_enabled,
           }}
           onChange={handleFieldChange}
         />

@@ -5,32 +5,32 @@ import { Loading } from '@/components/ui/Loading';
 
 // Lazy load admin-specific components
 const LazyBulkImageProcessor = lazy(() =>
-  import('../admin/BulkImageProcessor').then(module => ({
-    default: module.BulkImageProcessor
+  import('../admin/BulkImageProcessor').then((module) => ({
+    default: module.BulkImageProcessor,
   }))
 );
 
 const LazyCommandPalette = lazy(() =>
-  import('../admin/CommandPalette').then(module => ({
-    default: module.CommandPalette
+  import('../admin/CommandPalette').then((module) => ({
+    default: module.CommandPalette,
   }))
 );
 
 const LazyProductTemplates = lazy(() =>
-  import('../admin/ProductTemplates').then(module => ({
-    default: module.ProductTemplates
+  import('../admin/ProductTemplates').then((module) => ({
+    default: module.ProductTemplates,
   }))
 );
 
 const LazyUsageCharts = lazy(() =>
-  import('../admin/UsageCharts').then(module => ({
-    default: module.UsageCharts
+  import('../admin/UsageCharts').then((module) => ({
+    default: module.UsageCharts,
   }))
 );
 
 const LazyAuditLogViewer = lazy(() =>
-  import('../admin/AuditLogViewer').then(module => ({
-    default: module.AuditLogViewer
+  import('../admin/AuditLogViewer').then((module) => ({
+    default: module.AuditLogViewer,
   }))
 );
 
@@ -44,7 +44,7 @@ function withAdminLazyLoading<T extends object>(
       <LazyComponent {...props} />
     </Suspense>
   );
-  
+
   WrappedComponent.displayName = `withAdminLazyLoading(${LazyComponent.displayName || 'AdminComponent'})`;
   return WrappedComponent;
 }

@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { verifyAdminSession } from '@/lib/auth/admin-session';
+import { requireAnyRole } from '@/lib/auth/permissions';
 
 // PUT /api/admin/constraints/[id]
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await verifyAdminSession(request);
-    if (!session.success) {
-      return NextResponse.json({ error: session.error }, { status: 401 });
-    }
-
-    // Check if user can edit products
-    const userRole = session.user.role;
-    if (!['super_admin', 'product_manager'].includes(userRole)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
-    }
+    const user = await requireAnyRole(request, ['super_admin', 'product_manager']);
 
     const supabase = createClient();
     const { id: constraintId } = await params;
@@ -24,6 +15,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       constraintImageUrl,
       detectedAreaPixels,
       detectedAreaPercentage,
+      detectedAreaX,
+      detectedAreaY,
+      detectedAreaWidth,
+      detectedAreaHeight,
       minLogoWidth,
       minLogoHeight,
       maxLogoWidth,
@@ -60,6 +55,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (detectedAreaPixels !== undefined) updateData.detected_area_pixels = detectedAreaPixels;
     if (detectedAreaPercentage !== undefined)
       updateData.detected_area_percentage = detectedAreaPercentage;
+    if (detectedAreaX !== undefined) updateData.detected_area_x = detectedAreaX;
+    if (detectedAreaY !== undefined) updateData.detected_area_y = detectedAreaY;
+    if (detectedAreaWidth !== undefined) updateData.detected_area_width = detectedAreaWidth;
+    if (detectedAreaHeight !== undefined) updateData.detected_area_height = detectedAreaHeight;
     if (minLogoWidth !== undefined) updateData.min_logo_width = minLogoWidth;
     if (minLogoHeight !== undefined) updateData.min_logo_height = minLogoHeight;
     if (maxLogoWidth !== undefined) updateData.max_logo_width = maxLogoWidth;
@@ -97,7 +96,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         .from('gift_items')
         .update({
           [enableField]: isEnabled,
-          updated_by: session.user.id,
+          updated_by: user.userId,
           updated_at: new Date().toISOString(),
         })
         .eq('id', productId);
@@ -109,7 +108,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Log the action
     await supabase.from('audit_log').insert({
-      admin_user_id: session.user.id,
+      admin_user_id: user.userId,
       action: 'UPDATE',
       entity_type: 'placement_constraint',
       entity_id: constraintId,
@@ -136,16 +135,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await verifyAdminSession(request);
-    if (!session.success) {
-      return NextResponse.json({ error: session.error }, { status: 401 });
-    }
-
-    // Check if user can edit products
-    const userRole = session.user.role;
-    if (!['super_admin', 'product_manager'].includes(userRole)) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
-    }
+    const user = await requireAnyRole(request, ['super_admin', 'product_manager']);
 
     const supabase = createClient();
     const { id: constraintId } = await params;
@@ -187,7 +177,7 @@ export async function DELETE(
         .from('gift_items')
         .update({
           [enableField]: false,
-          updated_by: session.user.id,
+          updated_by: user.userId,
           updated_at: new Date().toISOString(),
         })
         .eq('id', productId);
@@ -199,7 +189,7 @@ export async function DELETE(
 
     // Log the action
     await supabase.from('audit_log').insert({
-      admin_user_id: session.user.id,
+      admin_user_id: user.userId,
       action: 'DELETE',
       entity_type: 'placement_constraint',
       entity_id: constraintId,

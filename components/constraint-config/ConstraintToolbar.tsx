@@ -51,12 +51,7 @@ export function ConstraintToolbar({
           onClick={onToggleGrid}
           className="flex items-center gap-1"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -66,19 +61,14 @@ export function ConstraintToolbar({
           </svg>
           Grid
         </Button>
-        
+
         <Button
           variant={showMeasurement ? 'primary' : 'outline'}
           size="sm"
           onClick={onToggleMeasurement}
           className="flex items-center gap-1"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -95,12 +85,7 @@ export function ConstraintToolbar({
           onClick={onToggleGuidelines}
           className="flex items-center gap-1"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -121,12 +106,7 @@ export function ConstraintToolbar({
           onClick={onToggleSnapToGrid}
           className="flex items-center gap-1"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -143,8 +123,10 @@ export function ConstraintToolbar({
             onChange={(e) => onGridSizeChange(Number(e.target.value))}
             className="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            {gridSizes.map(size => (
-              <option key={size} value={size}>{size}px</option>
+            {gridSizes.map((size) => (
+              <option key={size} value={size}>
+                {size}px
+              </option>
             ))}
           </select>
         )}
@@ -160,12 +142,7 @@ export function ConstraintToolbar({
           className="flex items-center gap-1"
           title="Undo (Ctrl+Z)"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -174,7 +151,7 @@ export function ConstraintToolbar({
             />
           </svg>
         </Button>
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -183,12 +160,7 @@ export function ConstraintToolbar({
           className="flex items-center gap-1"
           title="Redo (Ctrl+Y)"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -207,12 +179,7 @@ export function ConstraintToolbar({
           onClick={onClearAll}
           className="flex items-center gap-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -228,16 +195,20 @@ export function ConstraintToolbar({
       <div className="ml-auto">
         <div className="text-xs text-gray-500 dark:text-gray-400">
           <span className="inline-block mr-3">
-            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Click</kbd> Create
+            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Click</kbd>{' '}
+            Create
           </span>
           <span className="inline-block mr-3">
-            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Drag</kbd> Move
+            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Drag</kbd>{' '}
+            Move
           </span>
           <span className="inline-block mr-3">
-            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Del</kbd> Remove
+            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Del</kbd>{' '}
+            Remove
           </span>
           <span className="inline-block">
-            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Esc</kbd> Deselect
+            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Esc</kbd>{' '}
+            Deselect
           </span>
         </div>
       </div>

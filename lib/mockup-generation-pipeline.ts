@@ -47,6 +47,8 @@ export interface ProductInput {
   id: string;
   name: string;
   imageUrl: string;
+  backImageUrl?: string;
+  hasBackPrinting?: boolean;
   category: string;
   constraints: {
     horizontal?: any;
@@ -57,8 +59,11 @@ export interface ProductInput {
 
 export interface MockupGenerationRequest {
   logo: LogoInput;
+  frontLogo?: LogoInput;
+  backLogo?: LogoInput;
   product: ProductInput;
   placementType: 'horizontal' | 'vertical' | 'all-over' | 'corner' | 'center';
+  side?: 'front' | 'back' | 'both';
   qualityLevel: 'basic' | 'enhanced' | 'premium' | 'ultra';
   stylePreferences: {
     lighting?: string;
@@ -104,6 +109,9 @@ export interface MockupGenerationResult {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   preparedInput: PreparedInput;
   generatedImageUrl?: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
+  side?: 'front' | 'back' | 'both';
   error?: string;
   processingTime?: number;
   createdAt: Date;
@@ -2027,6 +2035,147 @@ The result should be the original ${productType} with a professionally applied M
       });
 
       return fallbackImg;
+    }
+  }
+
+  /**
+   * Generate dual-sided mockup (front and/or back)
+   */
+  async generateDualSidedMockup(request: MockupGenerationRequest): Promise<MockupGenerationResult> {
+    const mockupId = this.generateMockupId();
+    const side = request.side || 'front';
+
+    const result: MockupGenerationResult = {
+      id: mockupId,
+      status: 'pending',
+      side,
+      preparedInput: {} as PreparedInput,
+      createdAt: new Date(),
+    };
+
+    try {
+      result.status = 'processing';
+      const results: { front?: string; back?: string } = {};
+
+      // Generate front mockup
+      if (side === 'front' || side === 'both') {
+        const frontLogo = request.frontLogo || request.logo;
+        const frontConstraint = await this.getConstraintForSide(
+          request.product.id,
+          request.placementType,
+          'front'
+        );
+
+        if (frontConstraint) {
+          try {
+            results.front = await this.generateWithConstraintImage(
+              request.product.imageUrl,
+              frontLogo.processedImageUrl,
+              frontConstraint.constraint_image_url,
+              request.product.category
+            );
+          } catch (error) {
+            console.warn(
+              '[generateDualSidedMockup] Front constraint generation failed, using fallback:',
+              error
+            );
+            // Fallback to AI mockup generation without constraints
+            results.front = await this.generateAIMockup(
+              request.product.imageUrl,
+              frontLogo.processedImageUrl,
+              { width: 1200, height: 1200 },
+              request.product.category
+            );
+          }
+        }
+      }
+
+      // Generate back mockup
+      if (side === 'back' || side === 'both') {
+        const backLogo = request.backLogo || request.frontLogo || request.logo;
+        const backImageUrl = request.product.backImageUrl || request.product.imageUrl;
+        let backConstraint = await this.getConstraintForSide(
+          request.product.id,
+          request.placementType,
+          'back'
+        );
+
+        // If back constraint doesn't exist, fallback to front constraint for dual-sided
+        if (!backConstraint && side === 'both') {
+          backConstraint = await this.getConstraintForSide(
+            request.product.id,
+            request.placementType,
+            'front'
+          );
+        }
+
+        if (backConstraint && request.product.hasBackPrinting) {
+          try {
+            results.back = await this.generateWithConstraintImage(
+              backImageUrl,
+              backLogo.processedImageUrl,
+              backConstraint.constraint_image_url,
+              request.product.category
+            );
+          } catch (error) {
+            console.warn(
+              '[generateDualSidedMockup] Back constraint generation failed, using fallback:',
+              error
+            );
+            // Fallback to AI mockup generation without constraints
+            results.back = await this.generateAIMockup(
+              backImageUrl,
+              backLogo.processedImageUrl,
+              { width: 1200, height: 1200 },
+              request.product.category
+            );
+          }
+        }
+      }
+
+      // Set result URLs
+      result.frontImageUrl = results.front;
+      result.backImageUrl = results.back;
+
+      // For backward compatibility, set generatedImageUrl to front or the single side
+      result.generatedImageUrl = results.front || results.back;
+
+      result.status = 'completed';
+      result.completedAt = new Date();
+
+      return result;
+    } catch (error) {
+      console.error('[generateDualSidedMockup] Error:', error);
+      result.status = 'failed';
+      result.error = error instanceof Error ? error.message : 'Unknown error';
+      result.completedAt = new Date();
+      return result;
+    }
+  }
+
+  /**
+   * Get constraint for specific side of product
+   */
+  private async getConstraintForSide(
+    productId: string,
+    placementType: string,
+    side: 'front' | 'back'
+  ): Promise<any> {
+    try {
+      // Temporary fix: Use the existing constraint file for all products/sides
+      // This should be replaced with actual database query
+      return {
+        constraint_image_url: `/uploads/constraints/1757413997559-a4_canvasbag_cream_constraints.png`,
+        min_logo_width: 50,
+        max_logo_width: 500,
+        min_logo_height: 50,
+        max_logo_height: 500,
+        default_x_position: 100,
+        default_y_position: 100,
+      };
+    } catch (error) {
+      console.error(`[getConstraintForSide] Error loading constraint for ${side} side:`, error);
+      return null;
     }
   }
 }

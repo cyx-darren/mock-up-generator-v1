@@ -29,7 +29,8 @@ const API_ROUTES = {
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
   event.waitUntil(
-    caches.open(STATIC_CACHE)
+    caches
+      .open(STATIC_CACHE)
       .then((cache) => {
         console.log('Caching static assets');
         return cache.addAll(STATIC_ASSETS);
@@ -42,7 +43,8 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating...');
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
@@ -86,16 +88,14 @@ self.addEventListener('fetch', (event) => {
 async function handleApiRequest(request) {
   const url = new URL(request.url);
   const pathname = url.pathname;
-  
+
   // Determine caching strategy
-  const strategy = Object.keys(API_ROUTES).find(route => 
-    pathname.startsWith(route)
-  );
-  
+  const strategy = Object.keys(API_ROUTES).find((route) => pathname.startsWith(route));
+
   if (!strategy) {
     return fetch(request);
   }
-  
+
   switch (API_ROUTES[strategy]) {
     case 'stale-while-revalidate':
       return staleWhileRevalidate(request, DYNAMIC_CACHE);
@@ -112,11 +112,11 @@ async function handleApiRequest(request) {
 async function handleStaticAssets(request) {
   const cache = await caches.open(STATIC_CACHE);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse) {
     return cachedResponse;
   }
-  
+
   const response = await fetch(request);
   if (response.ok) {
     cache.put(request, response.clone());
@@ -128,11 +128,11 @@ async function handleStaticAssets(request) {
 async function handleImages(request) {
   const cache = await caches.open(DYNAMIC_CACHE);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse) {
     return cachedResponse;
   }
-  
+
   try {
     const response = await fetch(request);
     if (response.ok) {
@@ -141,7 +141,9 @@ async function handleImages(request) {
     return response;
   } catch (error) {
     // Return fallback image if available
-    return cache.match('/fallback-image.png') || new Response('Image not available', { status: 404 });
+    return (
+      cache.match('/fallback-image.png') || new Response('Image not available', { status: 404 })
+    );
   }
 }
 
@@ -149,28 +151,28 @@ async function handleImages(request) {
 async function handlePageRequests(request) {
   try {
     const response = await fetch(request);
-    
+
     // Cache successful page responses
     if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, response.clone());
     }
-    
+
     return response;
   } catch (error) {
     // Try to serve from cache
     const cache = await caches.open(DYNAMIC_CACHE);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       return cachedResponse;
     }
-    
+
     // Return offline page for navigation requests
     if (request.mode === 'navigate') {
       return cache.match('/offline.html') || new Response('Offline', { status: 404 });
     }
-    
+
     throw error;
   }
 }
@@ -179,20 +181,20 @@ async function handlePageRequests(request) {
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
-  
-  const fetchPromise = fetch(request).then(response => {
+
+  const fetchPromise = fetch(request).then((response) => {
     if (response.ok) {
       cache.put(request, response.clone());
     }
     return response;
   });
-  
+
   return cachedResponse || fetchPromise;
 }
 
 async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
-  
+
   try {
     const response = await fetch(request);
     if (response.ok) {

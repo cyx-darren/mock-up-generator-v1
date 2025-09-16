@@ -7,7 +7,12 @@ interface ImagesStepProps {
   data: {
     thumbnail_url: string;
     primary_image_url: string;
+    back_image_url: string;
+    has_back_printing: boolean;
     additional_images: string[];
+    horizontal_enabled: boolean;
+    vertical_enabled: boolean;
+    all_over_enabled: boolean;
   };
   onChange: (field: string, value: any) => void;
 }
@@ -17,11 +22,13 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
   const [uploadProgress, setUploadProgress] = useState({
     thumbnail: 0,
     primary: 0,
+    back: 0,
     additional: 0,
   });
   const [uploading, setUploading] = useState({
     thumbnail: false,
     primary: false,
+    back: false,
     additional: false,
   });
 
@@ -59,7 +66,10 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
   };
 
   const handleImageUpload = useCallback(
-    async (file: File, imageType: 'thumbnail' | 'primary' | 'additional'): Promise<void> => {
+    async (
+      file: File,
+      imageType: 'thumbnail' | 'primary' | 'back' | 'additional'
+    ): Promise<void> => {
       const validationError = validateImageFile(file);
       if (validationError) {
         alert(validationError);
@@ -121,6 +131,8 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
           onChange('thumbnail_url', publicUrl);
         } else if (imageType === 'primary') {
           onChange('primary_image_url', publicUrl);
+        } else if (imageType === 'back') {
+          onChange('back_image_url', publicUrl);
         } else if (imageType === 'additional') {
           if (data.additional_images.length < 5) {
             onChange('additional_images', [...data.additional_images, publicUrl]);
@@ -158,7 +170,7 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
 
   const handleFileSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
-    imageType: 'thumbnail' | 'primary' | 'additional'
+    imageType: 'thumbnail' | 'primary' | 'back' | 'additional'
   ) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -170,8 +182,87 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
 
   return (
     <div className="space-y-6">
+      {/* Dual-Sided Printing Toggle */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            id="has_back_printing"
+            checked={data.has_back_printing}
+            onChange={(e) => onChange('has_back_printing', e.target.checked)}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          />
+          <label
+            htmlFor="has_back_printing"
+            className="text-sm font-medium text-blue-900 dark:text-blue-100"
+          >
+            Enable dual-sided printing (front and back)
+          </label>
+        </div>
+        <p className="text-xs text-blue-700 dark:text-blue-300 mt-2 ml-7">
+          Check this if the product supports printing on both front and back sides
+        </p>
+      </div>
+
+      {/* Placement Options */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <h4 className="font-medium text-gray-900 dark:text-white mb-3">Placement Options</h4>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="horizontal_enabled"
+              checked={data.horizontal_enabled}
+              onChange={(e) => onChange('horizontal_enabled', e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label
+              htmlFor="horizontal_enabled"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Horizontal placement
+            </label>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="vertical_enabled"
+              checked={data.vertical_enabled}
+              onChange={(e) => onChange('vertical_enabled', e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label
+              htmlFor="vertical_enabled"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Vertical placement
+            </label>
+          </div>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="all_over_enabled"
+              checked={data.all_over_enabled}
+              onChange={(e) => onChange('all_over_enabled', e.target.checked)}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label
+              htmlFor="all_over_enabled"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              All-over print (pattern)
+            </label>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Select which logo placement types are available for this product
+        </p>
+      </div>
+
       {/* Primary Images */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div
+        className={`grid gap-6 ${data.has_back_printing ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}
+      >
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Thumbnail Image
@@ -323,10 +414,91 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
             <p className="text-xs text-red-500">Invalid image URL format</p>
           )}
         </div>
+
+        {/* Back Image - Conditional */}
+        {data.has_back_printing && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Back Image
+            </label>
+
+            {/* URL Input */}
+            <Input
+              type="url"
+              value={data.back_image_url}
+              onChange={(e) => onChange('back_image_url', e.target.value)}
+              placeholder="https://example.com/back.jpg"
+            />
+
+            {/* Upload Section */}
+            <div className="flex items-center space-x-4">
+              <input
+                type="file"
+                id="back-upload"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                onChange={(e) => handleFileSelect(e, 'back')}
+                className="hidden"
+              />
+              <label
+                htmlFor="back-upload"
+                className={`cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
+                  uploading.back ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {uploading.back ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="h-4 w-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    Upload Back Image
+                  </>
+                )}
+              </label>
+
+              {/* Upload Progress */}
+              {uploadProgress.back > 0 && uploadProgress.back < 100 && (
+                <div className="flex-1 max-w-xs">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress.back}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1">{uploadProgress.back}%</span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500">
+              Back view product image • Upload PNG, JPG, WebP, or GIF (max 5MB) or enter URL
+              manually
+            </p>
+            {data.back_image_url && !validateImageUrl(data.back_image_url) && (
+              <p className="text-xs text-red-500">Invalid image URL format</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Image Previews */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div
+        className={`grid gap-6 ${data.has_back_printing ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}
+      >
         {data.thumbnail_url && validateImageUrl(data.thumbnail_url) && (
           <div>
             <h4 className="font-medium text-gray-900 dark:text-white mb-2">Thumbnail Preview</h4>
@@ -352,6 +524,22 @@ export function ImagesStep({ data, onChange }: ImagesStepProps) {
               <img
                 src={data.primary_image_url}
                 alt="Primary image preview"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {data.has_back_printing && data.back_image_url && validateImageUrl(data.back_image_url) && (
+          <div>
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">Back Image Preview</h4>
+            <div className="w-48 h-32 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800">
+              <img
+                src={data.back_image_url}
+                alt="Back image preview"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';

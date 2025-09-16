@@ -4,9 +4,9 @@ import { verifyAccessToken } from '@/lib/auth/jwt';
 import { getAuthTokens } from '@/lib/auth/cookies';
 
 interface RouteContext {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     const tokenPayload = verifyAccessToken(accessToken);
     const supabase = createClient();
+    const { id: productId } = await params;
 
     // Check user permissions
     const { data: user, error: userError } = await supabase
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const { data: product, error: productError } = await supabase
       .from('gift_items')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', productId)
       .single();
 
     if (productError || !product) {
@@ -68,6 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     const tokenPayload = verifyAccessToken(accessToken);
     const supabase = createClient();
+    const { id: productId } = await params;
 
     // Check user permissions
     const { data: user, error: userError } = await supabase
@@ -89,7 +91,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const { data: existingProduct, error: existingError } = await supabase
       .from('gift_items')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', productId)
       .single();
 
     if (existingError || !existingProduct) {
@@ -107,6 +109,8 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       tags,
       thumbnail_url,
       primary_image_url,
+      back_image_url,
+      has_back_printing,
       additional_images,
       horizontal_enabled,
       vertical_enabled,
@@ -127,7 +131,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         .from('gift_items')
         .select('id')
         .eq('sku', sku)
-        .neq('id', params.id)
+        .neq('id', productId)
         .single();
 
       if (duplicateProduct) {
@@ -146,6 +150,9 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
       tags: tags || existingProduct.tags,
       thumbnail_url,
       primary_image_url,
+      back_image_url,
+      has_back_printing:
+        has_back_printing !== undefined ? has_back_printing : existingProduct.has_back_printing,
       additional_images: additional_images || existingProduct.additional_images,
       horizontal_enabled:
         horizontal_enabled !== undefined ? horizontal_enabled : existingProduct.horizontal_enabled,
@@ -160,7 +167,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     const { data: product, error: updateError } = await supabase
       .from('gift_items')
       .update(updates)
-      .eq('id', params.id)
+      .eq('id', productId)
       .select()
       .single();
 
@@ -185,7 +192,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         user_id: user.id,
         action: 'product.update',
         table_name: 'gift_items',
-        record_id: params.id,
+        record_id: productId,
         changes,
       });
     }
@@ -211,6 +218,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
 
     const tokenPayload = verifyAccessToken(accessToken);
     const supabase = createClient();
+    const { id: productId } = await params;
 
     // Check user permissions
     const { data: user, error: userError } = await supabase
@@ -232,7 +240,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
     const { data: existingProduct, error: existingError } = await supabase
       .from('gift_items')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', productId)
       .single();
 
     if (existingError || !existingProduct) {
@@ -247,7 +255,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
         deleted_at: new Date().toISOString(),
         updated_by: user.id,
       })
-      .eq('id', params.id);
+      .eq('id', productId);
 
     if (deleteError) {
       throw new Error(deleteError.message);
@@ -258,7 +266,7 @@ export async function DELETE(request: NextRequest, { params }: RouteContext) {
       user_id: user.id,
       action: 'product.delete',
       table_name: 'gift_items',
-      record_id: params.id,
+      record_id: productId,
       changes: {
         deleted: {
           name: existingProduct.name,

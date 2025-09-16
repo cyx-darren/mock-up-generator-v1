@@ -4,11 +4,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { hoverEffects, microInteractions, durations, easingFunctions } from './AnimationUtils';
 
 // Hover lift effect
-export function HoverLift({ 
+export function HoverLift({
   children,
   liftHeight = '4px',
   duration = '300ms',
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   liftHeight?: string;
@@ -23,7 +23,7 @@ export function HoverLift({
       style={{
         transform: isHovered ? `translateY(-${liftHeight})` : 'translateY(0)',
         transitionDuration: duration,
-        transitionTimingFunction: easingFunctions.easeOut
+        transitionTimingFunction: easingFunctions.easeOut,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -34,11 +34,11 @@ export function HoverLift({
 }
 
 // Hover scale effect
-export function HoverScale({ 
+export function HoverScale({
   children,
   scale = '1.05',
   duration = '300ms',
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   scale?: string;
@@ -53,7 +53,7 @@ export function HoverScale({
       style={{
         transform: isHovered ? `scale(${scale})` : 'scale(1)',
         transitionDuration: duration,
-        transitionTimingFunction: easingFunctions.easeOut
+        transitionTimingFunction: easingFunctions.easeOut,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -64,11 +64,11 @@ export function HoverScale({
 }
 
 // Hover glow effect
-export function HoverGlow({ 
+export function HoverGlow({
   children,
   glowColor = '59, 130, 246',
   intensity = '0.5',
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   glowColor?: string;
@@ -81,11 +81,11 @@ export function HoverGlow({
     <div
       className={`transition-shadow ${className}`}
       style={{
-        boxShadow: isHovered 
-          ? `0 0 20px rgba(${glowColor}, ${intensity})` 
+        boxShadow: isHovered
+          ? `0 0 20px rgba(${glowColor}, ${intensity})`
           : '0 0 0px rgba(0, 0, 0, 0)',
         transitionDuration: durations.normal,
-        transitionTimingFunction: easingFunctions.easeOut
+        transitionTimingFunction: easingFunctions.easeOut,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -96,9 +96,9 @@ export function HoverGlow({
 }
 
 // Shimmer hover effect
-export function HoverShimmer({ 
+export function HoverShimmer({
   children,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   className?: string;
@@ -116,7 +116,7 @@ export function HoverShimmer({
         className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 -translate-x-full"
         style={{
           transform: isHovered ? 'translateX(100%)' : 'translateX(-100%)',
-          transition: `transform 600ms ${easingFunctions.easeOut}`
+          transition: `transform 600ms ${easingFunctions.easeOut}`,
         }}
       />
     </div>
@@ -124,10 +124,10 @@ export function HoverShimmer({
 }
 
 // Tilt effect on hover
-export function HoverTilt({ 
+export function HoverTilt({
   children,
   tiltDegree = '10',
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   tiltDegree?: string;
@@ -145,10 +145,12 @@ export function HoverTilt({
     const y = e.clientY - box.top;
     const centerX = box.width / 2;
     const centerY = box.height / 2;
-    const rotateX = (y - centerY) / centerY * parseInt(tiltDegree);
-    const rotateY = (centerX - x) / centerX * parseInt(tiltDegree);
+    const rotateX = ((y - centerY) / centerY) * parseInt(tiltDegree);
+    const rotateY = ((centerX - x) / centerX) * parseInt(tiltDegree);
 
-    setTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`);
+    setTransform(
+      `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1, 1, 1)`
+    );
   };
 
   const handleMouseLeave = () => {
@@ -162,7 +164,7 @@ export function HoverTilt({
       style={{
         transform,
         transitionDuration: durations.normal,
-        transitionTimingFunction: easingFunctions.easeOut
+        transitionTimingFunction: easingFunctions.easeOut,
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -173,10 +175,10 @@ export function HoverTilt({
 }
 
 // Magnetic effect
-export function HoverMagnetic({ 
+export function HoverMagnetic({
   children,
   strength = 0.3,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   strength?: number;
@@ -207,7 +209,7 @@ export function HoverMagnetic({
       style={{
         transform,
         transitionDuration: durations.slow,
-        transitionTimingFunction: easingFunctions.easeOut
+        transitionTimingFunction: easingFunctions.easeOut,
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -218,10 +220,10 @@ export function HoverMagnetic({
 }
 
 // Reveal animation on hover
-export function HoverReveal({ 
+export function HoverReveal({
   children,
   overlay,
-  className = '' 
+  className = '',
 }: {
   children: React.ReactNode;
   overlay: React.ReactNode;
@@ -241,7 +243,7 @@ export function HoverReveal({
         style={{
           opacity: isHovered ? 1 : 0,
           transform: isHovered ? 'translateY(0)' : 'translateY(100%)',
-          transition: `all ${durations.normal} ${easingFunctions.easeOut}`
+          transition: `all ${durations.normal} ${easingFunctions.easeOut}`,
         }}
       >
         {overlay}
@@ -251,18 +253,20 @@ export function HoverReveal({
 }
 
 // Button with ripple effect
-export function RippleButton({ 
+export function RippleButton({
   children,
   onClick,
   className = '',
-  rippleColor = 'rgba(255, 255, 255, 0.6)' 
+  rippleColor = 'rgba(255, 255, 255, 0.6)',
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   rippleColor?: string;
 }) {
-  const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number; size: number }>>([]);
+  const [ripples, setRipples] = useState<Array<{ id: number; x: number; y: number; size: number }>>(
+    []
+  );
 
   const createRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
     const button = e.currentTarget;
@@ -275,25 +279,22 @@ export function RippleButton({
       id: Date.now(),
       x,
       y,
-      size
+      size,
     };
 
-    setRipples(prev => [...prev, newRipple]);
+    setRipples((prev) => [...prev, newRipple]);
 
     setTimeout(() => {
-      setRipples(prev => prev.filter(ripple => ripple.id !== newRipple.id));
+      setRipples((prev) => prev.filter((ripple) => ripple.id !== newRipple.id));
     }, 600);
 
     onClick?.(e);
   };
 
   return (
-    <button
-      className={`relative overflow-hidden ${className}`}
-      onClick={createRipple}
-    >
+    <button className={`relative overflow-hidden ${className}`} onClick={createRipple}>
       {children}
-      {ripples.map(ripple => (
+      {ripples.map((ripple) => (
         <span
           key={ripple.id}
           className="absolute rounded-full animate-ping pointer-events-none"
@@ -304,7 +305,7 @@ export function RippleButton({
             height: ripple.size,
             backgroundColor: rippleColor,
             transform: 'scale(0)',
-            animation: 'ripple 600ms linear'
+            animation: 'ripple 600ms linear',
           }}
         />
       ))}

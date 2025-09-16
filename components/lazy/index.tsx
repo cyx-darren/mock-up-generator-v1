@@ -4,39 +4,39 @@ import { lazy, Suspense, ComponentType } from 'react';
 import { Loading } from '@/components/ui/Loading';
 
 // Lazy load heavy components
-const LazyLogoAdjustmentInterface = lazy(() => 
-  import('../logo-adjustment/LogoAdjustmentInterface').then(module => ({
-    default: module.LogoAdjustmentInterface
+const LazyLogoAdjustmentInterface = lazy(() =>
+  import('../logo-adjustment/LogoAdjustmentInterface').then((module) => ({
+    default: module.LogoAdjustmentInterface,
   }))
 );
 
 const LazyPreviewEnhancements = lazy(() =>
-  import('../preview/PreviewEnhancements').then(module => ({
-    default: module.PreviewEnhancements
+  import('../preview/PreviewEnhancements').then((module) => ({
+    default: module.PreviewEnhancements,
   }))
 );
 
 const LazyAdminDashboard = lazy(() =>
-  import('../admin/DashboardStats').then(module => ({
-    default: module.DashboardStats
+  import('../admin/DashboardStats').then((module) => ({
+    default: module.DashboardStats,
   }))
 );
 
 const LazyConstraintEditor = lazy(() =>
-  import('../constraint-config/VisualConstraintEditor').then(module => ({
-    default: module.VisualConstraintEditor
+  import('../constraint-config/VisualConstraintEditor').then((module) => ({
+    default: module.VisualConstraintEditor,
   }))
 );
 
 const LazyProductDetailModal = lazy(() =>
-  import('../catalog/ProductDetailModal').then(module => ({
-    default: module.ProductDetailModal
+  import('../catalog/ProductDetailModal').then((module) => ({
+    default: module.ProductDetailModal,
   }))
 );
 
 const LazyRichTextEditor = lazy(() =>
-  import('../ui/RichTextEditor').then(module => ({
-    default: module.RichTextEditor
+  import('../ui/RichTextEditor').then((module) => ({
+    default: module.RichTextEditor,
   }))
 );
 
@@ -50,7 +50,7 @@ function withLazyLoading<T extends object>(
       <LazyComponent {...props} />
     </Suspense>
   );
-  
+
   WrappedComponent.displayName = `withLazyLoading(${LazyComponent.displayName || 'Component'})`;
   return WrappedComponent;
 }

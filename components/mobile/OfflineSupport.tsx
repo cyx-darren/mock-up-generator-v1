@@ -57,11 +57,11 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
         try {
           const cacheNames = await caches.keys();
           let totalSize = 0;
-          
+
           for (const name of cacheNames) {
             const cache = await caches.open(name);
             const requests = await cache.keys();
-            
+
             for (const request of requests) {
               const response = await cache.match(request);
               if (response) {
@@ -70,7 +70,7 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
               }
             }
           }
-          
+
           setCacheSize(totalSize);
         } catch (error) {
           console.error('Failed to calculate cache size:', error);
@@ -85,7 +85,7 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
         setCacheSize(0);
       } catch (error) {
         console.error('Failed to clear cache:', error);
@@ -94,13 +94,15 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <OfflineContext.Provider value={{
-      isOnline,
-      isOffline: !isOnline,
-      showOfflineIndicator,
-      cacheSize,
-      clearCache
-    }}>
+    <OfflineContext.Provider
+      value={{
+        isOnline,
+        isOffline: !isOnline,
+        showOfflineIndicator,
+        cacheSize,
+        clearCache,
+      }}
+    >
       {children}
     </OfflineContext.Provider>
   );
@@ -109,14 +111,21 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
 // Offline indicator component
 export function OfflineIndicator({ className = '' }: { className?: string }) {
   const { showOfflineIndicator, isOnline } = useOffline();
-  
+
   if (!showOfflineIndicator) return null;
 
   return (
-    <div className={`fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 px-4 text-sm font-medium z-50 ${className}`}>
+    <div
+      className={`fixed top-0 left-0 right-0 bg-red-500 text-white text-center py-2 px-4 text-sm font-medium z-50 ${className}`}
+    >
       <div className="flex items-center justify-center space-x-2">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.18l.1.85c0 .4.3.72.7.72s.7-.32.7-.72l.1-.85m0 17.64l.1-.85c0-.4.3-.72.7-.72s.7.32.7.72l.1.85m7.64-7.64l-.85.1c-.4 0-.72.3-.72.7s.32.7.72.7l.85.1m-17.64 0l.85.1c.4 0 .72.3.72.7s-.32.7-.72.7l-.85.1" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.18l.1.85c0 .4.3.72.7.72s.7-.32.7-.72l.1-.85m0 17.64l.1-.85c0-.4.3-.72.7-.72s.7.32.7.72l.1.85m7.64-7.64l-.85.1c-.4 0-.72.3-.72.7s.32.7.72.7l.85.1m-17.64 0l.85.1c.4 0 .72.3.72.7s-.32.7-.72.7l-.85.1"
+          />
         </svg>
         <span>You're offline. Some features may be limited.</span>
       </div>
@@ -135,7 +144,7 @@ export function useServiceWorker() {
         try {
           setSWStatus('installing');
           const registration = await navigator.serviceWorker.register('/sw.js');
-          
+
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             if (newWorker) {
@@ -215,16 +224,16 @@ export class OfflineStorage {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         // Create object stores
         if (!db.objectStoreNames.contains('products')) {
           db.createObjectStore('products', { keyPath: 'id' });
         }
-        
+
         if (!db.objectStoreNames.contains('mockups')) {
           db.createObjectStore('mockups', { keyPath: 'id' });
         }
-        
+
         if (!db.objectStoreNames.contains('images')) {
           db.createObjectStore('images', { keyPath: 'url' });
         }
@@ -234,20 +243,20 @@ export class OfflineStorage {
 
   async storeProducts(products: any[]): Promise<void> {
     if (!this.db) return;
-    
+
     const transaction = this.db.transaction(['products'], 'readwrite');
     const store = transaction.objectStore('products');
-    
-    await Promise.all(products.map(product => store.put(product)));
+
+    await Promise.all(products.map((product) => store.put(product)));
   }
 
   async getProducts(): Promise<any[]> {
     if (!this.db) return [];
-    
+
     const transaction = this.db.transaction(['products'], 'readonly');
     const store = transaction.objectStore('products');
     const request = store.getAll();
-    
+
     return new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -256,7 +265,7 @@ export class OfflineStorage {
 
   async storeMockup(mockup: any): Promise<void> {
     if (!this.db) return;
-    
+
     const transaction = this.db.transaction(['mockups'], 'readwrite');
     const store = transaction.objectStore('mockups');
     await store.put({ ...mockup, timestamp: Date.now() });
@@ -264,11 +273,11 @@ export class OfflineStorage {
 
   async getMockups(): Promise<any[]> {
     if (!this.db) return [];
-    
+
     const transaction = this.db.transaction(['mockups'], 'readonly');
     const store = transaction.objectStore('mockups');
     const request = store.getAll();
-    
+
     return new Promise((resolve, reject) => {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -277,7 +286,7 @@ export class OfflineStorage {
 
   async storeImage(url: string, blob: Blob): Promise<void> {
     if (!this.db) return;
-    
+
     const transaction = this.db.transaction(['images'], 'readwrite');
     const store = transaction.objectStore('images');
     await store.put({ url, blob, timestamp: Date.now() });
@@ -285,11 +294,11 @@ export class OfflineStorage {
 
   async getImage(url: string): Promise<Blob | null> {
     if (!this.db) return null;
-    
+
     const transaction = this.db.transaction(['images'], 'readonly');
     const store = transaction.objectStore('images');
     const request = store.get(url);
-    
+
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
         const result = request.result;
@@ -301,15 +310,15 @@ export class OfflineStorage {
 
   async clearExpiredData(maxAge: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
     if (!this.db) return;
-    
+
     const cutoff = Date.now() - maxAge;
     const stores = ['mockups', 'images'];
-    
+
     for (const storeName of stores) {
       const transaction = this.db.transaction([storeName], 'readwrite');
       const store = transaction.objectStore('store');
       const request = store.openCursor();
-      
+
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
         if (cursor) {
@@ -353,7 +362,7 @@ export function useOfflineData<T>(
   const { staleTime = 5 * 60 * 1000, cacheTime = 24 * 60 * 60 * 1000 } = options;
   const { isOnline } = useOffline();
   const storage = useOfflineStorage();
-  
+
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -370,18 +379,18 @@ export function useOfflineData<T>(
           // Try to fetch fresh data
           const freshData = await fetchFn();
           setData(freshData);
-          
+
           // Cache the data
           await storage.storeMockup({
             id: cacheKey,
             data: freshData,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
         } else {
           // Load from offline storage
           const mockups = await storage.getMockups();
-          const cached = mockups.find(m => m.id === cacheKey);
-          
+          const cached = mockups.find((m) => m.id === cacheKey);
+
           if (cached) {
             const age = Date.now() - cached.timestamp;
             if (age < cacheTime) {
@@ -409,35 +418,44 @@ export function useOfflineData<T>(
 // Connection quality indicator
 export function ConnectionQuality() {
   const [quality, setQuality] = useState<'4g' | '3g' | '2g' | 'slow-2g' | 'unknown'>('unknown');
-  
+
   useEffect(() => {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
-      
+
       const updateQuality = () => {
         setQuality(connection.effectiveType || 'unknown');
       };
 
       updateQuality();
       connection.addEventListener('change', updateQuality);
-      
+
       return () => connection.removeEventListener('change', updateQuality);
     }
   }, []);
 
   const getQualityColor = () => {
     switch (quality) {
-      case '4g': return 'text-green-600';
-      case '3g': return 'text-yellow-600';
-      case '2g': case 'slow-2g': return 'text-red-600';
-      default: return 'text-gray-600';
+      case '4g':
+        return 'text-green-600';
+      case '3g':
+        return 'text-yellow-600';
+      case '2g':
+      case 'slow-2g':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   return (
     <div className={`flex items-center space-x-1 text-xs ${getQualityColor()}`}>
       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.24 0 1 1 0 01-1.415-1.415 5 5 0 017.07 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M17.778 8.222c-4.296-4.296-11.26-4.296-15.556 0A1 1 0 01.808 6.808c5.076-5.077 13.308-5.077 18.384 0a1 1 0 01-1.414 1.414zM14.95 11.05a7 7 0 00-9.9 0 1 1 0 01-1.414-1.414 9 9 0 0112.728 0 1 1 0 01-1.414 1.414zM12.12 13.88a3 3 0 00-4.24 0 1 1 0 01-1.415-1.415 5 5 0 017.07 0 1 1 0 01-1.415 1.415zM9 16a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+          clipRule="evenodd"
+        />
       </svg>
       <span>{quality.toUpperCase()}</span>
     </div>

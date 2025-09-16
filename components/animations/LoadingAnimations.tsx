@@ -4,10 +4,10 @@ import React from 'react';
 import { loadingAnimations, durations, easingFunctions } from './AnimationUtils';
 
 // Spinner component
-export function Spinner({ 
-  size = 'md', 
+export function Spinner({
+  size = 'md',
   color = 'blue-500',
-  className = '' 
+  className = '',
 }: {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   color?: string;
@@ -15,25 +15,25 @@ export function Spinner({
 }) {
   const sizeClasses = {
     sm: 'w-4 h-4',
-    md: 'w-8 h-8', 
+    md: 'w-8 h-8',
     lg: 'w-12 h-12',
-    xl: 'w-16 h-16'
+    xl: 'w-16 h-16',
   };
 
   return (
     <div
       className={`inline-block ${sizeClasses[size]} border-2 border-gray-200 border-t-${color} rounded-full ${className}`}
       style={{
-        animation: `${loadingAnimations.spin} 1s linear infinite`
+        animation: `${loadingAnimations.spin} 1s linear infinite`,
       }}
     />
   );
 }
 
 // Pulsing dots
-export function PulsingDots({ 
+export function PulsingDots({
   color = 'blue-500',
-  className = '' 
+  className = '',
 }: {
   color?: string;
   className?: string;
@@ -46,7 +46,7 @@ export function PulsingDots({
           className={`w-3 h-3 bg-${color} rounded-full`}
           style={{
             animation: `${loadingAnimations.pulse} 1.4s ease-in-out infinite both`,
-            animationDelay: `${index * 0.16}s`
+            animationDelay: `${index * 0.16}s`,
           }}
         />
       ))}
@@ -55,9 +55,9 @@ export function PulsingDots({
 }
 
 // Wave loading
-export function WaveLoading({ 
+export function WaveLoading({
   color = 'blue-500',
-  className = '' 
+  className = '',
 }: {
   color?: string;
   className?: string;
@@ -70,7 +70,7 @@ export function WaveLoading({
           className={`w-2 h-8 bg-${color} rounded-sm`}
           style={{
             animation: `${loadingAnimations.wave} 1.2s ease-in-out infinite`,
-            animationDelay: `${index * 0.1}s`
+            animationDelay: `${index * 0.1}s`,
           }}
         />
       ))}
@@ -79,11 +79,11 @@ export function WaveLoading({
 }
 
 // Skeleton loading
-export function SkeletonLoading({ 
+export function SkeletonLoading({
   width = '100%',
   height = '20px',
   className = '',
-  variant = 'rectangular' 
+  variant = 'rectangular',
 }: {
   width?: string;
   height?: string;
@@ -94,7 +94,7 @@ export function SkeletonLoading({
   const variantClasses = {
     rectangular: 'rounded',
     circular: 'rounded-full',
-    text: 'rounded'
+    text: 'rounded',
   };
 
   return (
@@ -104,16 +104,16 @@ export function SkeletonLoading({
         width,
         height,
         backgroundSize: '200px 100%',
-        animation: `${loadingAnimations.skeleton} 1.5s ease-in-out infinite`
+        animation: `${loadingAnimations.skeleton} 1.5s ease-in-out infinite`,
       }}
     />
   );
 }
 
 // Bouncing balls
-export function BouncingBalls({ 
+export function BouncingBalls({
   color = 'blue-500',
-  className = '' 
+  className = '',
 }: {
   color?: string;
   className?: string;
@@ -126,7 +126,7 @@ export function BouncingBalls({
           className={`w-4 h-4 bg-${color} rounded-full`}
           style={{
             animation: `${loadingAnimations.bounce} 1.4s ease-in-out infinite both`,
-            animationDelay: `${index * 0.16}s`
+            animationDelay: `${index * 0.16}s`,
           }}
         />
       ))}
@@ -135,13 +135,13 @@ export function BouncingBalls({
 }
 
 // Progress bar with animation
-export function AnimatedProgressBar({ 
+export function AnimatedProgressBar({
   progress = 0,
   color = 'blue-500',
   backgroundColor = 'gray-200',
   height = 'h-2',
   className = '',
-  showPercentage = false 
+  showPercentage = false,
 }: {
   progress?: number;
   color?: string;
@@ -174,7 +174,7 @@ export function AnimatedProgressBar({
               transparent
             )`,
             backgroundSize: '20px 20px',
-            animation: progress > 0 ? `${loadingAnimations.skeleton} 1s linear infinite` : 'none'
+            animation: progress > 0 ? `${loadingAnimations.skeleton} 1s linear infinite` : 'none',
           }}
         />
       </div>
@@ -183,10 +183,10 @@ export function AnimatedProgressBar({
 }
 
 // Loading overlay
-export function LoadingOverlay({ 
+export function LoadingOverlay({
   isVisible = false,
   message = 'Loading...',
-  className = '' 
+  className = '',
 }: {
   isVisible?: boolean;
   message?: string;
@@ -195,11 +195,11 @@ export function LoadingOverlay({
   if (!isVisible) return null;
 
   return (
-    <div 
+    <div
       className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${className}`}
       style={{
         backdropFilter: 'blur(4px)',
-        animation: `${loadingAnimations.pulse} 2s ease-in-out infinite`
+        animation: `${loadingAnimations.pulse} 2s ease-in-out infinite`,
       }}
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex flex-col items-center space-y-4 shadow-xl">
@@ -211,23 +211,13 @@ export function LoadingOverlay({
 }
 
 // Shimmer effect for loading cards
-export function ShimmerCard({ 
-  className = '',
-  lines = 3 
-}: {
-  className?: string;
-  lines?: number;
-}) {
+export function ShimmerCard({ className = '', lines = 3 }: { className?: string; lines?: number }) {
   return (
     <div className={`animate-pulse ${className}`}>
       <div className="bg-gray-300 h-48 rounded-lg mb-4"></div>
       <div className="space-y-2">
         {Array.from({ length: lines }, (_, index) => (
-          <SkeletonLoading 
-            key={index}
-            height="16px" 
-            width={index === lines - 1 ? '60%' : '100%'}
-          />
+          <SkeletonLoading key={index} height="16px" width={index === lines - 1 ? '60%' : '100%'} />
         ))}
       </div>
     </div>
@@ -235,11 +225,7 @@ export function ShimmerCard({
 }
 
 // Typing indicator
-export function TypingIndicator({ 
-  className = '' 
-}: {
-  className?: string;
-}) {
+export function TypingIndicator({ className = '' }: { className?: string }) {
   return (
     <div className={`flex space-x-1 ${className}`}>
       <span className="text-gray-500">Typing</span>
@@ -249,7 +235,7 @@ export function TypingIndicator({
           className="text-gray-500"
           style={{
             animation: `${loadingAnimations.pulse} 1.4s ease-in-out infinite`,
-            animationDelay: `${index * 0.2}s`
+            animationDelay: `${index * 0.2}s`,
           }}
         >
           .

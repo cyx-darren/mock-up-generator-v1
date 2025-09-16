@@ -11,40 +11,40 @@ interface PreloadResource {
 export class ResourcePreloader {
   private static instance: ResourcePreloader;
   private preloadedResources: Set<string> = new Set();
-  
+
   // Critical resources to preload immediately
   private criticalResources: PreloadResource[] = [
     {
       url: '/api/products',
       as: 'fetch',
-      priority: 'high'
+      priority: 'high',
     },
     {
       url: '/_next/static/chunks/vendors.js',
       as: 'script',
-      priority: 'high'
+      priority: 'high',
     },
     {
       url: '/_next/static/css/app.css',
       as: 'style',
-      priority: 'high'
-    }
+      priority: 'high',
+    },
   ];
 
   // Resources to preload based on user behavior
   private conditionalResources: Record<string, PreloadResource[]> = {
     'catalog-visit': [
       { url: '/api/products?sort=name', as: 'fetch' },
-      { url: '/catalog', as: 'fetch' }
+      { url: '/catalog', as: 'fetch' },
     ],
     'admin-access': [
       { url: '/api/admin/statistics', as: 'fetch' },
-      { url: '/_next/static/chunks/admin.js', as: 'script' }
+      { url: '/_next/static/chunks/admin.js', as: 'script' },
     ],
     'mockup-creation': [
       { url: '/api/remove-background', as: 'fetch' },
-      { url: '/_next/static/chunks/heavy-libs.js', as: 'script' }
-    ]
+      { url: '/_next/static/chunks/heavy-libs.js', as: 'script' },
+    ],
   };
 
   private constructor() {
@@ -63,17 +63,17 @@ export class ResourcePreloader {
   private initializePreloader(): void {
     // Preload critical resources immediately
     this.preloadCriticalResources();
-    
+
     // Setup intelligent preloading based on user interaction
     this.setupIntelligentPreloading();
-    
+
     // Setup intersection observer for viewport-based preloading
     this.setupViewportPreloading();
   }
 
   // Preload critical resources immediately
   private preloadCriticalResources(): void {
-    this.criticalResources.forEach(resource => {
+    this.criticalResources.forEach((resource) => {
       this.preloadResource(resource);
     });
   }
@@ -88,11 +88,11 @@ export class ResourcePreloader {
     link.rel = 'preload';
     link.href = resource.url;
     link.as = resource.as;
-    
+
     if (resource.crossorigin) {
       link.crossOrigin = resource.crossorigin;
     }
-    
+
     if (resource.type) {
       link.type = resource.type;
     }
@@ -105,7 +105,7 @@ export class ResourcePreloader {
     // Add to head
     document.head.appendChild(link);
     this.preloadedResources.add(resource.url);
-    
+
     console.log(`Preloaded resource: ${resource.url}`);
   }
 
@@ -140,7 +140,7 @@ export class ResourcePreloader {
   public preloadConditionalResources(condition: string): void {
     const resources = this.conditionalResources[condition];
     if (resources) {
-      resources.forEach(resource => {
+      resources.forEach((resource) => {
         this.preloadResource(resource);
       });
     }
@@ -168,7 +168,7 @@ export class ResourcePreloader {
     );
 
     // Observe elements with preload data
-    document.querySelectorAll('[data-preload]').forEach(el => {
+    document.querySelectorAll('[data-preload]').forEach((el) => {
       observer.observe(el);
     });
   }
@@ -185,9 +185,9 @@ export class ResourcePreloader {
               // Create preload link for image
               this.preloadResource({
                 url: src,
-                as: 'image'
+                as: 'image',
               });
-              
+
               // Load the actual image
               img.src = src;
               img.removeAttribute('data-src');
@@ -196,25 +196,25 @@ export class ResourcePreloader {
           }
         });
       },
-      { 
+      {
         threshold: 0,
-        rootMargin: '50px 0px' // Start loading 50px before image enters viewport
+        rootMargin: '50px 0px', // Start loading 50px before image enters viewport
       }
     );
 
-    document.querySelectorAll(selector).forEach(img => {
+    document.querySelectorAll(selector).forEach((img) => {
       imageObserver.observe(img);
     });
   }
 
   // Preload fonts
   public preloadFonts(fonts: string[]): void {
-    fonts.forEach(fontUrl => {
+    fonts.forEach((fontUrl) => {
       this.preloadResource({
         url: fontUrl,
         as: 'font',
         crossorigin: 'anonymous',
-        type: 'font/woff2'
+        type: 'font/woff2',
       });
     });
   }
@@ -225,7 +225,7 @@ export class ResourcePreloader {
     link.rel = 'prefetch';
     link.href = url;
     document.head.appendChild(link);
-    
+
     console.log(`Prefetched page: ${url}`);
   }
 
@@ -233,17 +233,17 @@ export class ResourcePreloader {
   public getStats(): { preloaded: number; resources: string[] } {
     return {
       preloaded: this.preloadedResources.size,
-      resources: Array.from(this.preloadedResources)
+      resources: Array.from(this.preloadedResources),
     };
   }
 
   // Clear preloaded resources (for memory management)
   public clearPreloadedResources(): void {
     // Remove preload links from DOM
-    document.querySelectorAll('link[rel="preload"]').forEach(link => {
+    document.querySelectorAll('link[rel="preload"]').forEach((link) => {
       link.remove();
     });
-    
+
     this.preloadedResources.clear();
     console.log('Cleared preloaded resources');
   }
@@ -252,18 +252,15 @@ export class ResourcePreloader {
 // React hook for resource preloading
 export function useResourcePreloader() {
   const preloader = ResourcePreloader.getInstance();
-  
+
   return {
-    preloadConditionalResources: (condition: string) => 
+    preloadConditionalResources: (condition: string) =>
       preloader.preloadConditionalResources(condition),
-    preloadImages: (selector?: string) => 
-      preloader.preloadImages(selector),
-    preloadFonts: (fonts: string[]) => 
-      preloader.preloadFonts(fonts),
-    prefetchPage: (url: string) => 
-      preloader.prefetchPage(url),
+    preloadImages: (selector?: string) => preloader.preloadImages(selector),
+    preloadFonts: (fonts: string[]) => preloader.preloadFonts(fonts),
+    prefetchPage: (url: string) => preloader.prefetchPage(url),
     getStats: () => preloader.getStats(),
-    clearPreloadedResources: () => preloader.clearPreloadedResources()
+    clearPreloadedResources: () => preloader.clearPreloadedResources(),
   };
 }
 
