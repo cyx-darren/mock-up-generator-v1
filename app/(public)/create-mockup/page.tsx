@@ -44,6 +44,13 @@ interface Constraint {
   max_logo_height: number;
   guidelines: string;
   is_active: boolean;
+  // Optional detected area properties (for constraint overlay)
+  detected_area_x?: number;
+  detected_area_y?: number;
+  detected_area_width?: number;
+  detected_area_height?: number;
+  detected_area_percentage?: number;
+  is_validated?: boolean;
 }
 
 // Step Component
@@ -414,6 +421,8 @@ function CreateMockupContent() {
 
   // Get current constraint for selected placement
   const getCurrentConstraint = () => {
+    if (!product) return null;
+
     let constraint = constraints.find((c) => c.placement_type === selectedPlacement);
     if (!constraint) {
       constraint = createDefaultConstraint(product.id, selectedPlacement);
@@ -425,6 +434,7 @@ function CreateMockupContent() {
   // Validate design adjustments against constraints
   const _validateAdjustments = (adjustments: typeof designAdjustments) => {
     const constraint = getCurrentConstraint();
+    if (!constraint) return []; // No validation if constraint is not available
     const warnings = [];
 
     // Check if scale respects min/max logo dimensions
@@ -468,10 +478,10 @@ function CreateMockupContent() {
       const halfLogoWidth = scaledWidth / 2;
       const halfLogoHeight = scaledHeight / 2;
 
-      const constraintMinX = constraint.detected_area_x;
-      const constraintMinY = constraint.detected_area_y;
-      const constraintMaxX = constraint.detected_area_x + constraintAreaWidth;
-      const constraintMaxY = constraint.detected_area_y + constraintAreaHeight;
+      const constraintMinX = constraint.detected_area_x || 0;
+      const constraintMinY = constraint.detected_area_y || 0;
+      const constraintMaxX = (constraint.detected_area_x || 0) + constraintAreaWidth;
+      const constraintMaxY = (constraint.detected_area_y || 0) + constraintAreaHeight;
 
       if (logoX - halfLogoWidth < constraintMinX) {
         warnings.push(`Logo extends outside left edge of constraint area`);
@@ -493,6 +503,7 @@ function CreateMockupContent() {
   // Generate mockup
   const generateMockup = async () => {
     if (!product) return;
+    let progressInterval: NodeJS.Timeout | undefined;
 
     // Check if we have required logos based on selected sides
     if (selectedSides === 'both' && (!frontProcessedLogo || !backProcessedLogo)) {
@@ -531,7 +542,7 @@ function CreateMockupContent() {
       // Check cache first
       const cacheKey = cache.generateCacheKey({
         productId: product.id,
-        logoHash: processedLogo,
+        logoHash: processedLogo || '',
         placementType: selectedPlacement,
         constraintVersion: constraint.id,
       });
@@ -545,8 +556,9 @@ function CreateMockupContent() {
         setProgress('Retrieved from cache!');
         setProgressPercentage(100);
         await new Promise((resolve) => setTimeout(resolve, 500));
-        setGeneratedMockup(cachedResult.result);
-        setOriginalMockup(cachedResult.result);
+        // cachedResult should be the mockup URL string directly
+        setGeneratedMockup(cachedResult as string);
+        setOriginalMockup(cachedResult as string);
         setCurrentMockupIndex(0);
         setCurrentStep(4);
         return;
@@ -558,7 +570,7 @@ function CreateMockupContent() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Simulate progress updates
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProgressPercentage((prev) => {
           if (prev < 85) {
             return prev + Math.random() * 10;
@@ -726,7 +738,7 @@ function CreateMockupContent() {
     } catch (err) {
       console.error('Error generating mockup:', err);
       setError('Failed to generate mockup. Please try again.');
-      if (typeof progressInterval !== 'undefined') {
+      if (progressInterval) {
         clearInterval(progressInterval);
       }
     } finally {
@@ -773,7 +785,7 @@ function CreateMockupContent() {
 
       // JPEG
       const jpegResult = await converter.convertFormat(imageData, {
-        format: 'jpeg',
+        format: 'jpg',
         quality: 90,
       });
       formats.jpeg = jpegResult.base64Data;
@@ -809,6 +821,7 @@ function CreateMockupContent() {
   // Handle prompt adjustments
   const handleApplyChanges = async (instruction: string, enhancedPrompt: string) => {
     if (!product || !originalMockup) return;
+    let adjustProgressInterval: NodeJS.Timeout | undefined;
 
     try {
       // Immediately show progress UI
@@ -821,7 +834,7 @@ function CreateMockupContent() {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Simulate progress for adjustment
-      const adjustProgressInterval = setInterval(() => {
+      adjustProgressInterval = setInterval(() => {
         setProgressPercentage((prev) => {
           if (prev < 85) {
             return prev + Math.random() * 15;
@@ -900,7 +913,7 @@ function CreateMockupContent() {
     } catch (err) {
       console.error('Error applying adjustments:', err);
       setError(err instanceof Error ? err.message : 'Failed to apply adjustments');
-      if (typeof adjustProgressInterval !== 'undefined') {
+      if (adjustProgressInterval) {
         clearInterval(adjustProgressInterval);
       }
       setProgressPercentage(0);
@@ -979,7 +992,7 @@ function CreateMockupContent() {
   if (!product && !loading) {
     return (
       <Container className="py-12">
-        <Alert variant="error">Product not found. Redirecting to catalog...</Alert>
+        <Alert type="error" message="Product not found. Redirecting to catalog..." />
       </Container>
     );
   }
@@ -1037,11 +1050,7 @@ function CreateMockupContent() {
           />
         </div>
 
-        {error && (
-          <Alert variant="error" className="mb-6">
-            {error}
-          </Alert>
-        )}
+        {error && <Alert type="error" message={error} className="mb-6" />}
 
         {/* Progress Modal Overlay */}
         {loading && progress && (
@@ -1118,11 +1127,15 @@ function CreateMockupContent() {
                             // Fallback to any constraint for the placement type if no side-specific constraint found
                             const fallbackConstraint =
                               constraints.find((c) => c.placement_type === selectedPlacement) ||
-                              createDefaultConstraint(product.id, selectedPlacement, view);
-                            setCurrentConstraint(fallbackConstraint);
+                              (product
+                                ? createDefaultConstraint(product.id, selectedPlacement, view)
+                                : null);
+                            if (fallbackConstraint) {
+                              setCurrentConstraint(fallbackConstraint);
+                            }
                           }
                         }}
-                        hasBackView={product.has_back_printing}
+                        hasBackView={product?.has_back_printing || false}
                         frontMockup={generatedMockups.front}
                         backMockup={generatedMockups.back}
                       />
@@ -1551,8 +1564,8 @@ function CreateMockupContent() {
                           <img
                             src={
                               selectedSides === 'front'
-                                ? frontProcessedLogo || processedLogo
-                                : backProcessedLogo
+                                ? frontProcessedLogo || processedLogo || ''
+                                : backProcessedLogo || ''
                             }
                             alt="Processed Logo"
                             className="w-full h-full object-contain"
@@ -1581,10 +1594,12 @@ function CreateMockupContent() {
                                 | 'all_over';
                               setSelectedPlacement(newPlacement);
                               // Update current constraint
-                              const constraint =
-                                constraints.find((c) => c.placement_type === newPlacement) ||
-                                createDefaultConstraint(product.id, newPlacement);
-                              setCurrentConstraint(constraint);
+                              if (product) {
+                                const constraint =
+                                  constraints.find((c) => c.placement_type === newPlacement) ||
+                                  createDefaultConstraint(product.id, newPlacement);
+                                setCurrentConstraint(constraint);
+                              }
                             }}
                             className="mr-3"
                           />
@@ -1611,10 +1626,12 @@ function CreateMockupContent() {
                                 | 'all_over';
                               setSelectedPlacement(newPlacement);
                               // Update current constraint
-                              const constraint =
-                                constraints.find((c) => c.placement_type === newPlacement) ||
-                                createDefaultConstraint(product.id, newPlacement);
-                              setCurrentConstraint(constraint);
+                              if (product) {
+                                const constraint =
+                                  constraints.find((c) => c.placement_type === newPlacement) ||
+                                  createDefaultConstraint(product.id, newPlacement);
+                                setCurrentConstraint(constraint);
+                              }
                             }}
                             className="mr-3"
                           />
@@ -1641,10 +1658,12 @@ function CreateMockupContent() {
                                 | 'all_over';
                               setSelectedPlacement(newPlacement);
                               // Update current constraint
-                              const constraint =
-                                constraints.find((c) => c.placement_type === newPlacement) ||
-                                createDefaultConstraint(product.id, newPlacement);
-                              setCurrentConstraint(constraint);
+                              if (product) {
+                                const constraint =
+                                  constraints.find((c) => c.placement_type === newPlacement) ||
+                                  createDefaultConstraint(product.id, newPlacement);
+                                setCurrentConstraint(constraint);
+                              }
                             }}
                             className="mr-3"
                           />
@@ -1719,9 +1738,10 @@ function CreateMockupContent() {
                 </CardHeader>
                 <CardBody>
                   <div className="space-y-4">
-                    <Alert variant="success">
-                      Your customized mockup is ready! Choose a format to download.
-                    </Alert>
+                    <Alert
+                      type="success"
+                      message="Your customized mockup is ready! Choose a format to download."
+                    />
 
                     <div className="grid grid-cols-3 gap-3">
                       <Button

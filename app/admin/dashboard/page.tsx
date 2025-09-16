@@ -105,7 +105,7 @@ export default function AdminDashboard() {
                 Bulk Images
               </button>
             )}
-            {can('canManageAdmins') && (
+            {can('canViewAuditLogs') && (
               <button
                 className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
                   activeTab === 'audit'
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
           <BulkImageProcessor onProcessingComplete={() => setRefreshTrigger((prev) => prev + 1)} />
         )}
 
-        {activeTab === 'audit' && can('canManageAdmins') && <AuditLogViewer />}
+        {activeTab === 'audit' && can('canViewAuditLogs') && <AuditLogViewer />}
       </div>
     </div>
   );
