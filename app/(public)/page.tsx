@@ -28,8 +28,8 @@ export default function LandingPage() {
   }, []);
 
   const handleSignupClick = () => {
-    // Redirect to your create page or signup
-    window.location.href = '/create';
+    // Redirect to catalog page
+    window.location.href = '/catalog';
   };
 
   const handleBrowseTemplates = () => {

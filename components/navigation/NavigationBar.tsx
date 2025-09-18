@@ -73,7 +73,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className = '' }) => {
           {/* CTA Button */}
           <div className="hidden md:flex items-center">
             <Link
-              href="/create"
+              href="/catalog"
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
             >
               Start Creating
@@ -106,7 +106,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ className = '' }) => {
               ))}
               <div className="px-3 py-2">
                 <Link
-                  href="/create"
+                  href="/catalog"
                   className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors duration-200"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
