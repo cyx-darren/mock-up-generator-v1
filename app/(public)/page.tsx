@@ -1,137 +1,107 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
-import { Container } from '@/components/layout/Container';
+'use client';
 
-export default function HomePage() {
+import React, { useState, useEffect } from 'react';
+
+// Import all Rocket landing page components
+import HeroSection from '@/components/rocket-landing/HeroSection';
+import ProblemSection from '@/components/rocket-landing/ProblemSection';
+import SolutionShowcase from '@/components/rocket-landing/SolutionShowcase';
+import TemplateGallery from '@/components/rocket-landing/TemplateGallery';
+import IntegrationSection from '@/components/rocket-landing/IntegrationSection';
+import SocialProofSection from '@/components/rocket-landing/SocialProofSection';
+import PricingSection from '@/components/rocket-landing/PricingSection';
+import FAQSection from '@/components/rocket-landing/FAQSection';
+import ConversionZone from '@/components/rocket-landing/ConversionZone';
+import Footer from '@/components/rocket-landing/Footer';
+import NavigationBar from '@/components/navigation/NavigationBar';
+
+export default function LandingPage() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate initial loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSignupClick = () => {
+    // Redirect to your create page or signup
+    window.location.href = '/create';
+  };
+
+  const handleBrowseTemplates = () => {
+    const templatesSection = document.getElementById('templates');
+    if (templatesSection) {
+      templatesSection?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading Mockup Gen...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-blue-50 to-white py-20">
-        <Container>
-          <div className="text-center">
-            <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Create Stunning Mockups for Corporate Gifts
-            </h1>
-            <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
-              Generate professional mockups with your logo on corporate gift items using AI
-              technology. No design skills required.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Link href="/catalog">
-                <Button size="lg">Browse Catalog</Button>
-              </Link>
-              <Link href="/create">
-                <Button variant="secondary" size="lg">
-                  Start Creating
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </Container>
-      </section>
+    <div className="min-h-screen bg-white">
+      {/* Navigation Bar */}
+      <NavigationBar />
 
-      {/* How It Works */}
-      <section className="py-20 bg-white dark:bg-gray-900">
-        <Container>
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">
-            How It Works
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">1</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Choose a Product
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Select from our catalog of corporate gift items
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">2</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Upload Your Logo
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Upload your company logo and choose placement options
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">3</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Generate Mockup
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                AI generates a realistic mockup in seconds
-              </p>
-            </div>
-          </div>
-        </Container>
-      </section>
+      {/* Main Content */}
+      <main>
+        {/* Hero Section */}
+        <HeroSection
+          onStartCreating={handleSignupClick}
+          onBrowseTemplates={handleBrowseTemplates}
+        />
 
-      {/* Features */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-800">
-        <Container>
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-12">
-            Features
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                AI-Powered
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Advanced AI technology for realistic mockup generation
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Fast Generation
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Get your mockups in under 30 seconds
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Multiple Formats
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Download in PNG, JPG, or WebP formats
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Background Removal
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Automatic logo background removal included
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                Placement Options
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Choose horizontal, vertical, or all-over print
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                High Resolution
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Export high-quality mockups for presentations
-              </p>
-            </div>
-          </div>
-        </Container>
-      </section>
+        {/* Problem Section */}
+        <ProblemSection />
+
+        {/* Solution Showcase */}
+        <div id="how-it-works">
+          <SolutionShowcase />
+        </div>
+
+        {/* Template Gallery */}
+        <div id="templates">
+          <TemplateGallery />
+        </div>
+
+        {/* Integration Section */}
+        <IntegrationSection />
+
+        {/* Social Proof Section */}
+        <SocialProofSection />
+
+        {/* Pricing Section */}
+        <div id="pricing">
+          <PricingSection
+            onGetStarted={handleSignupClick}
+          />
+        </div>
+
+        {/* FAQ Section */}
+        <div id="faq">
+          <FAQSection />
+        </div>
+
+        {/* Conversion Zone */}
+        <ConversionZone
+          onStartCreating={handleSignupClick}
+        />
+
+        {/* Footer */}
+        <Footer />
+      </main>
     </div>
   );
 }

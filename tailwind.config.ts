@@ -8,9 +8,46 @@ const config: Config = {
   ],
   darkMode: 'class',
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       colors: {
+        border: "var(--color-border)",
+        input: "var(--color-input)",
+        ring: "var(--color-ring)",
+        background: "var(--color-background)",
+        foreground: "var(--color-foreground)",
+        muted: {
+          DEFAULT: "var(--color-muted)",
+          foreground: "var(--color-muted-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--color-accent)",
+          foreground: "var(--color-accent-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--color-popover)",
+          foreground: "var(--color-popover-foreground)",
+        },
+        card: {
+          DEFAULT: "var(--color-card)",
+          foreground: "var(--color-card-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--color-destructive)",
+          foreground: "var(--color-destructive-foreground)",
+        },
+        surface: "var(--color-surface)",
+        "text-primary": "var(--color-text-primary)",
+        "text-secondary": "var(--color-text-secondary)",
         primary: {
+          DEFAULT: "var(--color-primary)",
+          foreground: "var(--color-primary-foreground)",
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
@@ -24,6 +61,8 @@ const config: Config = {
           950: '#172554',
         },
         secondary: {
+          DEFAULT: "var(--color-secondary)",
+          foreground: "var(--color-secondary-foreground)",
           50: '#f0f9ff',
           100: '#e0f2fe',
           200: '#bae6fd',
@@ -98,9 +137,26 @@ const config: Config = {
           950: '#030712',
         },
       },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+        accent: ['Playfair Display', 'serif'],
         display: ['Cal Sans', 'Inter', 'system-ui', 'sans-serif'],
+      },
+      fontWeight: {
+        'headline-semibold': '600',
+        'headline-bold': '700',
+        'headline-extrabold': '800',
+        'body-normal': '400',
+        'body-medium': '500',
+        'cta-semibold': '600',
+        'accent-medium': '500',
+        'accent-semibold': '600',
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
@@ -122,6 +178,14 @@ const config: Config = {
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
+        'header-desktop': '80px',
+        'header-mobile': '64px',
+      },
+      zIndex: {
+        'header': '100',
+        'mobile-bar': '90',
+        'modal-backdrop': '999',
+        'modal': '1000',
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-in-out',
@@ -153,6 +217,16 @@ const config: Config = {
         'inner-sm': 'inset 0 1px 2px 0 rgb(0 0 0 / 0.05)',
         'inner-md': 'inset 0 4px 6px -1px rgb(0 0 0 / 0.1)',
         'inner-lg': 'inset 0 10px 15px -3px rgb(0 0 0 / 0.1)',
+        'cta': '0 4px 14px 0 rgba(37, 99, 235, 0.15)',
+        'mockup': '0 10px 25px -3px rgba(0, 0, 0, 0.1)',
+      },
+      transitionDuration: {
+        'smooth': '250ms',
+        'slide': '300ms',
+      },
+      transitionTimingFunction: {
+        'smooth': 'ease-in-out',
+        'slide': 'ease-in-out',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -160,7 +234,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require("tailwindcss-animate"),
+  ],
 };
 
 export default config;

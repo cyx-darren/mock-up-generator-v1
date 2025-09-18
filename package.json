@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@radix-ui/react-slot": "^1.2.3",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.56.1",
     "@types/bcryptjs": "^2.4.6",
@@ -26,9 +27,11 @@
     "@types/jszip": "^3.4.0",
     "bcryptjs": "^3.0.2",
     "canvas": "^3.2.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
+    "framer-motion": "^12.23.14",
     "jimp": "^1.6.0",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
@@ -37,7 +40,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "sharp": "^0.34.3",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

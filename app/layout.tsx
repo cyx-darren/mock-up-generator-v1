@@ -49,13 +49,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* Resource hints for critical assets */}
-        <link
-          rel="preload"
-          href="/fonts/inter-var.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
         <link rel="preload" href="/_next/static/css/app.css" as="style" />
 
         {/* Prefetch likely navigation targets */}
