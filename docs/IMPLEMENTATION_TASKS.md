@@ -949,6 +949,168 @@
 
 ---
 
+## PHASE 6.5: LAYERED LOGO SYSTEM
+
+**Duration:** Week 12-13
+**Status:** Not Started
+**Description:** Transform mockup generation from single merged image to interactive layered system with real-time logo manipulation
+
+### 6.5.1 Logo Layer Component Development
+
+#### 6.5.1.1 Create Logo Layer Component
+
+( ) Build LogoLayer component with absolute positioning
+( ) Implement drag-and-drop functionality for repositioning
+( ) Add resize handles with corner/edge dragging
+( ) Create rotation controls with visual indicator
+( ) Implement opacity adjustment slider
+( ) Add flip horizontal/vertical toggles
+**Verification:** Logo layer renders over product with all controls functional
+
+#### 6.5.1.2 Transform State Management
+
+( ) Create logo transform state (position, rotation, scale, opacity)
+( ) Implement real-time state updates on manipulation
+( ) Add undo/redo functionality with history stack
+( ) Create state persistence in session storage
+( ) Implement reset to default function
+( ) Add transform constraints validation
+**Verification:** All transformations persist and can be undone/redone
+
+#### 6.5.1.3 Interactive Controls Implementation
+
+( ) Build control panel UI for adjustments
+( ) Add numeric input fields for precise values
+( ) Implement slider controls for smooth adjustments
+( ) Create preset position buttons (corners, center)
+( ) Add snap-to-grid functionality
+( ) Implement aspect ratio lock toggle
+**Verification:** Controls provide both visual and numeric manipulation
+
+### 6.5.2 Mockup Preview System
+
+#### 6.5.2.1 Layered Preview Component
+
+( ) Create MockupPreview container component
+( ) Implement ProductLayer for base product image
+( ) Add LogoLayer as manipulable overlay
+( ) Integrate ConstraintOverlay for visual guides
+( ) Build layer visibility toggles
+( ) Add layer order management
+**Verification:** Preview shows product with draggable logo overlay
+
+#### 6.5.2.2 Real-time Preview Updates
+
+( ) Implement instant visual feedback on manipulation
+( ) Add smooth animations for transformations
+( ) Create transform throttling for performance
+( ) Implement WebGL acceleration if needed
+( ) Add preview quality settings
+( ) Create mobile touch optimization
+**Verification:** Manipulations update smoothly at 60fps
+
+### 6.5.3 Constraint Integration
+
+#### 6.5.3.1 Constraint Boundary Enforcement
+
+( ) Load product constraint configurations
+( ) Implement boundary collision detection
+( ) Add visual indicators for constraint violations
+( ) Create auto-adjustment when exceeding bounds
+( ) Implement soft boundaries with warnings
+( ) Add constraint override option for admins
+**Verification:** Logo stays within safe zones with clear feedback
+
+#### 6.5.3.2 Visual Constraint Guides
+
+( ) Display constraint overlay on demand
+( ) Add transparency control for overlay
+( ) Implement guide lines for alignment
+( ) Create snap-to-constraint edges
+( ) Add measurement indicators
+( ) Build constraint zone highlighting
+**Verification:** Constraints clearly visible during adjustment
+
+### 6.5.4 Generation Pipeline Updates
+
+#### 6.5.4.1 Transform Parameter Integration
+
+( ) Modify API to accept transform parameters
+( ) Update mockup generation pipeline
+( ) Implement server-side transform application
+( ) Add transform validation on backend
+( ) Create fallback for invalid transforms
+( ) Implement transform optimization
+**Verification:** API correctly applies client-side transforms
+
+#### 6.5.4.2 Dual-mode Generation Support
+
+( ) Maintain preview mode (client-side only)
+( ) Implement final generation mode (server-side)
+( ) Add quality settings for each mode
+( ) Create mode switching logic
+( ) Implement caching for both modes
+( ) Add generation time optimization
+**Verification:** Both preview and final generation work correctly
+
+### 6.5.5 Export Options
+
+#### 6.5.5.1 Multiple Export Formats
+
+( ) Add merged single image export (current behavior)
+( ) Implement layered PNG export with transparency
+( ) Create PSD export capability (stretch goal)
+( ) Add SVG export for vector logos
+( ) Implement batch export functionality
+( ) Create export preset configurations
+**Verification:** Export in at least 3 different formats
+
+#### 6.5.5.2 Export Data Persistence
+
+( ) Export logo position data as JSON
+( ) Create import functionality for saved positions
+( ) Implement project save/load feature
+( ) Add export history tracking
+( ) Create shareable position links
+( ) Build position template library
+**Verification:** Can save and reload logo positions
+
+### 6.5.6 Backward Compatibility
+
+#### 6.5.6.1 Legacy Support
+
+( ) Maintain existing single-image generation
+( ) Add toggle between legacy and layered modes
+( ) Create migration path for existing mockups
+( ) Implement fallback for unsupported browsers
+( ) Add progressive enhancement approach
+( ) Create compatibility detection
+**Verification:** Existing functionality remains unaffected
+
+#### 6.5.6.2 Mobile Optimization
+
+( ) Optimize touch controls for mobile
+( ) Implement pinch-to-zoom for scaling
+( ) Add touch-friendly resize handles
+( ) Create mobile-specific control panel
+( ) Implement gesture recognition
+( ) Add haptic feedback support
+**Verification:** Full functionality on mobile devices
+
+---
+
+## PHASE 6.5 COMPLETION CHECKLIST
+
+( ) Logo layer component fully functional
+( ) Real-time manipulation working smoothly
+( ) Constraints properly enforced
+( ) Multiple export formats available
+( ) Backward compatibility maintained
+( ) Mobile experience optimized
+**Sign-off Required:** Technical Lead & UI/UX Designer
+
+---
+
 ## PHASE 7: TESTING & QUALITY ASSURANCE
 
 **Duration:** Week 13  
